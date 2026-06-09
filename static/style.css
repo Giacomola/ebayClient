@@ -1,0 +1,24 @@
+:root { font-family: system-ui, sans-serif; font-size: 18px; }
+body { margin: 0; background: #f6f5f1; color: #222; }
+header { display: flex; justify-content: space-between; align-items: center;
+  padding: 1rem 1.5rem; background: #fff; border-bottom: 1px solid #e3e0d8; }
+h1 { font-size: 1.3rem; margin: 0; }
+main { max-width: 720px; margin: 0 auto; padding: 1.5rem; }
+.drop-zone { border: 2px dashed #b9b3a5; border-radius: 12px; padding: 2rem;
+  text-align: center; background: #fff; }
+.drop-zone.drag { border-color: #c4623a; background: #fff8f4; }
+.thumbs { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+.thumbs img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+button { font-size: 1rem; padding: .6rem 1.1rem; border-radius: 8px;
+  border: 1px solid #c9c3b5; background: #fff; cursor: pointer; }
+button.primary { background: #c4623a; color: #fff; border: none; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+#generate-btn { width: 100%; margin: 1rem 0; }
+.result { display: flex; flex-direction: column; gap: .8rem; background: #fff;
+  padding: 1.5rem; border-radius: 12px; margin-top: 1rem; }
+.result label { display: flex; flex-direction: column; gap: .3rem; font-size: .9rem; }
+.result input, .result textarea, .result select { font-size: 1rem; padding: .5rem;
+  border: 1px solid #c9c3b5; border-radius: 6px; }
+.status { min-height: 1.4rem; color: #c4623a; }
+dialog { border: none; border-radius: 12px; padding: 1.5rem; min-width: 320px; }
+dialog label { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .8rem; }

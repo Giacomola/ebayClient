@@ -1,0 +1,90 @@
+let selectedFiles = [];
+
+const $ = (id) => document.getElementById(id);
+const status = (msg) => { $("status").textContent = msg; };
+
+function renderThumbs() {
+  const box = $("thumbs");
+  box.innerHTML = "";
+  selectedFiles.forEach((file) => {
+    const img = document.createElement("img");
+    img.src = URL.createObjectURL(file);
+    box.appendChild(img);
+  });
+  $("generate-btn").disabled = selectedFiles.length === 0;
+}
+
+function addFiles(fileList) {
+  for (const f of fileList) if (f.type.startsWith("image/")) selectedFiles.push(f);
+  renderThumbs();
+}
+
+const dz = $("drop-zone");
+dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("drag"); });
+dz.addEventListener("dragleave", () => dz.classList.remove("drag"));
+dz.addEventListener("drop", (e) => {
+  e.preventDefault(); dz.classList.remove("drag"); addFiles(e.dataTransfer.files);
+});
+$("choose-btn").addEventListener("click", () => $("file-input").click());
+$("file-input").addEventListener("change", (e) => addFiles(e.target.files));
+
+$("generate-btn").addEventListener("click", async () => {
+  status("KI analysiert die Fotos …");
+  const fd = new FormData();
+  selectedFiles.forEach((f) => fd.append("images", f));
+  const r = await fetch("/api/generate", { method: "POST", body: fd });
+  const data = await r.json();
+  if (!r.ok) { status(data.error || "Fehler bei der Analyse."); return; }
+  for (const key of ["title", "author", "book_title", "language", "publisher",
+                     "publication_year", "book_format", "description"]) {
+    $("f-" + key).value = data[key] || "";
+  }
+  $("result").hidden = false;
+  status("Fertig – bitte prüfen und bei Bedarf bearbeiten.");
+});
+
+$("save-csv-btn").addEventListener("click", async () => {
+  status("Fotos werden hochgeladen und Datei erstellt …");
+  const fd = new FormData();
+  selectedFiles.forEach((f) => fd.append("images", f));
+  for (const key of ["title", "author", "book_title", "language", "publisher",
+                     "publication_year", "book_format", "description"]) {
+    fd.append(key, $("f-" + key).value);
+  }
+  fd.append("price", $("f-price").value);
+  fd.append("condition_id", $("f-condition").value);
+  const r = await fetch("/api/create-csv", { method: "POST", body: fd });
+  if (!r.ok) { const e = await r.json(); status(e.error || "Fehler."); return; }
+  const blob = await r.blob();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ebay-anzeige.csv";
+  a.click();
+  status("eBay-Datei gespeichert. Jetzt im eBay-CSV-Manager hochladen.");
+});
+
+const dlg = $("settings-dialog");
+$("settings-btn").addEventListener("click", async () => {
+  const s = await (await fetch("/api/settings")).json();
+  $("s-anthropic").value = s.anthropic_api_key || "";
+  $("s-imgbb").value = s.imgbb_api_key || "";
+  $("s-model").value = s.model;
+  $("s-location").value = s.location;
+  $("s-shipping_cost").value = s.shipping_cost;
+  dlg.showModal();
+});
+$("s-save").addEventListener("click", async (e) => {
+  e.preventDefault();
+  await fetch("/api/settings", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      anthropic_api_key: $("s-anthropic").value,
+      imgbb_api_key: $("s-imgbb").value,
+      model: $("s-model").value,
+      location: $("s-location").value,
+      shipping_cost: $("s-shipping_cost").value,
+    }),
+  });
+  dlg.close();
+  status("Einstellungen gespeichert.");
+});

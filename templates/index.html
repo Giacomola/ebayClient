@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Buch-Anzeigen-Helfer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Buch-Anzeigen-Helfer</h1>
+    <button id="settings-btn" type="button">Einstellungen</button>
+  </header>
+
+  <main>
+    <section id="drop-zone" class="drop-zone">
+      <p>Fotos des Buches hierher ziehen</p>
+      <input id="file-input" type="file" accept="image/*" multiple hidden>
+      <button id="choose-btn" type="button">Fotos auswählen</button>
+      <div id="thumbs" class="thumbs"></div>
+    </section>
+
+    <button id="generate-btn" type="button" class="primary" disabled>Anzeige erstellen</button>
+    <p id="status" class="status"></p>
+
+    <section id="result" class="result" hidden>
+      <label>Titel <input id="f-title" maxlength="80"></label>
+      <label>Autor <input id="f-author"></label>
+      <label>Buchtitel <input id="f-book_title"></label>
+      <label>Sprache <input id="f-language"></label>
+      <label>Verlag <input id="f-publisher"></label>
+      <label>Erscheinungsjahr <input id="f-publication_year"></label>
+      <label>Format <input id="f-book_format"></label>
+      <label>Beschreibung <textarea id="f-description" rows="4"></textarea></label>
+      <label>Preis (EUR, z. B. 9.99) <input id="f-price" value="9.99"></label>
+      <label>Zustand
+        <select id="f-condition">
+          <option value="1000">Neu</option>
+          <option value="2750">Wie neu</option>
+          <option value="4000">Sehr gut</option>
+          <option value="5000" selected>Gut</option>
+          <option value="6000">Akzeptabel</option>
+        </select>
+      </label>
+      <button id="save-csv-btn" type="button" class="primary">eBay-Datei speichern</button>
+    </section>
+  </main>
+
+  <dialog id="settings-dialog">
+    <form method="dialog">
+      <h2>Einstellungen</h2>
+      <label>Anthropic-API-Schlüssel <input id="s-anthropic" type="password"></label>
+      <label>imgbb-API-Schlüssel <input id="s-imgbb" type="password"></label>
+      <label>KI-Modell
+        <select id="s-model">
+          <option value="claude-sonnet-4-6">Sonnet (günstig)</option>
+          <option value="claude-opus-4-8">Opus (stärker)</option>
+        </select>
+      </label>
+      <label>Standort <input id="s-location" value="Berlin"></label>
+      <label>Versandkosten <input id="s-shipping_cost" value="5.49"></label>
+      <menu>
+        <button id="s-save" value="save">Speichern</button>
+        <button value="cancel">Abbrechen</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
