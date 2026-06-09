@@ -3,33 +3,54 @@ import os
 
 # Allgemeine Regeln, die für die ganze KI-Analyse gelten.
 DEFAULT_PROMPT_GENERAL = (
-    "Du bist ein Assistent für eBay-Buchverkäufe. Analysiere die Fotos EINES Buches "
-    "(Cover, Buchrücken, ggf. Impressum/Titelseite) und fülle die Anzeigenfelder aus. "
-    "Schreibe auf Deutsch, sachlich und korrekt. Verwende niemals Semikolons. "
-    "Halte dich an die Vorgaben für die einzelnen Felder unten."
+    "Du bist ein Assistent für den Verkauf antiquarischer und gebrauchter Bücher auf "
+    "eBay.de. Analysiere die Fotos EINES Buches (Einband, Buchrücken, Titelseite, "
+    "Impressum, ggf. Inhaltsverzeichnis) und fülle die Anzeigenfelder aus. Schreibe auf "
+    "Deutsch, sachlich und korrekt im Stil einer antiquarischen Beschreibung. Gib nur an, "
+    "was auf den Fotos sicher erkennbar ist; rate nichts dazu und lass Unsicheres weg. "
+    "Verwende niemals Semikolons. Formatiere die Beschreibung als eBay-taugliches HTML: "
+    "Absätze mit <p>…</p>, Zeilenumbrüche mit <br>, Hervorhebungen mit <b>…</b>; verwende "
+    "KEINE echten Zeilenumbrüche (Enter-Taste), sondern ausschließlich diese HTML-Tags."
 )
 
 # Reihenfolge, Beschriftung und Standard-Anweisung je Feld, das die KI füllt.
 # (key, deutsche Beschriftung für die Oberfläche, Standard-Anweisung an die KI)
 PROMPT_FIELDS = [
     ("title", "Titel",
-     "Verkaufsstarker eBay-Anzeigentitel, höchstens 80 Zeichen. "
-     "Empfohlene Struktur: Buchtitel – Autor."),
+     "eBay-Anzeigentitel mit höchstens 80 Zeichen. Das Erscheinungsjahr steht IMMER an "
+     "erster Stelle. Danach, soweit es in 80 Zeichen passt, in dieser Reihenfolge: Autor, "
+     "Buchtitel, Sprache, Verlag, Original oder Faksimile, Genre/Thema, Einband, "
+     "Erscheinungsort, Format/Größe. Keine Semikolons."),
     ("author", "Autor",
-     "Vollständige(r) Name(n) des Autors oder der Autoren."),
+     "Verfasser mit vollständigem Namen; wenn üblich auch die originale bzw. lateinische "
+     "Namensform, zum Beispiel Publius Ovidius Naso (Ovid)."),
     ("book_title", "Buchtitel",
-     "Reiner Buchtitel ohne Zusätze."),
+     "Reiner Buchtitel; falls vorhanden mit Herausgeber, zum Beispiel "
+     "Metamorphoses, Gottlieb Erdmann Gierig."),
     ("language", "Sprache",
-     "Sprache des Buches, zum Beispiel Deutsch."),
+     "Sprache des Buchinhalts, zum Beispiel Deutsch oder Latein."),
     ("description", "Beschreibung",
-     "Kurze, ehrliche Beschreibung des Artikels und des Autors, 2 bis 4 Sätze."),
+     "Strukturierte antiquarische Beschreibung als Fließtext mit Absätzen (HTML: <p>, "
+     "<br>, <b>) in genau dieser Reihenfolge: "
+     "1. Verfasser (Verfassername in <b>fett</b>). "
+     "2. Titel, danach Herausgeber. "
+     "3. Erscheinungsort / Verlag / Jahr, z. B. Lipsiae (Leipzig), sumtu E. B. "
+     "Schwickerti, 1807. "
+     "4. Auflage und Band, z. B. Editio altera …, Tomus posterior. "
+     "5. Format und Größe (Oktav, Großoktav usw. oder in cm), Seitenzahl und Einband. "
+     "6. Zustandsbeschreibung unter Berücksichtigung des Einbandes. "
+     "7. Inhalt des Buches sowie Angaben zum Verfasser/Autor. "
+     "Nenne, falls erkennbar, ob es sich um ein Original oder ein Faksimile handelt, "
+     "sowie Genre/Thema (Unterthema/Spezialthema). Ist ein Inhaltsverzeichnis sichtbar, "
+     "ergänze am Ende eine kurze Verschlagwortung (Stichwörter) daraus."),
     ("publisher", "Verlag",
-     "Verlag, nur wenn sicher erkennbar, sonst leer lassen."),
+     "Verlag, nur wenn erkennbar, sonst leer lassen."),
     ("publication_year", "Erscheinungsjahr",
-     "Erscheinungsjahr (vierstellig), nur wenn sicher erkennbar, sonst leer lassen."),
+     "Erscheinungsjahr (vierstellig), nur wenn erkennbar. Wird im Titel an erster Stelle "
+     "verwendet."),
     ("book_format", "Format",
-     "Einband oder Format, zum Beispiel Taschenbuch oder Gebunden, "
-     "nur wenn sicher erkennbar."),
+     "Einband und Größe/Format, soweit ersichtlich, zum Beispiel Halbleder, Großoktav. "
+     "Größe als antiquarisches Format (Oktav, Großoktav usw.) oder in cm."),
 ]
 
 # Praktische Hilfs-Strukturen, abgeleitet aus PROMPT_FIELDS.
