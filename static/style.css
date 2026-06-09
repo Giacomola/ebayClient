@@ -19,6 +19,12 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .result label { display: flex; flex-direction: column; gap: .3rem; font-size: .9rem; }
 .result input, .result textarea, .result select { font-size: 1rem; padding: .5rem;
   border: 1px solid #c9c3b5; border-radius: 6px; }
+.result .rich { font-size: 1rem; padding: .6rem .7rem; border: 1px solid #c9c3b5;
+  border-radius: 6px; background: #fff; min-height: 6rem; max-height: 18rem;
+  overflow-y: auto; line-height: 1.45; }
+.result .rich:focus { outline: 2px solid #c4623a; outline-offset: -1px; }
+.result .rich p { margin: 0 0 .6rem; }
+.result .sub { font-weight: normal; color: #6b665c; font-size: .8rem; }
 .status { min-height: 1.4rem; color: #c4623a; }
 .header-buttons { display: flex; gap: .5rem; }
 dialog { border: none; border-radius: 12px; padding: 1.5rem; min-width: 320px; }

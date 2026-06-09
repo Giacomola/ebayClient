@@ -36,9 +36,10 @@ $("generate-btn").addEventListener("click", async () => {
   const data = await r.json();
   if (!r.ok) { status(data.error || "Fehler bei der Analyse."); return; }
   for (const key of ["title", "author", "book_title", "language", "publisher",
-                     "publication_year", "book_format", "description"]) {
+                     "publication_year", "book_format"]) {
     $("f-" + key).value = data[key] || "";
   }
+  $("f-description").innerHTML = data.description || "";  // HTML gerendert anzeigen
   $("result").hidden = false;
   status("Fertig – bitte prüfen und bei Bedarf bearbeiten.");
 });
@@ -48,9 +49,10 @@ $("save-csv-btn").addEventListener("click", async () => {
   const fd = new FormData();
   selectedFiles.forEach((f) => fd.append("images", f));
   for (const key of ["title", "author", "book_title", "language", "publisher",
-                     "publication_year", "book_format", "description"]) {
+                     "publication_year", "book_format"]) {
     fd.append(key, $("f-" + key).value);
   }
+  fd.append("description", $("f-description").innerHTML);  // bearbeitetes HTML übernehmen
   fd.append("price", $("f-price").value);
   fd.append("condition_id", $("f-condition").value);
   const r = await fetch("/api/create-csv", { method: "POST", body: fd });
