@@ -3,6 +3,23 @@ let selectedFiles = [];
 const $ = (id) => document.getElementById(id);
 const status = (msg) => { $("status").textContent = msg; };
 
+// Lässt ein Textfeld in der Höhe automatisch mit dem Inhalt wachsen.
+function autosize(el) {
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
+// Schriftgröße der ganzen App – einfach per A−/A+ verstellbar, bleibt gespeichert.
+const FONT_KEY = "fontPx";
+let fontPx = parseInt(localStorage.getItem(FONT_KEY) || "18", 10);
+function applyFont() {
+  document.documentElement.style.fontSize = fontPx + "px";
+  localStorage.setItem(FONT_KEY, fontPx);
+}
+applyFont();
+$("font-inc").addEventListener("click", () => { fontPx = Math.min(30, fontPx + 2); applyFont(); });
+$("font-dec").addEventListener("click", () => { fontPx = Math.max(12, fontPx - 2); applyFont(); });
+
 function renderThumbs() {
   const box = $("thumbs");
   box.innerHTML = "";
@@ -89,13 +106,17 @@ $("prompt-btn").addEventListener("click", async () => {
     wrap.textContent = label;
     const ta = document.createElement("textarea");
     ta.id = "p-field-" + key;
-    ta.rows = 2;
+    ta.rows = 1;
     ta.value = fields[key] || "";
+    ta.addEventListener("input", () => autosize(ta));
     wrap.appendChild(ta);
     box.appendChild(wrap);
   }
   promptDlg.showModal();
+  // Erst nach dem Öffnen messen, sonst ist die Höhe 0.
+  promptDlg.querySelectorAll("textarea").forEach(autosize);
 });
+$("p-general").addEventListener("input", () => autosize($("p-general")));
 $("p-save").addEventListener("click", async (e) => {
   e.preventDefault();
   const prompt_fields = {};
@@ -105,7 +126,7 @@ $("p-save").addEventListener("click", async (e) => {
     body: JSON.stringify({ prompt_general: $("p-general").value, prompt_fields }),
   });
   promptDlg.close();
-  status("Prompt-Vorlage gespeichert.");
+  status("Anweisungen gespeichert.");
 });
 
 const dlg = $("settings-dialog");

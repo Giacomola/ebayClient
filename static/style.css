@@ -31,6 +31,9 @@ dialog { border: none; border-radius: 12px; padding: 1.5rem; min-width: 320px; }
 dialog label { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .8rem;
   font-size: .9rem; }
 dialog input, dialog select, dialog textarea { font-size: 1rem; padding: .5rem;
-  border: 1px solid #c9c3b5; border-radius: 6px; font-family: inherit; }
+  border: 1px solid #c9c3b5; border-radius: 6px; font-family: inherit;
+  box-sizing: border-box; width: 100%; }
+dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
+#font-dec, #font-inc { padding: .4rem .7rem; font-weight: 600; }
 #prompt-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
 .hint { font-size: .85rem; color: #6b665c; margin: 0 0 1rem; }
