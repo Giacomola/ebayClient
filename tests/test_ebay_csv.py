@@ -1,4 +1,4 @@
-from ebay_csv import build_csv, COLUMNS
+from ebay_csv import build_csv, append_listing, COLUMNS
 
 def _parse(data: bytes):
     assert data[:3] == b"\xef\xbb\xbf"            # BOM vorhanden
@@ -49,3 +49,21 @@ def test_semikolon_und_titel_werden_bereinigt():
     row = dict(zip(header, lines[2].split(";")))
     assert ";" not in row["*Description"]
     assert len(row["*Title"]) <= 80
+
+def test_append_listing_sammelt_in_einer_datei(tmp_path):
+    folder = str(tmp_path)
+    gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
+                     price="9.99", condition_id="5000", picture_urls=["https://x/1.jpg"])
+    path, count = append_listing(folder, title="Buch 1", **gemeinsam)
+    assert count == 1
+    path2, count2 = append_listing(folder, title="Buch 2", **gemeinsam)
+    assert path == path2           # gleiche Sammeldatei
+    assert count2 == 2
+    data = open(path, "rb").read()
+    assert data[:3] == b"\xef\xbb\xbf"             # BOM nur einmal am Anfang
+    lines = data.decode("utf-8-sig").splitlines()
+    assert lines[0].startswith("Info;")
+    assert len(lines[1].split(";")) == 99          # genau eine Kopfzeile
+    assert lines[2].split(";")[0] == "Add"
+    assert lines[3].split(";")[0] == "Add"
+    assert len(lines) == 4                          # Info + Kopf + 2 Anzeigen

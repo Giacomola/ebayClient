@@ -1,7 +1,12 @@
-"""Erzeugt eine eBay-File-Exchange-CSV (Kategorie-Vorlage Bücher) für genau ein Buch."""
+"""Erzeugt eine eBay-File-Exchange-CSV (Kategorie-Vorlage Bücher).
+
+Unterstützt eine einzelne Anzeige (build_csv) sowie das Sammeln mehrerer
+Anzeigen in einer gemeinsamen Datei (append_listing)."""
+import os
 
 ACTION = "*Action(SiteID=Germany|Country=DE|Currency=EUR|Version=1193|CC=UTF-8)"
 INFO_LINE = "Info;Version=1.0.0;Template=fx_category_template_EBAY_DE"
+DEFAULT_FILENAME = "ebay-anzeigen.csv"
 
 COLUMNS = [
     ACTION, "CustomLabel", "*Category", "StoreCategory", "*Title", "Subtitle",
@@ -42,11 +47,13 @@ def _clean(value) -> str:
         text = text.replace(ch, " ")
     return text.strip()
 
-def build_csv(*, title, author, book_title, language, description, price,
-              condition_id, picture_urls, publisher="", publication_year="",
-              book_format="", location="Berlin", shipping_service="DE_DHLPaket",
-              shipping_cost="5.49", dispatch_time_max="3", custom_label="") -> bytes:
-    values = {
+HEADER = ";".join(COLUMNS)
+
+def _values(*, title, author, book_title, language, description, price,
+            condition_id, picture_urls, publisher="", publication_year="",
+            book_format="", location="Berlin", shipping_service="DE_DHLPaket",
+            shipping_cost="5.49", dispatch_time_max="3", custom_label="") -> dict:
+    return {
         ACTION: "Add",
         "CustomLabel": _clean(custom_label),
         "*Category": "261186",
@@ -71,7 +78,33 @@ def build_csv(*, title, author, book_title, language, description, price,
         "*DispatchTimeMax": _clean(dispatch_time_max),
         "*ReturnsAcceptedOption": "ReturnsNotAccepted",
     }
-    header = ";".join(COLUMNS)
-    row = ";".join(values.get(col, "") for col in COLUMNS)
-    text = "\r\n".join([INFO_LINE, header, row]) + "\r\n"
+
+def build_row(**kwargs) -> str:
+    """Baut die Datenzeile (99 Spalten, mit ; getrennt) für ein Buch."""
+    values = _values(**kwargs)
+    return ";".join(values.get(col, "") for col in COLUMNS)
+
+def build_csv(**kwargs) -> bytes:
+    """Erzeugt eine komplette CSV (Info + Kopfzeile + eine Datenzeile) als Bytes."""
+    text = "\r\n".join([INFO_LINE, HEADER, build_row(**kwargs)]) + "\r\n"
     return ("﻿" + text).encode("utf-8")
+
+def _count_listings(path: str) -> int:
+    """Zählt die enthaltenen Anzeigen (Datenzeilen) in einer Sammel-CSV."""
+    with open(path, "r", encoding="utf-8-sig") as f:
+        return sum(1 for line in f if line.startswith("Add;"))
+
+def append_listing(folder: str, filename: str = DEFAULT_FILENAME, **kwargs):
+    """Hängt eine Anzeige an die gemeinsame CSV im Ordner an.
+
+    Legt die Datei mit BOM, Info- und Kopfzeile an, falls sie noch nicht
+    existiert. Gibt (Pfad, Anzahl der Anzeigen) zurück."""
+    os.makedirs(folder, exist_ok=True)
+    path = os.path.join(folder, filename)
+    new_file = not os.path.exists(path)
+    encoding = "utf-8-sig" if new_file else "utf-8"
+    with open(path, "a", encoding=encoding, newline="") as f:
+        if new_file:
+            f.write(INFO_LINE + "\r\n" + HEADER + "\r\n")
+        f.write(build_row(**kwargs) + "\r\n")
+    return path, _count_listings(path)

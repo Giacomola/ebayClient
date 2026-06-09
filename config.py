@@ -65,6 +65,7 @@ DEFAULTS = {
     "shipping_service": "DE_DHLPaket",
     "shipping_cost": "5.49",
     "dispatch_time_max": "3",
+    "save_folder": "",
     "prompt_general": DEFAULT_PROMPT_GENERAL,
     "prompt_fields": dict(DEFAULT_FIELD_PROMPTS),
 }

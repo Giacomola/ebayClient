@@ -1,8 +1,28 @@
-from flask import Flask, request, jsonify, render_template, Response
+import subprocess
+import sys
+from flask import Flask, request, jsonify, render_template
 from config import load_settings, save_settings, build_system_prompt
 from ai_client import analyze_book
 from image_host import upload_image
-from ebay_csv import build_csv
+from ebay_csv import append_listing, DEFAULT_FILENAME
+
+def _pick_folder_dialog() -> str:
+    """Öffnet ein natives Ordner-Auswahlfenster und gibt den gewählten Pfad zurück.
+
+    Läuft in einem eigenen Prozess, damit es das Flask-Fenster/den Hauptthread
+    nicht stört. Leerer String = abgebrochen."""
+    script = (
+        "import tkinter as tk\n"
+        "from tkinter import filedialog\n"
+        "r = tk.Tk(); r.withdraw(); r.attributes('-topmost', True)\n"
+        "print(filedialog.askdirectory(title='Speicherordner für eBay-Dateien'))\n"
+    )
+    try:
+        out = subprocess.run([sys.executable, "-c", script],
+                             capture_output=True, text=True, timeout=180)
+        return out.stdout.strip()
+    except Exception:  # noqa: BLE001
+        return ""
 
 def create_app(config_path: str = "config.json") -> Flask:
     app = Flask(__name__)
@@ -40,12 +60,25 @@ def create_app(config_path: str = "config.json") -> Flask:
             return jsonify({"error": f"KI-Fehler: {e}"}), 502
         return jsonify(book.model_dump())
 
+    @app.post("/api/choose-folder")
+    def choose_folder():
+        path = _pick_folder_dialog()
+        current = load_settings(config_path)
+        if path:
+            current["save_folder"] = path
+            save_settings(current, config_path)
+        return jsonify({"folder": current.get("save_folder", "")})
+
     @app.post("/api/create-csv")
     def create_csv():
         settings = load_settings(config_path)
         if not settings["imgbb_api_key"]:
             return jsonify({"error": "Kein imgbb-API-Schlüssel hinterlegt. "
                                      "Bitte in den Einstellungen eintragen."}), 400
+        folder = settings.get("save_folder", "")
+        if not folder:
+            return jsonify({"error": "Kein Speicherordner gewählt. "
+                                     "Bitte zuerst auf 'Ordner wählen' klicken."}), 400
         form = request.form
         files = request.files.getlist("images")
         try:
@@ -54,22 +87,25 @@ def create_app(config_path: str = "config.json") -> Flask:
             return jsonify({"error": f"Foto-Upload fehlgeschlagen: {e}"}), 502
         if not urls:
             return jsonify({"error": "Keine Fotos für die Anzeige vorhanden."}), 400
-        csv_bytes = build_csv(
-            title=form.get("title", ""), author=form.get("author", ""),
-            book_title=form.get("book_title", ""), language=form.get("language", ""),
-            description=form.get("description", ""), price=form.get("price", ""),
-            condition_id=form.get("condition_id", ""), picture_urls=urls,
-            publisher=form.get("publisher", ""),
-            publication_year=form.get("publication_year", ""),
-            book_format=form.get("book_format", ""),
-            location=settings["location"], shipping_service=settings["shipping_service"],
-            shipping_cost=settings["shipping_cost"],
-            dispatch_time_max=settings["dispatch_time_max"],
-        )
-        return Response(
-            csv_bytes, mimetype="text/csv",
-            headers={"Content-Disposition": "attachment; filename=ebay-anzeige.csv"},
-        )
+        try:
+            path, count = append_listing(
+                folder,
+                title=form.get("title", ""), author=form.get("author", ""),
+                book_title=form.get("book_title", ""), language=form.get("language", ""),
+                description=form.get("description", ""), price=form.get("price", ""),
+                condition_id=form.get("condition_id", ""), picture_urls=urls,
+                publisher=form.get("publisher", ""),
+                publication_year=form.get("publication_year", ""),
+                book_format=form.get("book_format", ""),
+                location=settings["location"],
+                shipping_service=settings["shipping_service"],
+                shipping_cost=settings["shipping_cost"],
+                dispatch_time_max=settings["dispatch_time_max"],
+            )
+        except Exception as e:  # noqa: BLE001
+            return jsonify({"error": f"Datei konnte nicht gespeichert werden: {e}"}), 500
+        return jsonify({"ok": True, "folder": folder,
+                        "filename": DEFAULT_FILENAME, "path": path, "count": count})
 
     return app
 

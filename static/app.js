@@ -73,14 +73,30 @@ $("save-csv-btn").addEventListener("click", async () => {
   fd.append("price", $("f-price").value);
   fd.append("condition_id", $("f-condition").value);
   const r = await fetch("/api/create-csv", { method: "POST", body: fd });
-  if (!r.ok) { const e = await r.json(); status(e.error || "Fehler."); return; }
-  const blob = await r.blob();
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "ebay-anzeige.csv";
-  a.click();
-  status("eBay-Datei gespeichert. Jetzt im eBay-CSV-Manager hochladen.");
+  const data = await r.json();
+  if (!r.ok) { status(data.error || "Fehler."); return; }
+  $("folder-path").textContent = data.folder;
+  status(`Hinzugefügt – jetzt ${data.count} Anzeige(n) in „${data.filename}". `
+         + `Ordner: ${data.folder}`);
 });
+
+// Speicherordner wählen (öffnet ein natives Ordner-Auswahlfenster).
+$("choose-folder-btn").addEventListener("click", async () => {
+  status("Ordner-Auswahl geöffnet – bitte im Fenster einen Ordner wählen …");
+  const d = await (await fetch("/api/choose-folder", { method: "POST" })).json();
+  if (d.folder) {
+    $("folder-path").textContent = d.folder;
+    status("Speicherordner gesetzt.");
+  } else {
+    status("Kein Ordner gewählt.");
+  }
+});
+
+// Beim Start den gespeicherten Ordner anzeigen.
+(async () => {
+  const s = await (await fetch("/api/settings")).json();
+  if (s.save_folder) $("folder-path").textContent = s.save_folder;
+})();
 
 // Beschriftungen der KI-Felder (gleiche Reihenfolge wie in config.py).
 const PROMPT_FIELDS = [
