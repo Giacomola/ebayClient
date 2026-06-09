@@ -50,6 +50,21 @@ def test_semikolon_und_titel_werden_bereinigt():
     assert ";" not in row["*Description"]
     assert len(row["*Title"]) <= 80
 
+def test_lange_artikelmerkmale_werden_auf_65_gekuerzt():
+    langer_titel = ("Fünfftes Supplement zu seinen Historischen und Genealogischen "
+                    "wie auch Geographischen Fragen so viel sich im Jahre 1712 zugetragen hat")
+    data = build_csv(
+        title="T", author="A", book_title=langer_titel, language="Deutsch",
+        description="D", price="9.99", condition_id="5000",
+        picture_urls=["https://x/1.jpg"], publisher="X" * 80,
+    )
+    lines = _parse(data)
+    header = lines[1].split(";")
+    row = dict(zip(header, lines[2].split(";")))
+    assert len(row["*C:Buchtitel"]) <= 65
+    assert len(row["C:Verlag"]) <= 65
+    assert " " not in row["*C:Buchtitel"][-1]   # nicht mitten im Wort abgeschnitten
+
 def test_append_listing_sammelt_in_einer_datei(tmp_path):
     folder = str(tmp_path)
     gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",

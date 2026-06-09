@@ -47,6 +47,18 @@ def _clean(value) -> str:
         text = text.replace(ch, " ")
     return text.strip()
 
+def _limit(text: str, max_len: int) -> str:
+    """Kürzt auf max. max_len Zeichen, möglichst an der letzten Wortgrenze."""
+    if len(text) <= max_len:
+        return text
+    cut = text[:max_len].rstrip()
+    if " " in cut:
+        cut = cut[:cut.rfind(" ")].rstrip()
+    return cut or text[:max_len]
+
+# eBay-Längengrenzen: Anzeigentitel 80, Artikelmerkmale (C:...) je 65 Zeichen.
+SPECIFIC_MAX = 65
+
 HEADER = ";".join(COLUMNS)
 
 def _values(*, title, author, book_title, language, description, price,
@@ -57,14 +69,14 @@ def _values(*, title, author, book_title, language, description, price,
         ACTION: "Add",
         "CustomLabel": _clean(custom_label),
         "*Category": "261186",
-        "*Title": _clean(title)[:80],
+        "*Title": _limit(_clean(title), 80),
         "*ConditionID": _clean(condition_id),
-        "*C:Autor": _clean(author),
-        "*C:Buchtitel": _clean(book_title),
-        "*C:Sprache": _clean(language),
-        "C:Verlag": _clean(publisher),
+        "*C:Autor": _limit(_clean(author), SPECIFIC_MAX),
+        "*C:Buchtitel": _limit(_clean(book_title), SPECIFIC_MAX),
+        "*C:Sprache": _limit(_clean(language), SPECIFIC_MAX),
+        "C:Verlag": _limit(_clean(publisher), SPECIFIC_MAX),
         "C:Erscheinungsjahr": _clean(publication_year),
-        "C:Format": _clean(book_format),
+        "C:Format": _limit(_clean(book_format), SPECIFIC_MAX),
         "PicURL": "|".join(picture_urls[:12]),
         "*Description": _clean(description),
         "*Format": "FixedPrice",
