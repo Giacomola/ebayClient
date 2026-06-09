@@ -63,6 +63,49 @@ $("save-csv-btn").addEventListener("click", async () => {
   status("eBay-Datei gespeichert. Jetzt im eBay-CSV-Manager hochladen.");
 });
 
+// Beschriftungen der KI-Felder (gleiche Reihenfolge wie in config.py).
+const PROMPT_FIELDS = [
+  ["title", "Titel"],
+  ["author", "Autor"],
+  ["book_title", "Buchtitel"],
+  ["language", "Sprache"],
+  ["description", "Beschreibung"],
+  ["publisher", "Verlag"],
+  ["publication_year", "Erscheinungsjahr"],
+  ["book_format", "Format"],
+];
+
+const promptDlg = $("prompt-dialog");
+$("prompt-btn").addEventListener("click", async () => {
+  const s = await (await fetch("/api/settings")).json();
+  $("p-general").value = s.prompt_general || "";
+  const box = $("p-fields");
+  box.innerHTML = "";
+  const fields = s.prompt_fields || {};
+  for (const [key, label] of PROMPT_FIELDS) {
+    const wrap = document.createElement("label");
+    wrap.textContent = label;
+    const ta = document.createElement("textarea");
+    ta.id = "p-field-" + key;
+    ta.rows = 2;
+    ta.value = fields[key] || "";
+    wrap.appendChild(ta);
+    box.appendChild(wrap);
+  }
+  promptDlg.showModal();
+});
+$("p-save").addEventListener("click", async (e) => {
+  e.preventDefault();
+  const prompt_fields = {};
+  for (const [key] of PROMPT_FIELDS) prompt_fields[key] = $("p-field-" + key).value;
+  await fetch("/api/settings", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt_general: $("p-general").value, prompt_fields }),
+  });
+  promptDlg.close();
+  status("Prompt-Vorlage gespeichert.");
+});
+
 const dlg = $("settings-dialog");
 $("settings-btn").addEventListener("click", async () => {
   const s = await (await fetch("/api/settings")).json();

@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, render_template, Response
-from config import load_settings, save_settings
+from config import load_settings, save_settings, build_system_prompt
 from ai_client import analyze_book
 from image_host import upload_image
 from ebay_csv import build_csv
@@ -34,7 +34,8 @@ def create_app(config_path: str = "config.json") -> Flask:
         images = [f.read() for f in files]
         try:
             book = analyze_book(images, api_key=settings["anthropic_api_key"],
-                                model=settings["model"], prompt=settings["prompt"])
+                                model=settings["model"],
+                                prompt=build_system_prompt(settings))
         except Exception as e:  # noqa: BLE001
             return jsonify({"error": f"KI-Fehler: {e}"}), 502
         return jsonify(book.model_dump())
