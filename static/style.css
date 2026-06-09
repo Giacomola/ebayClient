@@ -24,7 +24,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   overflow-y: auto; line-height: 1.45; }
 .result .rich:focus { outline: 2px solid #c4623a; outline-offset: -1px; }
 .result .rich p { margin: 0 0 .6rem; }
-.result .sub { font-weight: normal; color: #6b665c; font-size: .8rem; }
+.sub { font-weight: normal; color: #6b665c; font-size: .8rem; }
 .save-area { margin-top: 1rem; }
 .folder-line { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
   font-size: .9rem; margin-bottom: .6rem; }

@@ -114,6 +114,7 @@ const promptDlg = $("prompt-dialog");
 $("prompt-btn").addEventListener("click", async () => {
   const s = await (await fetch("/api/settings")).json();
   $("p-general").value = s.prompt_general || "";
+  $("p-examples").value = s.prompt_examples || "";
   const box = $("p-fields");
   box.innerHTML = "";
   const fields = s.prompt_fields || {};
@@ -133,13 +134,15 @@ $("prompt-btn").addEventListener("click", async () => {
   promptDlg.querySelectorAll("textarea").forEach(autosize);
 });
 $("p-general").addEventListener("input", () => autosize($("p-general")));
+$("p-examples").addEventListener("input", () => autosize($("p-examples")));
 $("p-save").addEventListener("click", async (e) => {
   e.preventDefault();
   const prompt_fields = {};
   for (const [key] of PROMPT_FIELDS) prompt_fields[key] = $("p-field-" + key).value;
   await fetch("/api/settings", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt_general: $("p-general").value, prompt_fields }),
+    body: JSON.stringify({ prompt_general: $("p-general").value,
+                           prompt_examples: $("p-examples").value, prompt_fields }),
   });
   promptDlg.close();
   status("Anweisungen gespeichert.");

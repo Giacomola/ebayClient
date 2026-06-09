@@ -68,6 +68,7 @@ DEFAULTS = {
     "save_folder": "",
     "prompt_general": DEFAULT_PROMPT_GENERAL,
     "prompt_fields": dict(DEFAULT_FIELD_PROMPTS),
+    "prompt_examples": "",   # optionale Beispiel-Beschreibung(en) als Stil-Vorlage
 }
 
 def load_settings(path: str = "config.json") -> dict:
@@ -106,4 +107,14 @@ def build_system_prompt(settings: dict) -> str:
     for key, label, _default in PROMPT_FIELDS:
         instr = fields.get(key, DEFAULT_FIELD_PROMPTS[key])
         lines.append(f"- {key} ({label}): {instr}")
+    examples = settings.get("prompt_examples", "").strip()
+    if examples:
+        lines += [
+            "",
+            "Beispiel-Beschreibung (nur als Stil- und Aufbau-Vorlage): Übernimm Tonfall, "
+            "Struktur und Formatierung, aber NICHT die konkreten Angaben (Autor, Titel, "
+            "Verlag, Jahr usw.). Alle Fakten stammen ausschließlich aus den Fotos des "
+            "aktuellen Buches.",
+            examples,
+        ]
     return "\n".join(lines)
