@@ -1,10 +1,13 @@
+import base64
 import subprocess
 import sys
+import anthropic
 from flask import Flask, request, jsonify, render_template
 from config import load_settings, save_settings, build_system_prompt
 from ai_client import analyze_book
 from image_host import upload_image
 from ebay_csv import append_listing, DEFAULT_FILENAME
+from draft import load_draft, update_fields, update_images, clear_draft
 
 def _pick_folder_dialog() -> str:
     """Öffnet ein natives Ordner-Auswahlfenster und gibt den gewählten Pfad zurück.
@@ -24,12 +27,51 @@ def _pick_folder_dialog() -> str:
     except Exception:  # noqa: BLE001
         return ""
 
-def create_app(config_path: str = "config.json") -> Flask:
+def create_app(config_path: str = "config.json",
+               draft_path: str = "draft.json") -> Flask:
     app = Flask(__name__)
 
     @app.get("/")
     def index():
         return render_template("index.html")
+
+    @app.get("/api/draft")
+    def get_draft():
+        return jsonify(load_draft(draft_path))
+
+    @app.post("/api/draft")
+    def post_draft():
+        data = request.get_json(force=True)
+        update_fields(data.get("fields", {}),
+                      bool(data.get("result_visible", False)), draft_path)
+        return jsonify({"ok": True})
+
+    @app.post("/api/draft/images")
+    def post_draft_images():
+        images = []
+        for f in request.files.getlist("images"):
+            raw = f.read()
+            media_type = "image/png" if raw[:8].startswith(b"\x89PNG") else "image/jpeg"
+            data_url = f"data:{media_type};base64," + \
+                base64.standard_b64encode(raw).decode("ascii")
+            images.append({"media_type": media_type, "data_url": data_url})
+        update_images(images, draft_path)
+        return jsonify({"ok": True, "count": len(images)})
+
+    @app.post("/api/draft/clear")
+    def post_draft_clear():
+        clear_draft(draft_path)
+        return jsonify({"ok": True})
+
+    @app.post("/api/shutdown")
+    def shutdown():
+        # Beendet den lokalen Server. Erst antworten, dann beenden (kurze Verzögerung).
+        import os
+        import threading
+        import time
+        threading.Thread(target=lambda: (time.sleep(0.3), os._exit(0)),
+                         daemon=True).start()
+        return jsonify({"ok": True})
 
     @app.get("/api/settings")
     def get_settings():
@@ -56,6 +98,20 @@ def create_app(config_path: str = "config.json") -> Flask:
             book = analyze_book(images, api_key=settings["anthropic_api_key"],
                                 model=settings["model"],
                                 prompt=build_system_prompt(settings))
+        except anthropic.AuthenticationError:
+            return jsonify({"error": "Der Anthropic-API-Schlüssel fehlt oder ist "
+                                     "ungültig. Bitte in den Einstellungen den richtigen "
+                                     "Schlüssel eintragen (er beginnt mit „sk-ant-“)."}), 401
+        except anthropic.APIConnectionError:
+            return jsonify({"error": "Keine Verbindung zu den KI-Servern. Bitte die "
+                                     "Internetverbindung prüfen und erneut versuchen."}), 503
+        except anthropic.APIStatusError as e:
+            if e.status_code >= 500:
+                # 5xx = Server überlastet/kurz weg. Kein Code-Fehler.
+                return jsonify({"error": "Die KI-Server sind gerade überlastet oder kurz "
+                                         "nicht erreichbar. Bitte ein paar Sekunden warten "
+                                         "und erneut auf „Anzeige erstellen“ klicken."}), 503
+            return jsonify({"error": f"KI-Fehler ({e.status_code}): {e.message}"}), 502
         except Exception as e:  # noqa: BLE001
             return jsonify({"error": f"KI-Fehler: {e}"}), 502
         return jsonify(book.model_dump())
@@ -111,6 +167,7 @@ def create_app(config_path: str = "config.json") -> Flask:
 
 if __name__ == "__main__":
     import webbrowser
+    # Port 5050 statt 5000: 5000 ist unter macOS oft vom AirPlay-Empfänger belegt.
     app = create_app()
-    webbrowser.open("http://127.0.0.1:5000")
-    app.run(host="127.0.0.1", port=5000, debug=False)
+    webbrowser.open("http://127.0.0.1:5050")
+    app.run(host="127.0.0.1", port=5050, debug=False)

@@ -13,7 +13,8 @@ button { font-size: 1rem; padding: .6rem 1.1rem; border-radius: 8px;
   border: 1px solid #c9c3b5; background: #fff; cursor: pointer; }
 button.primary { background: #c4623a; color: #fff; border: none; }
 button:disabled { opacity: .5; cursor: not-allowed; }
-#generate-btn { width: 100%; margin: 1rem 0; }
+#generate-btn { width: 100%; margin: 1rem 0 .5rem; }
+#new-case-btn { width: 100%; margin: 0 0 1rem; }
 .result { display: flex; flex-direction: column; gap: .8rem; background: #fff;
   padding: 1.5rem; border-radius: 12px; margin-top: 1rem; }
 .result label { display: flex; flex-direction: column; gap: .3rem; font-size: .9rem; }
@@ -43,3 +44,4 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 #font-dec, #font-inc { padding: .4rem .7rem; font-weight: 600; }
 #prompt-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
 .hint { font-size: .85rem; color: #6b665c; margin: 0 0 1rem; }
+.quit { display: block; margin: 2.5rem auto 0; color: #8a3b22; }

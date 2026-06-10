@@ -19,7 +19,9 @@ def _media_type(image_bytes: bytes) -> str:
     return "image/jpeg"
 
 def analyze_book(images: list[bytes], *, api_key: str, model: str, prompt: str) -> BookFields:
-    client = anthropic.Anthropic(api_key=api_key)
+    # max_retries: wiederholt bei kurzen Server-Fehlern (z. B. 502) automatisch.
+    # timeout: großzügig, weil Fotos groß sein können.
+    client = anthropic.Anthropic(api_key=api_key, max_retries=4, timeout=120.0)
     content = []
     for img in images:
         content.append({

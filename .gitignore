@@ -1,6 +1,8 @@
 .venv/
 __pycache__/
 config.json
+draft.json
 *.pyc
 eBay-Test-*.csv
 .DS_Store
+Buch-Anzeigen-Helfer.app/

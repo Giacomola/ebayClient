@@ -15,7 +15,7 @@ if [ ! -d ".venv" ]; then
   ./.venv/bin/pip install --quiet -r requirements.txt || { echo "Installation fehlgeschlagen."; read -r; exit 1; }
 fi
 
-# App starten (öffnet selbst den Browser auf http://127.0.0.1:5000).
+# App starten (öffnet selbst den Browser auf http://127.0.0.1:5050).
 echo "Fertig. Der Browser öffnet sich gleich. Dieses Fenster bitte offen lassen."
 echo "Zum Beenden dieses Fenster schließen."
 ./.venv/bin/python app.py
