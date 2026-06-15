@@ -2,18 +2,19 @@ import json
 import os
 
 # Allgemeine Regeln, die für die ganze KI-Analyse gelten.
-DEFAULT_PROMPT_GENERAL = """### eBay-Anzeige für antiquarische & gebrauchte Bücher
-Erstelle aus den Fotos EINES Buches eine fertige, verkaufsstarke und rechtssichere Anzeige auf Deutsch.
-
-## INHALT
-- Nur was auf den Fotos sicher erkennbar ist. Niemals raten oder erfinden. Du hast NUR die Fotos – nicht recherchieren.
-- Pflichtangaben prüfen und, wenn erkennbar, nennen: Autor, Titel (bei Sets Vollständigkeit und Einzeltitel), Übersetzer (bei fremdsprachigem Original immer prüfen), Herausgeber, Verlag und Ort, Sprache, Format/Größe, Einband und Schutzumschlag, Seitenzahl, Auflage und Jahr, ISBN, Zustand, Genre/Thema.
-- Nicht erkennbare Pflichtangabe an Ort und Stelle als FARBIGEN Platzhalter einsetzen, exakt so: <span style="color:#c00">[Angabe – bitte prüfen]</span> (zum Beispiel <span style="color:#c00">[Jahr – bitte prüfen]</span>).
-- Zustand ehrlich und vorsichtig formulieren (rechtlich bindend). Keine Übertreibungen wie „neuwertig“ oder „makellos“ ohne sichtbaren Beleg.
-
-## FORM (WICHTIG – sonst zeigt eBay Fehler an)
-- Formatiere AUSSCHLIESSLICH mit HTML: Absätze <p>…</p>, Zeilenumbruch <br>, fett <b>…</b>, Farbe <span style="color:#c00">…</span>.
-- NIEMALS Markdown (kein **, *, #, -). NIEMALS Semikolons. KEINE echten Zeilenumbrüche – nur die HTML-Tags."""
+DEFAULT_PROMPT_GENERAL = (
+    "Du bist ein Assistent für den Verkauf antiquarischer und gebrauchter Bücher auf "
+    "eBay.de. Analysiere die Fotos EINES Buches (Einband, Buchrücken, Titelseite, "
+    "Impressum, ggf. Inhaltsverzeichnis) und fülle die Anzeigenfelder aus. Nutze die "
+    "Websuche, um die exakte Ausgabe zu bestimmen und fehlende Angaben zu ergänzen. "
+    "Schreibe auf Deutsch: antiquarisch korrekt UND als ansprechender Verkaufstext, der "
+    "einen möglichen Käufer überzeugt – sachlich, aber einladend, ohne Übertreibung oder "
+    "erfundene Angaben. Gib bevorzugt an, was auf den Fotos sicher erkennbar ist; aus dem "
+    "Netz ergänzte Angaben sind erlaubt, müssen aber belegbar sein. "
+    "Verwende niemals Semikolons. Formatiere die Beschreibung als eBay-taugliches HTML: "
+    "Absätze mit <p>…</p>, Zeilenumbrüche mit <br>, Hervorhebungen mit <b>…</b>; verwende "
+    "KEINE echten Zeilenumbrüche (Enter-Taste), sondern ausschließlich diese HTML-Tags."
+)
 
 # Anweisung für den 80-Zeichen-Anzeigentitel.
 DEFAULT_TITLE_PROMPT = (
@@ -28,10 +29,10 @@ DEFAULT_DESCRIPTION_PROMPT = """Beschreibung als HTML-Fließtext mit Absätzen (
 1. <b>Autor</b> – <b>Titel</b>, darunter eine Kurzzeile mit Bänden, Verlag und Ort.
 2. Bibliografische Fakten in EINEM Satz, nur Erkennbares: Vollständigkeit/Einzeltitel, Übersetzer, Auflage und Jahr, Format, Einband, Seitenzahl, ISBN.
 3. Sichtbare physische Beschreibung: Einbandmotive, Prägungen, Rücken – nur Belegbares.
-4. <b>Zustand:</b> ehrlich und konkret. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung.“ ergänzen.
+4. <b>Zustand:</b> ehrlich und konkret. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung." ergänzen.
 5. <b>Zum Werk:</b> 2–3 Sätze, die GEZIELT DIESE Ausgabe aufwerten (Bedeutung, Sammler- oder Lesereiz) – kein generisches Allgemeinwissen.
 6. Schlagworte: 5–8 Stück, mit · getrennt.
-7. Rechtshinweis je nach Verkäufertyp. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.“"""
+7. Rechtshinweis je nach Verkäufertyp. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.”"""
 
 # Reihenfolge, Beschriftung und Standard-Anweisung je Feld, das die KI füllt.
 # (key, deutsche Beschriftung für die Oberfläche, Standard-Anweisung an die KI)
@@ -64,7 +65,7 @@ FIELD_LABELS = {key: label for key, label, _instr in PROMPT_FIELDS}
 DEFAULTS = {
     "anthropic_api_key": "",
     "imgbb_api_key": "",
-    "model": "claude-sonnet-4-6",
+    "model": "claude-opus-4-8",
     "location": "Berlin",
     "shipping_service": "DE_DHLPaket",
     "shipping_cost": "5.49",

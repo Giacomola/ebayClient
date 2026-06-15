@@ -5,7 +5,7 @@ from config import (load_settings, save_settings, build_system_prompt,
 def test_load_missing_file_returns_defaults(tmp_path):
     p = tmp_path / "config.json"
     settings = load_settings(str(p))
-    assert settings["model"] == "claude-sonnet-4-6"
+    assert settings["model"] == "claude-opus-4-8"
     assert settings["anthropic_api_key"] == ""
 
 def test_save_then_load_roundtrip(tmp_path):
@@ -62,3 +62,12 @@ def test_build_system_prompt_includes_general_and_fields():
     assert "Titel-Sonderregel." in text
     assert "title (Titel):" in text
     assert "author (Autor):" in text
+
+def test_standardmodell_ist_opus(tmp_path):
+    settings = load_settings(str(tmp_path / "config.json"))
+    assert settings["model"] == "claude-opus-4-8"
+
+def test_general_prompt_nennt_verkauf_und_websuche():
+    text = DEFAULTS["prompt_general"].lower()
+    assert "websuche" in text
+    assert "käufer" in text or "verkauf" in text
