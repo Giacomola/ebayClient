@@ -31,9 +31,9 @@ DEFAULT_DESCRIPTION_PROMPT = """Falls unten eine Muster-Vorlage steht, übernimm
 Jeder der folgenden sieben Punkte ist ein eigener Absatz <p>…</p>, in dieser Reihenfolge:
 1. <p><b>Autor</b> – <b>Buchtitel</b><br>danach eine Kurzzeile mit Verlag und Ort (bei Sets auch Bändezahl).</p>
 2. <p>Bibliografische Fakten, nur Erkennbares: Auflage und Jahr, Druckart (z. B. Frakturdruck), Format, Seitenzahl, Übersetzer, ISBN.</p>
-3. <p>Sichtbare physische Beschreibung: Einband, Prägungen, Rücken, Gebrauchsspuren – nur Belegbares. Nicht beurteilbar? Auf die Fotos verweisen.</p>
-4. <p><b>Zustand:</b> ehrlich und konkret. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung.“ ergänzen.</p>
-5. <p><b>Zum Werk:</b> 2–3 Sätze, die GEZIELT DIESE Ausgabe aufwerten (Bedeutung, Sammler- oder Lesereiz) – kein generisches Allgemeinwissen.</p>
+3. <p>Sichtbare physische Beschreibung: Einband, Prägungen, Rücken, Gebrauchsspuren. NUR was auf den Fotos sichtbar ist – nichts aus dem Netz, nichts erfinden. Nicht beurteilbar? Auf die Fotos verweisen.</p>
+4. <p><b>Zustand:</b> ehrlich und konkret, AUSSCHLIESSLICH nach den Fotos beurteilt. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung.“ ergänzen.</p>
+5. <p><b>Zum Werk:</b> 2–3 Sätze, die GEZIELT DIESE Ausgabe aufwerten (Bedeutung, Sammler- oder Lesereiz) – kein generisches Allgemeinwissen. Dieser Teil darf aus den Quellen stammen (bevorzugt ZVAB).</p>
 6. <p>Schlagworte: 5–8 Stück, mit · getrennt.</p>
 7. <p>Rechtshinweis. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.“</p>
 Formatierung: <b> nur für die Autor-/Titel-Zeile und die Marken „Zustand:“ und „Zum Werk:“. Keine Semikolons, kein Markdown, keine echten Zeilenumbrüche – ausschließlich diese HTML-Tags."""
