@@ -10,6 +10,11 @@ def _client(tmp_path):
     app.config.update(TESTING=True)
     return app.test_client()
 
+def test_startseite_oeffnet_links_in_neuem_tab(tmp_path):
+    c = _client(tmp_path)
+    html = c.get("/").get_data(as_text=True)
+    assert '<base target="_blank">' in html   # alle Links im neuen Tab
+
 def test_settings_speichern_und_lesen(tmp_path):
     c = _client(tmp_path)
     r = c.post("/api/settings", json={"anthropic_api_key": "sk-x", "model": "claude-opus-4-8"})
