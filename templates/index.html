@@ -69,7 +69,7 @@
       </section>
       <label>Preis (EUR, z. B. 9.99)
         <span class="price-line">
-          <input id="f-price" value="9.99">
+          <input id="f-price" value="" placeholder="– wird aus der Preissuche gefüllt –">
           <button id="price-btn" type="button">Preis recherchieren</button>
         </span>
       </label>
@@ -84,6 +84,7 @@
       </label>
       <section id="price-box" class="info-box" hidden>
         <h3>Beispielpreise aus dem Netz</h3>
+        <p id="price-recommend" class="price-recommend" hidden></p>
         <p id="price-status" class="sub"></p>
         <table id="price-table" class="price-table" hidden>
           <thead>

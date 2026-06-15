@@ -114,6 +114,7 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 .price-line { display: flex; gap: .5rem; align-items: center; }
 .price-line input { flex: 1; }
 .price-line button { white-space: nowrap; }
+.price-recommend { font-weight: 600; color: #2b6a4b; margin: .2rem 0 .5rem; }
 
 /* Preistabelle: Angebot · Quelle · Preis – nach Preis sortiert, gut lesbar. */
 .price-table { width: 100%; border-collapse: collapse; margin: .4rem 0;

@@ -347,6 +347,7 @@ def create_app(config_path: str = "config.json",
                 title=data.get("title", ""), language=data.get("language", ""),
                 publication_year=data.get("publication_year", ""),
                 publisher=data.get("publisher", ""), book_format=data.get("book_format", ""),
+                condition=data.get("condition", ""),
                 backend=settings["ki_backend"])
         except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
             return _ki_fehlerantwort(e, kontext="Preis-Recherche fehlgeschlagen")

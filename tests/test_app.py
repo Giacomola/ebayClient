@@ -321,16 +321,20 @@ def test_price_ruft_analyze_price(tmp_path):
     c.post("/api/settings", json={"anthropic_api_key": "sk-x"})
     fake = PriceAnalysis(comparables=[{"title": "X", "price": "12.00",
                                        "url": "https://y", "source": "ZVAB"}],
-                         note="ok")
+                         recommended_price="11.50", price_reason="Gut erhalten", note="ok")
     with patch("app.analyze_price", return_value=fake) as m:
         r = c.post("/api/price", json={"author": "A", "book_title": "B", "title": "T",
                                        "language": "Deutsch", "publication_year": "1957",
-                                       "publisher": "", "book_format": ""})
+                                       "publisher": "", "book_format": "", "condition": "Gut"})
     assert r.status_code == 200
-    assert r.get_json()["comparables"][0]["price"] == "12.00"
+    body = r.get_json()
+    assert body["comparables"][0]["price"] == "12.00"
+    assert body["recommended_price"] == "11.50"   # Empfehlung wird durchgereicht
+    assert body["price_reason"] == "Gut erhalten"
     assert m.called
     # Preis-Aufruf nutzt das (schnellere) Preis-Modell (Standard Sonnet).
     assert m.call_args.kwargs["model"] == "claude-sonnet-4-6"
+    assert m.call_args.kwargs["condition"] == "Gut"   # Zustand wird mitgegeben
 
 def test_derive_instructions_fuellt_felder(tmp_path):
     c = _client(tmp_path)

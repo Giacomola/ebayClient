@@ -91,6 +91,21 @@ function renderPrice(d) {
   $("price-status").textContent =
     items.length === 0 ? "Keine Beispielpreise gefunden."
                        : `${items.length} Beispielpreise gefunden:`;
+  // Von der KI empfohlenen Preis ins Preisfeld übernehmen (überschreibt einen evtl.
+  // getippten Wert – gewollt, der Preis soll sich an die Recherche anpassen) und
+  // die kurze Begründung anzeigen.
+  const rec = (d.recommended_price || "").trim();
+  const recEl = $("price-recommend");
+  if (rec) {
+    $("f-price").value = rec;
+    saveFieldsSoon();   // Vorschlag in den Entwurf übernehmen
+    recEl.textContent = `Empfohlener Preis: ${rec} €`
+      + (d.price_reason ? ` – ${d.price_reason}` : "");
+    recEl.hidden = false;
+  } else {
+    recEl.textContent = d.price_reason || "";   // ohne Empfehlung ggf. nur die Begründung
+    recEl.hidden = !d.price_reason;
+  }
   $("price-note").textContent = d.note || "";
 }
 // Holt die Beispielpreise anhand der aktuellen Feldwerte.
@@ -101,11 +116,14 @@ async function fetchPrice() {
   $("price-status").textContent = "💶 suche Beispielpreise …";
   $("price-comparables").innerHTML = "";
   $("price-note").textContent = "";
+  $("price-recommend").hidden = true;
   const body = {};
   for (const key of ["title", "author", "book_title", "language",
                      "publication_year", "publisher", "book_format"]) {
     body[key] = $("f-" + key).value;
   }
+  // Gewählten Zustand als Text mitgeben (z. B. „Gut"), damit die KI ihn einrechnet.
+  body.condition = $("f-condition").selectedOptions[0].textContent.trim();
   let r, d;
   try {
     r = await fetch("/api/price", {
@@ -464,7 +482,7 @@ on("new-case-btn", "click", async () => {
   renderThumbs();
   for (const key of RESULT_FIELDS) $("f-" + key).value = "";
   $("f-description").innerHTML = "";
-  $("f-price").value = "9.99";
+  $("f-price").value = "";
   $("f-condition").value = "5000";
   $("result").hidden = true;
   $("title-suggestions").hidden = true;
