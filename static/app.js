@@ -220,9 +220,33 @@ function dataURLtoFile(dataURL, name) {
   return new File([bytes], name, { type: mime });
 }
 
+// Ab wie vielen Fotos die Analyse-Auswahl erscheint, und wie viele höchstens
+// analysiert werden (jedes Foto kostet Token – darum die Obergrenze).
+const ANALYSE_AB = 2;     // mehr als 2 Fotos → Auswahl anzeigen
+const ANALYSE_MAX = 5;    // höchstens 5 Fotos analysieren
+const ANALYSE_STD = 3;    // beim Start die ersten 3 vorauswählen
+
+// Setzt für neue Fotos (ohne gesetzte Wahl) den Standard: erste 3 an, Rest aus.
+function setzeAnalyseStandards() {
+  selectedFiles.forEach((f, i) => { if (f.analyze === undefined) f.analyze = i < ANALYSE_STD; });
+}
+// Wie viele Fotos sind aktuell zum Analysieren angehakt?
+function anzahlAnalyse() { return selectedFiles.filter((f) => f.analyze).length; }
+// Welche Fotos gehen an die KI? Bei ≤2 Fotos einfach alle, sonst nur die angehakten.
+function fotosFuerAnalyse() {
+  if (selectedFiles.length <= ANALYSE_AB) return selectedFiles;
+  return selectedFiles.filter((f) => f.analyze);
+}
+// „Anzeige erstellen" nur freigeben, wenn mindestens ein Foto analysiert wird.
+function aktualisiereGenerateKnopf() {
+  $("generate-btn").disabled = fotosFuerAnalyse().length === 0;
+}
+
 function renderThumbs() {
   const box = $("thumbs");
   box.innerHTML = "";
+  const auswahl = selectedFiles.length > ANALYSE_AB;   // Häkchen erst ab >2 Fotos
+  if (auswahl) setzeAnalyseStandards();
   selectedFiles.forEach((file, idx) => {
     const wrap = document.createElement("div");
     wrap.className = "thumb";
@@ -236,9 +260,36 @@ function renderThumbs() {
     del.addEventListener("click", () => removeFile(idx));
     wrap.appendChild(img);
     wrap.appendChild(del);
+    if (auswahl) {
+      // Kleines Häkchen „analysieren" unten auf dem Bild.
+      const lab = document.createElement("label");
+      lab.className = "thumb-analyze";
+      lab.title = "Dieses Foto von der KI analysieren lassen";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = !!file.analyze;
+      cb.addEventListener("change", () => toggleAnalyse(idx, cb));
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode("🔍"));
+      wrap.appendChild(lab);
+      if (!file.analyze) wrap.classList.add("analyze-off");   // nicht gewählte abblenden
+    }
     box.appendChild(wrap);
   });
-  $("generate-btn").disabled = selectedFiles.length === 0;
+  $("analyze-hint").hidden = !auswahl;
+  aktualisiereGenerateKnopf();
+}
+
+// Häkchen umschalten – aber nie mehr als ANALYSE_MAX Fotos gleichzeitig anhaken.
+function toggleAnalyse(idx, cb) {
+  if (cb.checked && anzahlAnalyse() >= ANALYSE_MAX) {
+    cb.checked = false;
+    status(`Es werden höchstens ${ANALYSE_MAX} Fotos analysiert. `
+           + "Nimm zuerst bei einem anderen Foto das Häkchen weg.");
+    return;
+  }
+  selectedFiles[idx].analyze = cb.checked;
+  renderThumbs();   // Abblendung/Knopf-Status auffrischen
 }
 
 // Entfernt ein einzelnes Foto (Klick auf das ×) und hält den Entwurf synchron.
@@ -304,7 +355,7 @@ generateBtn.addEventListener("click", async () => {
   $("price-box").hidden = true;
   try {
     const fd = new FormData();
-    selectedFiles.forEach((f) => fd.append("images", f));
+    fotosFuerAnalyse().forEach((f) => fd.append("images", f));  // nur ausgewählte Fotos analysieren
     const r = await fetch("/api/generate", { method: "POST", body: fd });
     const data = await r.json();
     if (!r.ok) { status(data.error || "Fehler bei der Analyse."); return; }

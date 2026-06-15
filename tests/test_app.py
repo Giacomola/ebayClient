@@ -204,6 +204,18 @@ def test_generate_ruft_ai_client(tmp_path):
     # Text-Aufruf nutzt das Text-Modell (Standard Opus).
     assert m.call_args.kwargs["model"] == "claude-opus-4-8"
 
+def test_generate_analysiert_hoechstens_5_fotos(tmp_path):
+    c = _client(tmp_path)
+    c.post("/api/settings", json={"anthropic_api_key": "sk-x"})
+    fake = BookFields(title="T", author="A", book_title="B", language="Deutsch",
+                      description="D")
+    # Acht Fotos schicken – das Backend darf höchstens 5 an die KI weiterreichen.
+    data = {"images": [(io.BytesIO(b"\xff\xd8jpeg"), f"{i}.jpg") for i in range(8)]}
+    with patch("app.analyze_book", return_value=fake) as m:
+        r = c.post("/api/generate", data=data, content_type="multipart/form-data")
+    assert r.status_code == 200
+    assert len(m.call_args.args[0]) == 5    # nur 5 Bilder kamen bei der KI an
+
 def _status_error(cls, status, message):
     import httpx
     resp = httpx.Response(status, request=httpx.Request("POST", "http://x"))

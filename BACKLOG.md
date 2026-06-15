@@ -26,8 +26,6 @@ nach Abschluss entfernen._
 ## 📷 Eingabe/Fotos
 _Fotos reinziehen, Ordnerwahl, Upload zu imgbb, Vorschau._
 
-- [ ] Bei mehr als 2 Fotos auswählbar machen, welche Fotos analysiert werden (max 5)  `→ app.py, index.html, app.js`
-
 ## ✍️ KI-Anzeigentext
 _Claude-Generierung, Felder (Titel, Beschreibung, Merkmale), Preis, Zustand, Stilvorlage._
 
@@ -76,3 +74,4 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 Inhaltsbreite per ↔−/↔+ in der Kopfzeile verstellbar (Stufen 720/900/1100/1400 px, im Browser gespeichert wie die Schriftgröße); CSS-Variable --page-width (index.html, app.js, style.css).
 - [x] 2026-06-15 Handy-Zugang per QR-Code im Browser (Route /api/handy-zugang liefert WLAN-Adresse + QR als SVG, Knopf „Per Handy hochladen") (app.py, app.js, style.css, index.html, Tests) `ac7b55b`.
 - [x] 2026-06-15 Verständliche Fehlermeldung bei Token-/Anfrage-Limit (429) und zu großer Eingabe (400 „prompt too long" → 413); gemeinsame Hilfsfunktion _ki_fehlerantwort für alle KI-Routen (app.py, Tests).
+- [x] 2026-06-15 Bei mehr als 2 Fotos auswählbar, welche analysiert werden (🔍-Häkchen je Bild, erste 3 vorausgewählt, höchstens 5); alle Fotos kommen weiterhin in die Anzeige. Backend kappt defensiv bei 5 (app.py, index.html, app.js, Tests).

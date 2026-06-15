@@ -234,7 +234,9 @@ def create_app(config_path: str = "config.json",
         files = request.files.getlist("images")
         if not files:
             return jsonify({"error": "Keine Fotos ausgewählt."}), 400
-        images = [f.read() for f in files]
+        # Sicherheitsnetz: höchstens 5 Fotos analysieren (jedes Foto kostet Token).
+        # Welche Fotos das sind, wählt normalerweise die Oberfläche; hier nur die Grenze.
+        images = [f.read() for f in files][:5]
         try:
             book = analyze_book(images, api_key=settings["anthropic_api_key"],
                                 model=settings["model_text"],
