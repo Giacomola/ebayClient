@@ -29,10 +29,10 @@ DEFAULT_DESCRIPTION_PROMPT = """Beschreibung als HTML-Fließtext mit Absätzen (
 1. <b>Autor</b> – <b>Titel</b>, darunter eine Kurzzeile mit Bänden, Verlag und Ort.
 2. Bibliografische Fakten in EINEM Satz, nur Erkennbares: Vollständigkeit/Einzeltitel, Übersetzer, Auflage und Jahr, Format, Einband, Seitenzahl, ISBN.
 3. Sichtbare physische Beschreibung: Einbandmotive, Prägungen, Rücken – nur Belegbares.
-4. <b>Zustand:</b> ehrlich und konkret. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung." ergänzen.
+4. <b>Zustand:</b> ehrlich und konkret. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung.“ ergänzen.
 5. <b>Zum Werk:</b> 2–3 Sätze, die GEZIELT DIESE Ausgabe aufwerten (Bedeutung, Sammler- oder Lesereiz) – kein generisches Allgemeinwissen.
 6. Schlagworte: 5–8 Stück, mit · getrennt.
-7. Rechtshinweis je nach Verkäufertyp. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.”"""
+7. Rechtshinweis je nach Verkäufertyp. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.“"""
 
 # Reihenfolge, Beschriftung und Standard-Anweisung je Feld, das die KI füllt.
 # (key, deutsche Beschriftung für die Oberfläche, Standard-Anweisung an die KI)
