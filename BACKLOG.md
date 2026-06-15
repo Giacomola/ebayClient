@@ -26,6 +26,8 @@ _Claude-Generierung, Felder (Titel, Beschreibung, Merkmale), Preis, Zustand, Sti
 
 - [ ] Zwei Titelvorschläge ausgeben (Auswahl über anklicken)  `→ ai_client.py, app.py, index.html, app.js`
 - [ ] Strukturierte antiquarische Beschreibung als Vorlage für KI-Generierung (über das „Beispiel-Beschreibung"-Feld)  `→ anweisungen.txt, config.py`
+- [ ] Textfeld der Beschreibung sollte sich dem Platz auf dem Bildschirm anpassen (maximale Anzeigegröße)  `→ index.html`
+- [ ] Zur Suche DNB und DBB als Primärquelle verwenden, andere Quellen nur wenn nichts anderes vorhanden  `→ anweisungen.txt`
 
 ## 📄 CSV-Export
 _eBay-File-Exchange-CSV erzeugen, Sammel-CSV, Zielordner, Feld-Grenzen._
