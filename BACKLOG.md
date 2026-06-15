@@ -64,3 +64,4 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 Knopf „Sammeldatei archivieren & neu beginnen": benennt die aktive Datei in eBayClient_<Datum>[_Name].csv um (Name manuell, Datum immer vorangestellt), danach beginnt die Sammeldatei neu. Ersetzt den alten „Als hochgeladen markieren"-Knopf (ebay_csv.py, app.py, index.html, app.js, Tests).
 - [x] 2026-06-15 Alle Links der Seite öffnen in einem neuen Tab/Fenster (global via <base target="_blank">) (index.html).
 - [x] 2026-06-15 Senioren-/Einrichter-Anleitung für Windows per Fernwartung (Abo-Weg) + App-Icon fürs Windows-Paket (EINRICHTUNG-WINDOWS.md, app.ico).
+- [x] 2026-06-15 Inhaltsbreite per ↔−/↔+ in der Kopfzeile verstellbar (Stufen 720/900/1100/1400 px, im Browser gespeichert wie die Schriftgröße); CSS-Variable --page-width (index.html, app.js, style.css).

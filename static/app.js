@@ -131,6 +131,27 @@ applyFont();
 $("font-inc").addEventListener("click", () => { fontPx = Math.min(30, fontPx + 2); applyFont(); });
 $("font-dec").addEventListener("click", () => { fontPx = Math.max(12, fontPx - 2); applyFont(); });
 
+// Inhaltsbreite – wie die Schrift per ↔−/↔+ in festen Stufen verstellbar,
+// bleibt im Browser gespeichert. Stufen in Pixeln (720 = wie ursprünglich).
+const WIDTH_KEY = "pageWidthPx";
+const WIDTH_STEPS = [720, 900, 1100, 1400];
+let widthPx = parseInt(localStorage.getItem(WIDTH_KEY) || "720", 10);
+function applyWidth() {
+  document.documentElement.style.setProperty("--page-width", widthPx + "px");
+  localStorage.setItem(WIDTH_KEY, widthPx);
+}
+function stepWidth(dir) {
+  // zur nächsten Stufe in Richtung dir (+1 breiter, −1 schmaler) springen
+  let i = WIDTH_STEPS.indexOf(widthPx);
+  if (i === -1) i = 0;                       // unbekannter Wert → von vorn
+  i = Math.min(WIDTH_STEPS.length - 1, Math.max(0, i + dir));
+  widthPx = WIDTH_STEPS[i];
+  applyWidth();
+}
+applyWidth();
+on("width-inc", "click", () => stepWidth(1));
+on("width-dec", "click", () => stepWidth(-1));
+
 // --- Automatisches Speichern des Arbeitsstands (Entwurf) -------------------
 const RESULT_FIELDS = ["title", "author", "book_title", "language", "publisher",
                        "publication_year", "book_format"];

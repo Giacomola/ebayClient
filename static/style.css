@@ -1,9 +1,9 @@
-:root { font-family: system-ui, sans-serif; font-size: 18px; }
+:root { font-family: system-ui, sans-serif; font-size: 18px; --page-width: 720px; }
 body { margin: 0; background: #f6f5f1; color: #222; }
 header { display: flex; justify-content: space-between; align-items: center;
   padding: 1rem 1.5rem; background: #fff; border-bottom: 1px solid #e3e0d8; }
 h1 { font-size: 1.3rem; margin: 0; }
-main { max-width: 720px; margin: 0 auto; padding: 1.5rem; }
+main { max-width: var(--page-width, 720px); margin: 0 auto; padding: 1.5rem; }
 .drop-zone { border: 2px dashed #b9b3a5; border-radius: 12px; padding: 2rem;
   text-align: center; background: #fff; }
 .drop-zone.drag { border-color: #c4623a; background: #fff8f4; }
