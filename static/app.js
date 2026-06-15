@@ -23,6 +23,8 @@ let appActive = true;
     if (m.id === meineId) return;                 // eigene Nachrichten ignorieren
     if (m.type === "hallo" && appActive) {
       kanal.postMessage({ type: "hier", id: meineId });   // „ich bin schon aktiv"
+    } else if (m.type === "fokus" && appActive) {
+      try { window.focus(); } catch (_) {}        // bestmöglich nach vorne (oft blockiert)
     } else if (m.type === "hier" || m.type === "uebernahme") {
       werdeBlockiert();                           // anderes aktives Fenster / Übernahme
     }
@@ -30,9 +32,23 @@ let appActive = true;
   // Beim Start fragen: ist schon ein aktives Fenster da? (Antwort kommt in ms.)
   kanal.postMessage({ type: "hallo", id: meineId });
 
-  // „Dieses Fenster übernehmen": andere zurücktreten lassen, selbst aktiv werden.
-  const btn = $("si-takeover");
-  if (btn) btn.addEventListener("click", () => {
+  // Orange: „Zum geöffneten Fenster wechseln". Ein Tab kann das andere Fenster
+  // nicht zuverlässig nach vorne holen und sich selbst meist nicht schließen –
+  // darum: anderes Fenster bestmöglich anstupsen, dieses schließen versuchen,
+  // sonst klare Bitte anzeigen, dieses Fenster zu schließen.
+  const switchBtn = $("si-switch");
+  if (switchBtn) switchBtn.addEventListener("click", () => {
+    kanal.postMessage({ type: "fokus", id: meineId });
+    window.close();   // klappt nur bei per Skript geöffneten Fenstern
+    const t = $("si-text");
+    if (t) t.textContent = "Bitte schließen Sie dieses Fenster (Tab). " +
+      "Der Buch-Anzeigen-Helfer läuft im anderen Fenster weiter.";
+  });
+
+  // Grau: „Neues Fenster öffnen": dieses Fenster wird das aktive,
+  // die anderen treten zurück.
+  const newBtn = $("si-new");
+  if (newBtn) newBtn.addEventListener("click", () => {
     kanal.postMessage({ type: "uebernahme", id: meineId });
     werdeAktiv();
     location.reload();   // frischen Stand laden und sauber weiterarbeiten

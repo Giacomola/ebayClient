@@ -13,9 +13,12 @@
   <div id="single-instance-overlay" class="si-overlay" hidden>
     <div class="si-box">
       <h2>Schon geöffnet</h2>
-      <p>Der Buch-Anzeigen-Helfer ist bereits in einem anderen Fenster oder Tab offen.
+      <p id="si-text">Der Buch-Anzeigen-Helfer ist bereits in einem anderen Fenster oder Tab offen.
          Zwei Fenster gleichzeitig können sich gegenseitig stören.</p>
-      <button id="si-takeover" type="button" class="primary">Dieses Fenster übernehmen</button>
+      <div class="si-buttons">
+        <button id="si-switch" type="button" class="primary">Zum geöffneten Fenster wechseln</button>
+        <button id="si-new" type="button">Neues Fenster öffnen</button>
+      </div>
     </div>
   </div>
   <header>

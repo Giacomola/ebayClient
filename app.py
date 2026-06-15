@@ -524,14 +524,65 @@ def _zeige_handy_zugang(port: int) -> None:
         print("(Kein QR-Code verfügbar – bitte die Adresse oben am Handy eintippen.)")
     print()
 
+def _browserfenster_nach_vorne() -> bool:
+    """Bestmöglich: holt das bereits offene Helfer-Fenster im Browser nach vorne,
+    erkannt am Fenstertitel „Buch-Anzeigen-Helfer". Gibt True zurück, wenn ein
+    passendes Fenster gefunden und nach vorne geholt wurde – sonst False (dann öffnet
+    der Aufrufer ersatzweise ein Tab). Wirft nie einen Fehler nach außen.
+
+    macOS fragt beim ersten Mal nach der Erlaubnis „Bedienungshilfen" (Accessibility);
+    Windows braucht keine Erlaubnis (eingebautes AppActivate)."""
+    import subprocess
+    titel = "Buch-Anzeigen-Helfer"
+    try:
+        if sys.platform == "darwin":
+            # System Events sucht ein sichtbares Fenster mit diesem Titel und hebt es an.
+            applescript = (
+                'tell application "System Events"\n'
+                ' set ok to false\n'
+                ' repeat with p in (processes whose background only is false)\n'
+                '  try\n'
+                '   repeat with w in windows of p\n'
+                f'    if name of w contains "{titel}" then\n'
+                '     set frontmost of p to true\n'
+                '     try\n perform action "AXRaise" of w\n end try\n'
+                '     set ok to true\n exit repeat\n'
+                '    end if\n'
+                '   end repeat\n'
+                '  end try\n'
+                '  if ok then exit repeat\n'
+                ' end repeat\n'
+                ' if ok then return "OK"\n'
+                ' return "NO"\n'
+                'end tell'
+            )
+            out = subprocess.run(["osascript", "-e", applescript],
+                                 capture_output=True, text=True, timeout=5)
+            return out.stdout.strip() == "OK"
+        if sys.platform.startswith("win"):
+            # AppActivate holt ein Fenster anhand des (Anfangs vom) Titel nach vorne.
+            ps = ("$ws = New-Object -ComObject WScript.Shell\n"
+                  f"if ($ws.AppActivate('{titel}')) {{ 'OK' }} else {{ 'NO' }}")
+            out = subprocess.run(
+                ["powershell", "-NoProfile", "-Command", ps],
+                capture_output=True, text=True, timeout=8)
+            return "OK" in out.stdout
+    except Exception:  # noqa: BLE001 - Fokus ist Komfort, kein Muss
+        return False
+    return False
+
 if __name__ == "__main__":
     import webbrowser
     # Port 5050 statt 5000: 5000 ist unter macOS oft vom AirPlay-Empfänger belegt.
-    # Einzelinstanz: Läuft schon ein Server auf diesem PC, KEINEN zweiten starten –
-    # nur das Fenster im Browser öffnen. Sonst konkurrieren zwei Server um Port/Dateien.
+    # Einzelinstanz: Läuft schon ein Server auf diesem PC, KEINEN zweiten starten.
+    # Statt ein zweites Tab zu öffnen, holen wir das schon offene Fenster nach vorne;
+    # klappt das nicht, öffnen wir ersatzweise wie bisher ein Tab.
     if _server_laeuft_schon(PORT):
-        print("Das Programm läuft bereits – ich öffne nur das Fenster.")
-        webbrowser.open(f"http://127.0.0.1:{PORT}")
+        if _browserfenster_nach_vorne():
+            print("Das Programm läuft bereits – ich habe das offene Fenster nach vorne geholt.")
+        else:
+            print("Das Programm läuft bereits – ich öffne nur das Fenster.")
+            webbrowser.open(f"http://127.0.0.1:{PORT}")
         sys.exit(0)
     app = create_app()
     _zeige_handy_zugang(PORT)
