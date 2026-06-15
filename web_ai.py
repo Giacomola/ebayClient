@@ -104,7 +104,8 @@ def complete_json(*, api_key: str | None = None, model: str, content: list,
 
     Beide Wege liefern denselben Antworttext; die JSON-Auswertung darunter ist gleich."""
     if backend == "abo":
-        text = _via_abo(model=model, content=content, use_search=use_search)
+        text = _via_abo(model=model, content=content, use_search=use_search,
+                        max_searches=max_searches)
     else:
         text = _via_api(api_key=api_key, model=model, content=content,
                         max_tokens=max_tokens, max_searches=max_searches,
@@ -168,10 +169,16 @@ def _find_claude_cli() -> str | None:
             return p
     return None
 
-def _via_abo(*, model: str, content: list, use_search: bool) -> str:
+def _via_abo(*, model: str, content: list, use_search: bool,
+             max_searches: int | None = None) -> str:
     """Weg über das Claude-Abo (Agent SDK steuert die Claude-Code-CLI). Kein API-Schlüssel –
     der Verbrauch geht aufs Monatsguthaben. Es werden bewusst nur die Websuche und keine
-    Datei-/Shell-Werkzeuge erlaubt, damit die KI ausschließlich analysiert und JSON liefert."""
+    Datei-/Shell-Werkzeuge erlaubt, damit die KI ausschließlich analysiert und JSON liefert.
+
+    WICHTIG zur Websuche: Anders als der API-Weg (Tool-Limit max_uses) kennt die Agent-CLI
+    keine harte Such-Obergrenze. Ohne Bremse sucht die KI auf vielen Seiten und läuft in die
+    Schritt-Obergrenze (Abbruch) oder dauert minutenlang. Darum (a) begrenzen wir die Suchen
+    per klarer Anweisung und (b) geben passend dazu genug Schritte (max_turns)."""
     try:
         import anyio
         from claude_agent_sdk import (query, ClaudeAgentOptions,
@@ -189,17 +196,30 @@ def _via_abo(*, model: str, content: list, use_search: bool) -> str:
             "Claude Code installiert und eingeloggt sein."
         )
 
+    # Erlaubte Suchen (Standard 2, wie das API-Tool); daraus ein großzügiges Schritt-Budget.
+    n = max_searches if (max_searches and max_searches > 0) else 2
+    run_content = content
+    if use_search:
+        cap = ("\n\nWICHTIG: Führe insgesamt HÖCHSTENS %d Websuchen aus. Antworte danach "
+               "SOFORT mit dem geforderten JSON, auch wenn du nur wenige oder keine Treffer "
+               "hast. Suche nicht auf weiteren Seiten und wiederhole keine Suchen." % n)
+        run_content = content + [{"type": "text", "text": cap}]
+        max_turns = 6 + 3 * n      # genug Luft für die Suchen + die finale JSON-Antwort
+    else:
+        max_turns = 4              # ohne Suche reicht eine knappe Runde
+
     async def _run() -> str:
         async def messages():
-            yield {"type": "user", "message": {"role": "user", "content": content}}
+            yield {"type": "user", "message": {"role": "user", "content": run_content}}
         options = ClaudeAgentOptions(
             model=model,
             allowed_tools=["WebSearch"] if use_search else [],
             disallowed_tools=["Bash", "Edit", "Write", "Read", "Glob", "Grep"],
-            max_turns=6,
+            max_turns=max_turns,
             cli_path=cli,
             system_prompt=("Du fuellst eBay-Buchanzeigen aus Fotos. Folge den "
-                           "Anweisungen im Auftrag genau und antworte wie verlangt."),
+                           "Anweisungen im Auftrag genau und antworte wie verlangt. "
+                           "Halte dich strikt an genannte Such-Obergrenzen."),
         )
         text = ""
         async for msg in query(prompt=messages(), options=options):
