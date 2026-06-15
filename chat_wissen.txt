@@ -1,0 +1,99 @@
+WISSEN ÜBER DAS PROGRAMM „BUCH-ANZEIGEN-HELFER"
+
+Dieser Text beschreibt das Programm vollständig. Beantworte Fragen nur mit dem,
+was hier steht oder offensichtlich daraus folgt – erfinde keine Knöpfe oder
+Funktionen, die hier nicht genannt sind. Wenn etwas wirklich nicht abgedeckt ist,
+sag das ehrlich und nenne den nächstbesten Schritt.
+
+== Was das Programm macht ==
+Aus Fotos eines Buches erstellt das Programm automatisch einen fertigen
+eBay-Anzeigentext und eine eBay-Datei (CSV). Diese CSV lädt man danach im
+eBay-„CSV-Manager" (File-Exchange) hoch, um die Anzeige(n) bei eBay einzustellen.
+Die Buchfotos werden dabei ins Internet hochgeladen (über den Dienst imgbb), damit
+eBay sie anzeigen kann. Das Programm läuft auf dem eigenen Computer im Browser.
+
+== Der normale Ablauf (Schritt für Schritt) ==
+1. Fotos des Buches in das gestrichelte Feld ziehen – oder „Fotos auswählen" klicken.
+   Auch mehrere Fotos sind möglich (Cover, Rückseite, Titelblatt, Schäden usw.).
+2. Bei vielen Fotos: Mit dem 🔍-Häkchen unten am Foto wählt man, welche die KI
+   genau ansieht (höchstens 5). Alle Fotos kommen trotzdem mit in die Anzeige.
+3. Auf „Anzeige erstellen" klicken. Die KI sieht sich die Fotos an, sucht bei Bedarf
+   im Internet nach Buchdaten und füllt die Felder aus. Das dauert oft ungefähr
+   eine Minute – bitte warten, nicht mehrfach klicken.
+4. Die Felder prüfen und bei Bedarf anpassen: Titel, Autor, Buchtitel, Sprache,
+   Verlag, Erscheinungsjahr, Format, Beschreibung.
+5. „Preis recherchieren" sucht Beispielpreise im Netz und schlägt einen Preis vor;
+   den Preis kann man im Feld „Preis" überschreiben.
+6. „Zustand" auswählen (Neu, Wie neu, Sehr gut, Gut, Akzeptabel).
+7. Unter „Speicherordner" mit „Ordner wählen" festlegen, wo die Sammeldatei liegt.
+8. „Zur eBay-Sammeldatei hinzufügen" – die Anzeige wird in die gemeinsame CSV
+   geschrieben. Mehrere Bücher sammeln sich so in einer Datei.
+9. Wenn alle Bücher fertig sind: Die CSV bei eBay im CSV-Manager (File-Exchange)
+   hochladen. Danach kann man mit „Sammeldatei archivieren & neu beginnen" eine
+   neue, leere Sammeldatei starten.
+
+== Die Knöpfe oben (Kopfzeile) ==
+- „A−" / „A+": Schrift kleiner / größer.
+- „↔−" / „↔+": angezeigten Inhalt schmaler / breiter.
+- „Übersicht": zeigt alles gebündelt – Fälle „In Arbeit", Anzeigen „In der
+  Sammeldatei" (Anzahl und Summe der Preise) und „Archiviert" (frühere Sammeldateien).
+  Bei Anzeigen in der Sammeldatei kann man „Bearbeiten" wählen.
+- „Fragen": öffnet dieses Fenster (den Chat mit der KI).
+- „Einstellungen": Schlüssel, KI-Modelle, Quellen, Standort, Versandkosten.
+
+== Felder und Besonderheiten im Anzeige-Bereich ==
+- Ein 🌐-Hinweis („aus Websuche") an einem Feld bedeutet: dieser Wert stammt aus
+  einer Internet-Suche, nicht allein aus dem Foto. Bitte besonders prüfen.
+- Beschreibung: Man kann den Text direkt bearbeiten. Markiert man ein Stück Text,
+  erscheinen darüber kleine Knöpfe F (fett), K (kursiv), U (unterstrichen). Diese
+  Formatierung bleibt nur im Beschreibungsfeld erhalten und wird bei eBay angezeigt.
+- „Quellen": Links zu den Fundstellen der recherchierten Angaben.
+- „Beispielpreise aus dem Netz": Tabelle mit Angebot, Quelle und Preis, nach Preis
+  sortiert. Ein Klick auf einen Preis öffnet das jeweilige Angebot.
+- „Eintrag anzeigen" erscheint nach dem Speichern und zeigt die gerade gespeicherte
+  Zeile.
+
+== „Fall wiederaufnehmen" und „Neuen Fall starten" ==
+- Begonnene, noch nicht in die Sammeldatei übernommene Bücher erscheinen oben unter
+  „Fall wiederaufnehmen". Ein Klick öffnet den Fall erneut.
+- „Neuen Fall starten" leert die Eingabe für ein neues Buch (mit Sicherheitsabfrage).
+
+== Einstellungen ==
+- „Anweisungen bearbeiten": legt fest, wie die KI Titel und Beschreibung schreibt
+  (allgemeine Regeln und je Feld eine Anweisung; optional eine Beispiel-Beschreibung
+  als Stilvorlage).
+- „Rechenleistung": Entweder „API-Schlüssel" (pro Nutzung bezahlt) oder „Claude-Abo"
+  (Monatsguthaben, kein Schlüssel nötig).
+- „Anthropic-API-Schlüssel" und „imgbb-API-Schlüssel": nötig für KI und Foto-Upload
+  (beim API-Schlüssel-Weg).
+- „KI-Modell" lässt sich getrennt einstellen für die Texte, die Preissuche und dieses
+  Fragen-Fenster (Haiku = günstig, Sonnet = ausgewogen, Opus = beste Qualität).
+- „Primärquellen": bevorzugte Nachschlage-Quellen (z. B. DNB, DDB, ZVAB) mit
+  Prioritäten. Zustand und sichtbare Beschreibung kommen aber immer aus den Fotos.
+- „Standort" und „Versandkosten" landen in der eBay-Anzeige.
+
+== Fotos per Handy ==
+„📱 Per Handy hochladen" zeigt einen QR-Code. Handy und Computer müssen im gleichen
+Netzwerk sein (gleiches WLAN oder Kabel am selben Router). QR-Code mit der
+Handy-Kamera scannen, dann im Handy-Browser „Fotos auswählen" → Kamera oder
+Mediathek.
+
+== Starten, Beenden, nur ein Fenster ==
+- Starten per Doppelklick auf das Programm-Symbol; der Browser öffnet sich von selbst.
+- Beenden mit dem Knopf „Programm beenden" unten auf der Seite.
+- Klickt man das Symbol erneut an, während das Programm schon läuft, wird kein zweites
+  Fenster geöffnet, sondern das vorhandene nach Möglichkeit nach vorne geholt.
+
+== Datenschutz ==
+Schlüssel und der aktuelle Entwurf werden nur lokal auf dem Computer gespeichert.
+
+== Häufige Fragen und Lösungen ==
+- „Anzeige erstellen" ist grau / nicht klickbar: Es sind noch keine Fotos geladen –
+  zuerst Fotos hinzufügen.
+- Es kommt eine Fehlermeldung von der KI oder „Keine Verbindung": Meist fehlt der
+  Anthropic-API-Schlüssel oder die „Rechenleistung" ist falsch eingestellt – das in
+  „Einstellungen" prüfen. Bei Internet-Problemen später erneut versuchen.
+- Meldung über zu viel / zu lange Eingabe: weniger Fotos zur Analyse auswählen (🔍).
+- Die Preissuche findet nichts: Titel/Autor prüfen und „Preis recherchieren" erneut
+  klicken; den Preis kann man auch von Hand eintragen.
+- Wo lade ich die CSV hoch? Bei eBay im „CSV-Manager" (File-Exchange).

@@ -19,6 +19,13 @@ def test_startseite_oeffnet_links_in_neuem_tab(tmp_path):
     html = c.get("/").get_data(as_text=True)
     assert '<base target="_blank">' in html   # alle Links im neuen Tab
 
+def test_startseite_zeigt_version(tmp_path):
+    from app import APP_VERSION
+    c = _client(tmp_path)
+    html = c.get("/").get_data(as_text=True)
+    assert f"v{APP_VERSION}" in html          # Version oben im Kopf (z. B. v1.0)
+    assert "Stand:" not in html               # die alte Datumsanzeige ist weg
+
 def test_settings_speichern_und_lesen(tmp_path):
     c = _client(tmp_path)
     r = c.post("/api/settings", json={"anthropic_api_key": "sk-x", "model": "claude-opus-4-8"})
@@ -379,6 +386,19 @@ def test_chat_leer_gibt_fehler(tmp_path):
     c.post("/api/settings", json={"anthropic_api_key": "sk-x"})
     r = c.post("/api/chat", json={"messages": []})
     assert r.status_code == 400
+
+def test_chat_kennt_gespeicherte_faelle(tmp_path):
+    # Der Chat bekommt den aktuellen Stand der Einträge ins Wissen gereicht.
+    c = _client(tmp_path)
+    c.post("/api/settings", json={"anthropic_api_key": "sk-x"})
+    _save_offenen_fall(c, "Faust")
+    c.post("/api/draft/clear")   # parkt den Fall als offenen Fall
+    with patch("app.chat", return_value="ok") as m:
+        c.post("/api/chat", json={"messages": [{"role": "user", "content": "Welche Fälle?"}]})
+    wissen = m.call_args.kwargs["wissen"]
+    assert "Goethe – Faust" in wissen          # der offene Fall steht im Wissen
+    assert "Offene Fälle" in wissen            # der aktuelle Stand ist angehängt
+    assert "Ablauf" in wissen                  # die feste App-Beschreibung auch
 
 # --- Aktive Fälle (parken / öffnen / löschen) -------------------------------
 

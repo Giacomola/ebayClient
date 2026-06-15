@@ -23,6 +23,9 @@ from cases import (list_cases, save_case, load_case, delete_case,
 # Port, auf dem das Programm läuft (auch in der Handy-Adresse verwendet).
 PORT = 5050
 
+# Anzeige-Version oben im Kopf (z. B. „v1.0"). Bei einer Veröffentlichung hochzählen.
+APP_VERSION = "1.0"
+
 def _has_content(draft: dict) -> bool:
     """True, wenn der Fall etwas enthält (mindestens ein Foto oder ein gefülltes Feld)."""
     if draft.get("images"):
@@ -78,6 +81,61 @@ def _ki_fehlerantwort(e: Exception, *, kontext: str = "KI-Fehler"):
         return jsonify({"error": f"KI-Fehler ({e.status_code}): {e.message}"}), 502
     return jsonify({"error": f"{kontext}: {e}"}), 502
 
+def _chat_wissen() -> str:
+    """Liest das App-Wissen für das Fragen-Fenster aus chat_wissen.txt (neben app.py).
+    Fehlt die Datei, kommt ein leerer Text zurück – der Chat funktioniert dann ohne
+    Spezialwissen weiter, statt abzubrechen."""
+    pfad = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chat_wissen.txt")
+    try:
+        with open(pfad, encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return ""
+
+def _chat_kontext(folder: str, cases_dir: str) -> str:
+    """Fasst die aktuell gespeicherten Einträge zusammen (offene Fälle, Anzeigen in
+    der Sammeldatei, Archiv), damit der Chat konkrete Fragen dazu beantworten kann.
+    Bewusst kurz gehalten (höchstens je 50 Einträge)."""
+    from datetime import datetime
+
+    def datum(ts):
+        try:
+            return datetime.fromtimestamp(ts).strftime("%d.%m.%Y")
+        except Exception:  # noqa: BLE001
+            return "unbekannt"
+
+    def eur(x):
+        return f"{x:.2f}".replace(".", ",") + " EUR"
+
+    offen = list_cases(cases_dir, status="offen")
+    zeilen = ["== AKTUELLER STAND DER GESPEICHERTEN EINTRÄGE ==",
+              "Beantworte konkrete Fragen zu Fällen, Sammeldatei und Archiv anhand "
+              "dieser Liste – sie ist der aktuelle Stand auf diesem Computer.",
+              f"\nOffene Fälle (begonnen, noch nicht in der Sammeldatei): {len(offen)}"]
+    for c in offen[:50]:
+        zeilen.append(f"- {c['name']} – {c['photo_count']} Foto(s) – begonnen am {datum(c['saved_at'])}")
+
+    if not folder:
+        zeilen.append("\nSammeldatei und Archiv: noch kein Speicherordner gewählt.")
+        return "\n".join(zeilen)
+
+    stats = listing_stats(folder)
+    zeilen.append(f"\nAnzeigen in der aktuellen Sammeldatei: {stats['count']} Stück, "
+                  f"Summe der Startpreise {eur(stats['total'])}")
+    for r in recent_listings(folder, limit=50):
+        teil = f"- {r.get('title', '')}"
+        if (r.get("author") or "").strip():
+            teil += f" – {r['author'].strip()}"
+        if (r.get("price") or "").strip():
+            teil += f" – {r['price'].strip()} EUR"
+        zeilen.append(teil)
+
+    archive = list_archives(folder)
+    zeilen.append(f"\nArchivierte Sammeldateien: {len(archive)}")
+    for a in archive[:50]:
+        zeilen.append(f"- {a['filename']} – {a['count']} Anzeigen – Summe {eur(a['total'])}")
+    return "\n".join(zeilen)
+
 def _open_in_os(path: str) -> None:
     """Öffnet eine Datei im Standardprogramm des Betriebssystems.
 
@@ -121,18 +179,16 @@ def create_app(config_path: str = "config.json",
 
     @app.get("/")
     def index():
-        # Versionskennung aus dem Datenstand von app.js/style.css. Sie wird im
-        # Kopf angezeigt UND an die Datei-Links gehängt (?v=…). So lädt der Browser
-        # nach jeder Änderung automatisch die neue Datei – kein „alter Code" mehr.
-        import time
+        # mtime von app.js/style.css als Cache-Kennung an die Datei-Links hängen
+        # (?v=…), damit der Browser nach jeder Änderung automatisch die neue Datei
+        # lädt. Im Kopf angezeigt wird die App-Version (z. B. v1.0).
         ver = 0
         for name in ("app.js", "style.css"):
             try:
                 ver = max(ver, int(os.path.getmtime(os.path.join(app.static_folder, name))))
             except OSError:
                 pass
-        stand = time.strftime("%d.%m.%Y %H:%M", time.localtime(ver)) if ver else ""
-        return render_template("index.html", asset_ver=ver, asset_stand=stand)
+        return render_template("index.html", asset_ver=ver, app_version=APP_VERSION)
 
     @app.get("/api/draft")
     def get_draft():
@@ -392,10 +448,14 @@ def create_app(config_path: str = "config.json",
         messages = data.get("messages") or []
         if not messages:
             return jsonify({"error": "Keine Frage gestellt."}), 400
+        # Wissen = feste App-Beschreibung + aktueller Stand der gespeicherten Einträge.
+        folder = settings.get("save_folder", "")
+        wissen = _chat_wissen() + "\n\n" + _chat_kontext(folder, cases_dir)
         try:
             antwort = chat(api_key=settings["anthropic_api_key"],
                            model=settings.get("model_chat", "claude-haiku-4-5"),
-                           messages=messages, backend=settings["ki_backend"])
+                           messages=messages, wissen=wissen,
+                           backend=settings["ki_backend"])
         except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
             return _ki_fehlerantwort(e, kontext="Chat fehlgeschlagen")
         return jsonify({"answer": antwort})

@@ -248,30 +248,47 @@ def _via_abo(*, model: str, content: list, use_search: bool,
     return text
 
 # --- Einfacher Chat (freie Text-Antwort, mehrere Runden) --------------------
-CHAT_SYSTEM = (
-    "Du bist ein freundlicher, geduldiger Helfer für einen älteren Menschen. "
-    "Antworte in einfachem, klarem Deutsch, kurz und ohne Fachjargon. Du sitzt in "
-    "einem Programm, das aus Buchfotos eBay-Anzeigen erstellt – bei Fragen dazu hilfst "
-    "du gern, du beantwortest aber auch alle anderen Fragen."
+# Grundhaltung des Fragen-Fensters. Das eigentliche App-Wissen kommt aus
+# chat_wissen.txt und wird unten angehängt (siehe _chat_system).
+CHAT_BASIS = (
+    "Du bist der eingebaute Helfer im Programm Buch-Anzeigen-Helfer. Deine Aufgabe "
+    "ist es, dem Nutzer bei der Bedienung dieses Programms und beim Erstellen von "
+    "eBay-Buchanzeigen zu helfen. Gehe davon aus, dass sich jede Frage auf dieses "
+    "Programm oder seine Aufgabe bezieht (Bücher fotografieren und beschreiben, "
+    "Preise, eBay, die Bedienung) – auch wenn das Programm nicht ausdrücklich genannt "
+    "wird. Antworte auf Deutsch, sachlich und freundlich, vor allem aber "
+    "lösungsorientiert: nenne konkret den nächsten Schritt oder den richtigen Knopf, "
+    "statt allgemein zu bleiben. Fasse dich kurz und ohne Fachjargon; der Nutzer ist "
+    "kein Computerfachmann. Fehlt dir eine Information, frage kurz nach. Stütze dich "
+    "auf das folgende Wissen über das Programm und erfinde keine Funktionen, die dort "
+    "nicht stehen."
 )
 
-def chat(*, api_key: str | None = None, model: str, messages: list,
+def _chat_system(wissen: str = "") -> str:
+    """Baut den System-Prompt fürs Fragen-Fenster: Grundhaltung + App-Wissen."""
+    if wissen.strip():
+        return CHAT_BASIS + "\n\n=== WISSEN ÜBER DAS PROGRAMM ===\n" + wissen.strip()
+    return CHAT_BASIS
+
+def chat(*, api_key: str | None = None, model: str, messages: list, wissen: str = "",
          use_search: bool = True, backend: str = "api_key",
          max_tokens: int = 1000, max_searches: int = 2) -> str:
     """Beantwortet eine Chat-Frage als freien Text. messages = Liste aus
-    {"role": "user"|"assistant", "content": "..."}. Gibt den Antworttext zurück."""
+    {"role": "user"|"assistant", "content": "..."}. wissen = App-Wissen für den
+    System-Prompt. Gibt den Antworttext zurück."""
+    system = _chat_system(wissen)
     if backend == "abo":
         # Die Agent-CLI bekommt einen Prompt – den Verlauf in einen Text gießen.
         teile = [("Frage" if m["role"] == "user" else "Antwort") + ": " + str(m.get("content", ""))
                  for m in messages]
         content = [{"type": "text", "text": "\n".join(teile) + "\n\nAntwort:"}]
         return _via_abo(model=model, content=content, use_search=use_search,
-                        max_searches=max_searches, system_prompt=CHAT_SYSTEM)
-    return _chat_via_api(api_key=api_key, model=model, messages=messages,
+                        max_searches=max_searches, system_prompt=system)
+    return _chat_via_api(api_key=api_key, model=model, messages=messages, system=system,
                          use_search=use_search, max_searches=max_searches,
                          max_tokens=max_tokens)
 
-def _chat_via_api(*, api_key, model, messages, use_search, max_searches, max_tokens) -> str:
+def _chat_via_api(*, api_key, model, messages, system, use_search, max_searches, max_tokens) -> str:
     """Chat über den Anthropic-API-Schlüssel (echte Mehrrunden-Unterhaltung)."""
     tools = []
     if use_search:
@@ -284,7 +301,7 @@ def _chat_via_api(*, api_key, model, messages, use_search, max_searches, max_tok
     resp = None
     for _ in range(MAX_ROUNDS):
         resp = client.messages.create(
-            model=model, max_tokens=max_tokens, system=CHAT_SYSTEM,
+            model=model, max_tokens=max_tokens, system=system,
             tools=tools, messages=conv,
         )
         if resp.stop_reason == "pause_turn":   # Websuche läuft noch → fortsetzen
