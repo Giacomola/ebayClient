@@ -158,13 +158,22 @@ def _via_api(*, api_key: str | None, model: str, content: list, max_tokens: int,
 
 def _find_claude_cli() -> str | None:
     """Sucht den 'claude'-Befehl robust – erst über PATH, dann an üblichen Orten.
-    Wichtig, weil eine per Doppelklick gestartete .app oft einen kargen PATH hat."""
+    Wichtig, weil eine per Doppelklick gestartete .app/Verknüpfung oft einen kargen
+    PATH hat und unter Windows der frische Installpfad erst in einer neuen Konsole
+    im PATH steht."""
     import shutil
     found = shutil.which("claude")
     if found:
         return found
-    for p in (os.path.expanduser("~/.local/bin/claude"),
-              "/opt/homebrew/bin/claude", "/usr/local/bin/claude"):
+    # Windows: der native Installer legt claude unter %USERPROFILE%\.local\bin ab
+    # (als .exe/.cmd). macOS/Linux: ~/.local/bin bzw. Homebrew/usr-Pfade.
+    kandidaten = (
+        os.path.expanduser(r"~\.local\bin\claude.exe"),
+        os.path.expanduser(r"~\.local\bin\claude.cmd"),
+        os.path.expanduser("~/.local/bin/claude"),
+        "/opt/homebrew/bin/claude", "/usr/local/bin/claude",
+    )
+    for p in kandidaten:
         if os.path.exists(p):
             return p
     return None

@@ -6,99 +6,57 @@ Dieses Programm macht aus Fotos eines Buches eine fertige
 eBay-Anzeige. Du musst dich nicht auskennen – folge einfach
 den Schritten der Reihe nach. Lass dir ruhig Zeit.
 
+Die Einrichtung hat Giacomo schon für dich erledigt. Auf dem
+Desktop (Startbildschirm) liegt ein Symbol mit dem Namen
+"Buch-Anzeigen-Helfer". Das ist alles, was du brauchst.
+
 Du brauchst:
-  - einen Windows-Computer mit Internet
-  - den Zugangs-Schlüssel (bekommst du von Giacomo)
+  - den Computer mit Internet
   - wenn du mit dem Handy fotografieren willst:
     Handy und Computer im gleichen WLAN
 
-Tipp: Nimm dir die Schritte einzeln vor. Nach der ersten
-Einrichtung genügt später ein Doppelklick.
-
 
 ============================================================
-   TEIL 1 – EINMALIG EINRICHTEN
+   TEIL 1 – SO BENUTZT DU ES AM COMPUTER
 ============================================================
 
-SCHRITT 1: Den Ordner auspacken
--------------------------------
-Du hast eine Datei mit der Endung ".zip" bekommen.
-  1. Mit der rechten Maustaste auf die ZIP-Datei klicken.
-  2. Im Menü "Alle extrahieren..." anklicken.
-  3. Auf "Extrahieren" klicken.
-Es entsteht ein Ordner. Darin liegt eine Datei namens
-"Start.bat" – die brauchst du gleich.
+  1. Auf dem Desktop auf das Symbol "Buch-Anzeigen-Helfer"
+     doppelklicken. Dein Internet-Browser öffnet sich von
+     selbst mit dem Programm. (Ein schwarzes Fenster erscheint
+     NICHT – das ist richtig so.)
 
-
-SCHRITT 2: Python installieren (nur beim allerersten Mal)
----------------------------------------------------------
-Das Programm benötigt ein Hilfsprogramm namens "Python".
-Es ist kostenlos.
-
-  1. Auf "Start.bat" doppelklicken.
-  2. Ist Python noch nicht da, öffnet sich von selbst eine
-     Internetseite. Dort den großen Knopf "Download Python"
-     anklicken und die heruntergeladene Datei öffnen.
-  3. GANZ WICHTIG: Im ersten Fenster unten ein Häkchen setzen
-     bei  "Add python.exe to PATH".
-     (Ohne dieses Häkchen funktioniert es nicht.)
-  4. Dann auf "Install Now" klicken und warten, bis "Setup
-     was successful" erscheint. Fenster schließen.
-
-Ist Python schon vorhanden, kannst du diesen Schritt
-überspringen.
-
-
-SCHRITT 3: Das Programm zum ersten Mal starten
-----------------------------------------------
-  1. Wieder auf "Start.bat" doppelklicken.
-  2. Es öffnet sich ein schwarzes Fenster. Beim ersten Mal
-     richtet sich das Programm ein bis zwei Minuten lang
-     selbst ein. Das ist normal – einfach warten.
-  3. Danach öffnet sich von allein dein Internet-Browser
-     mit dem Programm.
-
-WICHTIG: Das schwarze Fenster bitte NICHT schließen,
-solange du arbeitest. Es ist der "Motor" im Hintergrund.
-Zum Beenden schließt du es einfach (oder klickst im
-Programm unten auf "Programm beenden").
-
-
-SCHRITT 4: Den Schlüssel eintragen (nur einmal)
------------------------------------------------
-Damit die künstliche Intelligenz arbeiten darf, trägst du
-einmal den Zugangs-Schlüssel ein.
-  1. Im Programm oben rechts auf "Einstellungen" klicken.
-  2. Beim "Anthropic-API-Schlüssel" den Schlüssel eintippen
-     oder einfügen, den dir Giacomo geschickt hat.
-  3. Auf "Speichern" klicken.
-
-Geschafft! Die Einrichtung ist fertig.
-
-
-============================================================
-   TEIL 2 – SO BENUTZT DU ES AM COMPUTER
-============================================================
-
-  1. Auf "Start.bat" doppelklicken (Browser öffnet sich).
   2. Fotos des Buches auf den Computer holen und mit
      "Fotos auswählen" hinzufügen.
-  3. Auf "Anzeige erstellen" klicken und kurz warten.
-  4. Text prüfen, bei Bedarf "Preis recherchieren",
-     dann zur eBay-Datei hinzufügen.
+     (Bequemer geht es mit dem Handy – siehe Teil 2.)
+
+  3. Auf "Anzeige erstellen" klicken und kurz warten
+     (etwa eine halbe bis eine Minute). Die künstliche
+     Intelligenz schreibt den Text und sucht Beispielpreise.
+
+  4. Text in Ruhe durchlesen und bei Bedarf anpassen.
+     Der vorgeschlagene Preis steht schon im Preisfeld.
+
+  5. Auf "Zur eBay-Sammeldatei hinzufügen" klicken.
+     Das Buch ist damit gespeichert. Du kannst gleich das
+     nächste Buch machen.
+
+  6. Zum Beenden unten auf der Seite auf "Programm beenden"
+     klicken. (Es gibt kein Fenster zum Schließen, weil das
+     Programm unsichtbar im Hintergrund läuft.)
 
 
 ============================================================
-   TEIL 3 – MIT DEM HANDY FOTOGRAFIEREN (am bequemsten)
+   TEIL 2 – MIT DEM HANDY FOTOGRAFIEREN (am bequemsten)
 ============================================================
 
-So kannst du das Buch direkt mit dem Handy fotografieren –
-ganz ohne Bilder umständlich zu übertragen.
+So fotografierst du das Buch direkt mit dem Handy – ganz ohne
+Bilder umständlich zu übertragen.
 Handy und Computer müssen im gleichen WLAN sein.
 
-  1. Am Computer auf "Start.bat" doppelklicken.
-  2. Im schwarzen Fenster erscheint ein QR-Code (ein
-     schwarz-weißes Quadrat-Muster).
+  1. Am Computer das Programm öffnen (Teil 1, Schritt 1).
+  2. Auf den Knopf "📱 Per Handy hochladen" klicken.
+     Es erscheint ein QR-Code (ein schwarz-weißes
+     Quadrat-Muster) und darunter eine Adresse.
   3. Nimm das Handy und öffne die Kamera. Halte sie auf den
      QR-Code auf dem Bildschirm – es erscheint ein Link.
      Diesen Link antippen.
@@ -106,23 +64,20 @@ Handy und Computer müssen im gleichen WLAN sein.
   5. Auf "Fotos auswählen" tippen. Das Handy fragt, ob du
      fotografieren oder ein vorhandenes Foto nehmen willst.
      Fotografiere das Buch (oder wähle ein Foto aus).
-  6. Auf "Anzeige erstellen" tippen.
+  6. Die Fotos erscheinen von selbst auch am Computer.
+     Dort dann wie gewohnt auf "Anzeige erstellen".
 
-Klappt der QR-Code nicht? Im schwarzen Fenster steht direkt
-darüber auch eine Adresse wie  http://192.168.x.x:5050 .
-Diese kannst du im Browser des Handys von Hand eingeben.
+Klappt der QR-Code nicht? Tippe die angezeigte Adresse
+(etwa  http://192.168.x.x:5050 ) im Browser des Handys
+von Hand ein.
 
 
 ============================================================
    WENN WINDOWS NACHFRAGT (ist harmlos)
 ============================================================
 
-Beim ersten Start können ein bis zwei blaue oder
-Hinweis-Fenster erscheinen. Das ist normal:
-
-  - "Der Computer wurde durch Windows geschützt":
-    Auf "Weitere Informationen" klicken,
-    dann auf "Trotzdem ausführen".
+Beim allerersten Start kann ein Hinweis-Fenster erscheinen.
+Das ist normal:
 
   - Windows-Firewall / "Zugriff zulassen":
     Auf "Zugriff zulassen" klicken.
@@ -133,13 +88,17 @@ Hinweis-Fenster erscheinen. Das ist normal:
    WENN ETWAS KLEMMT
 ============================================================
 
-  - Erster Tipp, hilft fast immer: das schwarze Fenster
-    schließen und "Start.bat" noch einmal doppelklicken.
+  - Erster Tipp, hilft fast immer: das Programm einmal
+    "Programm beenden" und das Desktop-Symbol erneut
+    doppelklicken.
 
-  - Steht im schwarzen Fenster eine Fehlermeldung in rot?
-    Mach ein Foto vom Bildschirm und schicke es Giacomo.
+  - Die Seite ist leer oder öffnet sich nicht? Im Browser
+    von Hand  http://127.0.0.1:5050  eingeben.
 
   - Handy findet das Programm nicht? Prüfe, ob Handy und
     Computer im gleichen WLAN sind.
+
+  - Etwas anderes klemmt? Mach ein Foto vom Bildschirm und
+    schicke es Giacomo.
 
 Viel Erfolg!

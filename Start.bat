@@ -42,7 +42,7 @@ if not exist ".venv\Scripts\python.exe" (
   ".venv\Scripts\python.exe" -m pip install --quiet -r requirements.txt
   if errorlevel 1 (
     echo Vollstaendige Installation fehlgeschlagen - versuche die Kernpakete ...
-    ".venv\Scripts\python.exe" -m pip install --quiet Flask anthropic requests
+    ".venv\Scripts\python.exe" -m pip install --quiet Flask anthropic requests qrcode claude-agent-sdk
     if errorlevel 1 (
       echo Installation fehlgeschlagen. Bitte Internetverbindung pruefen und erneut versuchen.
       pause

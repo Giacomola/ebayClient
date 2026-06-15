@@ -58,3 +58,24 @@ def test_extract_json_unreparierbar_meldet_klaren_fehler():
     from web_ai import _extract_json
     with pytest.raises(ValueError):
         _extract_json('{"a": 1 "b": 2}')  # fehlendes Komma – nicht reparierbar
+
+def test_find_claude_cli_nutzt_path_zuerst():
+    from web_ai import _find_claude_cli
+    with patch("shutil.which", return_value="/irgendwo/claude"):
+        assert _find_claude_cli() == "/irgendwo/claude"
+
+def test_find_claude_cli_findet_windows_local_bin():
+    # Kein Treffer im PATH -> der Windows-Installpfad (~\.local\bin\claude.exe)
+    # muss gefunden werden.
+    import os
+    from web_ai import _find_claude_cli
+    win = os.path.expanduser(r"~\.local\bin\claude.exe")
+    with patch("shutil.which", return_value=None), \
+         patch("web_ai.os.path.exists", side_effect=lambda p: p == win):
+        assert _find_claude_cli() == win
+
+def test_find_claude_cli_nichts_gefunden_gibt_none():
+    from web_ai import _find_claude_cli
+    with patch("shutil.which", return_value=None), \
+         patch("web_ai.os.path.exists", return_value=False):
+        assert _find_claude_cli() is None
