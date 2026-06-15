@@ -179,11 +179,37 @@ async function saveFieldsNow() {
   });
 }
 // Speichert die aktuellen Fotos als Entwurf (nur bei Änderung der Fotoauswahl).
+// Merkt sich die zuletzt bekannte Foto-Version. So lösen eigene Änderungen am PC
+// keine unnötige Neu-Ladung aus – nur Änderungen von anderswo (Handy) tun das.
+let knownImagesRev = 0;
 async function saveImagesNow() {
   const fd = new FormData();
   selectedFiles.forEach((f) => fd.append("images", f));
-  await fetch("/api/draft/images", { method: "POST", body: fd });
+  const r = await fetch("/api/draft/images", { method: "POST", body: fd });
+  try { knownImagesRev = (await r.json()).images_rev ?? knownImagesRev; } catch (e) {}
 }
+
+// Holt die Fotos aus dem Entwurf in die Ansicht (für die Live-Übernahme vom Handy).
+async function reloadImagesFromDraft() {
+  const draft = await (await fetch("/api/draft")).json();
+  knownImagesRev = draft.images_rev ?? knownImagesRev;
+  selectedFiles = (draft.images || []).map((im, i) =>
+    dataURLtoFile(im.data_url, "foto-" + (i + 1)));
+  renderThumbs();
+}
+
+// Fragt regelmäßig die leichte Foto-Version ab. Hat sich etwas geändert (z. B. ein
+// Foto vom Handy), werden die Fotos in die Computerseite übernommen.
+async function pollPhoneImages() {
+  try {
+    const d = await (await fetch("/api/draft/images-rev")).json();
+    if (d.images_rev !== knownImagesRev) {
+      await reloadImagesFromDraft();
+      status("📱 Foto vom Handy übernommen.");
+    }
+  } catch (e) { /* offline o. Ä. – einfach beim nächsten Mal erneut versuchen */ }
+}
+setInterval(pollPhoneImages, 2500);
 // Baut aus einem gespeicherten Base64-Foto wieder eine Datei (für den Upload).
 function dataURLtoFile(dataURL, name) {
   const [head, b64] = dataURL.split(",");
@@ -197,12 +223,29 @@ function dataURLtoFile(dataURL, name) {
 function renderThumbs() {
   const box = $("thumbs");
   box.innerHTML = "";
-  selectedFiles.forEach((file) => {
+  selectedFiles.forEach((file, idx) => {
+    const wrap = document.createElement("div");
+    wrap.className = "thumb";
     const img = document.createElement("img");
     img.src = URL.createObjectURL(file);
-    box.appendChild(img);
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "thumb-del";
+    del.textContent = "×";
+    del.title = "Foto entfernen";
+    del.addEventListener("click", () => removeFile(idx));
+    wrap.appendChild(img);
+    wrap.appendChild(del);
+    box.appendChild(wrap);
   });
   $("generate-btn").disabled = selectedFiles.length === 0;
+}
+
+// Entfernt ein einzelnes Foto (Klick auf das ×) und hält den Entwurf synchron.
+function removeFile(idx) {
+  selectedFiles.splice(idx, 1);
+  renderThumbs();
+  saveImagesNow();
 }
 
 function addFiles(fileList) {
@@ -430,6 +473,7 @@ $("choose-folder-btn").addEventListener("click", async () => {
   loadRecent();  // zuletzt gespeicherte Anzeigen unten zeigen
 
   const draft = await (await fetch("/api/draft")).json();
+  knownImagesRev = draft.images_rev ?? 0;   // Ausgangsstand merken (sonst Fehl-Reload)
   // Fotos aus dem Entwurf zurückholen.
   if (Array.isArray(draft.images) && draft.images.length) {
     selectedFiles = draft.images.map((im, i) =>

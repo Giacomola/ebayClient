@@ -7,7 +7,9 @@ Datei (dann wird ein leerer Entwurf zurückgegeben)."""
 import json
 import os
 
-EMPTY = {"fields": {}, "images": [], "result_visible": False}
+# images_rev zählt nur bei Foto-Änderungen hoch. So erkennt die Computerseite,
+# wenn vom Handy ein Foto dazukam, ohne bei jeder Textänderung neu zu laden.
+EMPTY = {"fields": {}, "images": [], "result_visible": False, "images_rev": 0}
 
 def load_draft(path: str = "draft.json") -> dict:
     if os.path.exists(path):
@@ -34,9 +36,11 @@ def update_fields(fields: dict, result_visible: bool, path: str = "draft.json") 
     return draft
 
 def update_images(images: list, path: str = "draft.json") -> dict:
-    """Speichert nur die Fotos; vorhandene Textfelder bleiben erhalten."""
+    """Speichert nur die Fotos; vorhandene Textfelder bleiben erhalten.
+    Erhöht images_rev, damit andere Geräte die Änderung erkennen."""
     draft = load_draft(path)
     draft["images"] = images
+    draft["images_rev"] = int(draft.get("images_rev", 0)) + 1
     save_draft(draft, path)
     return draft
 

@@ -28,6 +28,16 @@ def test_primary_sources_persistiert(tmp_path):
     assert r.status_code == 200
     assert c.get("/api/settings").get_json()["primary_sources"] == ["dnb", "zvab"]
 
+def test_draft_images_rev_und_live_abfrage(tmp_path):
+    c = _client(tmp_path)
+    assert c.get("/api/draft/images-rev").get_json()["images_rev"] == 0
+    data = {"images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
+    r = c.post("/api/draft/images", data=data, content_type="multipart/form-data")
+    body = r.get_json()
+    assert body["images_rev"] == 1                      # Antwort enthält neue Version
+    rev = c.get("/api/draft/images-rev").get_json()
+    assert rev["images_rev"] == 1 and rev["count"] == 1  # leichte Abfrage stimmt überein
+
 def test_handy_zugang_mit_ip(tmp_path):
     c = _client(tmp_path)
     with patch("app._lan_ip", return_value="192.168.0.5"):

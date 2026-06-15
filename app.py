@@ -124,8 +124,16 @@ def create_app(config_path: str = "config.json",
             data_url = f"data:{media_type};base64," + \
                 base64.standard_b64encode(raw).decode("ascii")
             images.append({"media_type": media_type, "data_url": data_url})
-        update_images(images, draft_path)
-        return jsonify({"ok": True, "count": len(images)})
+        d = update_images(images, draft_path)
+        return jsonify({"ok": True, "count": len(images),
+                        "images_rev": d.get("images_rev", 0)})
+
+    @app.get("/api/draft/images-rev")
+    def draft_images_rev():
+        """Leichte Abfrage: nur die Foto-Versionsnummer (für die Live-Aktualisierung)."""
+        d = load_draft(draft_path)
+        return jsonify({"images_rev": d.get("images_rev", 0),
+                        "count": len(d.get("images", []))})
 
     @app.post("/api/draft/clear")
     def post_draft_clear():

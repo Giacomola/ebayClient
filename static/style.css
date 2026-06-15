@@ -8,7 +8,13 @@ main { max-width: var(--page-width, 720px); margin: 0 auto; padding: 1.5rem; }
   text-align: center; background: #fff; }
 .drop-zone.drag { border-color: #c4623a; background: #fff8f4; }
 .thumbs { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
-.thumbs img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+.thumbs img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; display: block; }
+.thumb { position: relative; }
+.thumb-del { position: absolute; top: -7px; right: -7px; width: 22px; height: 22px;
+  padding: 0; border: none; border-radius: 50%; background: #8a3b22; color: #fff;
+  font-size: 1.1rem; line-height: 1; cursor: pointer; display: flex;
+  align-items: center; justify-content: center; }
+.thumb-del:hover { background: #c4623a; }
 button { font-size: 1rem; padding: .6rem 1.1rem; border-radius: 8px;
   border: 1px solid #c9c3b5; background: #fff; cursor: pointer; }
 button.primary { background: #c4623a; color: #fff; border: none; }
