@@ -398,12 +398,45 @@ $("f-description").addEventListener("input", saveFieldsSoon);
 // einfachen Zweck robust. styleWithCSS=false sorgt für saubere <b>/<i>/<u>-Tags
 // (statt style="..."), die eBay zuverlässig anzeigt und kein Semikolon enthalten.
 try { document.execCommand("styleWithCSS", false, false); } catch (e) { /* egal */ }
-function richBefehl(cmd) {
-  $("f-description").focus();
-  document.execCommand(cmd, false, null);
-  saveFieldsSoon();   // formatiertes HTML in den Entwurf übernehmen
+
+const richPopup = $("rich-popup");
+const richField = $("f-description");
+
+// Gibt den markierten Bereich zurück – aber nur, wenn echter Text INNERHALB des
+// Beschreibungsfeldes markiert ist (sonst null → Leiste bleibt verborgen).
+function markierungImFeld() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null;
+  const range = sel.getRangeAt(0);
+  if (!richField.contains(range.commonAncestorContainer)) return null;
+  if (!sel.toString().trim()) return null;
+  return range;
 }
-// mousedown statt click: verhindert, dass der Knopf die Textmarkierung wegnimmt.
+
+// Zeigt die Leiste über der Markierung an (oder verbirgt sie).
+function aktualisiereFormatLeiste() {
+  const range = markierungImFeld();
+  if (!range) { richPopup.hidden = true; return; }
+  richPopup.hidden = false;   // erst sichtbar machen, dann Maße messen
+  const rect = range.getBoundingClientRect();
+  const ph = richPopup.offsetHeight || 34;
+  const pw = richPopup.offsetWidth || 120;
+  let top = rect.top - ph - 6;
+  if (top < 4) top = rect.bottom + 6;                       // kein Platz oben → darunter
+  let left = Math.max(4, Math.min(rect.left, window.innerWidth - pw - 4));
+  richPopup.style.top = top + "px";
+  richPopup.style.left = left + "px";
+}
+document.addEventListener("selectionchange", aktualisiereFormatLeiste);
+// Beim Scrollen mitführen, solange die Leiste sichtbar ist.
+window.addEventListener("scroll", () => { if (!richPopup.hidden) aktualisiereFormatLeiste(); }, true);
+
+function richBefehl(cmd) {
+  document.execCommand(cmd, false, null);
+  saveFieldsSoon();              // formatiertes HTML in den Entwurf übernehmen
+  aktualisiereFormatLeiste();    // Leiste an die (noch bestehende) Markierung anpassen
+}
+// mousedown + preventDefault: der Knopf nimmt die Textmarkierung NICHT weg.
 on("fmt-bold", "mousedown", (e) => { e.preventDefault(); richBefehl("bold"); });
 on("fmt-italic", "mousedown", (e) => { e.preventDefault(); richBefehl("italic"); });
 on("fmt-underline", "mousedown", (e) => { e.preventDefault(); richBefehl("underline"); });

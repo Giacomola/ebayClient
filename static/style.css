@@ -33,9 +33,14 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .result label { display: flex; flex-direction: column; gap: .3rem; font-size: .9rem; }
 .result input, .result textarea, .result select { font-size: 1rem; padding: .5rem;
   border: 1px solid #c9c3b5; border-radius: 6px; }
-.rich-toolbar { display: flex; gap: .3rem; }
-.rich-toolbar button { padding: .15rem .6rem; min-width: 2rem; font-size: .95rem;
-  line-height: 1.3; }
+/* Schwebende Formatier-Leiste über markiertem Text. */
+.rich-popup { position: fixed; z-index: 50; display: flex; gap: .25rem;
+  background: #333; padding: .25rem; border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3); }
+.rich-popup[hidden] { display: none; }
+.rich-popup button { padding: .1rem .55rem; min-width: 1.9rem; font-size: .95rem;
+  line-height: 1.3; background: #fff; border: 1px solid #555; }
+.rich-popup button:hover { background: #f0eee8; }
 .result .rich { font-size: 1rem; padding: .6rem .7rem; border: 1px solid #c9c3b5;
   border-radius: 6px; background: #fff; min-height: 6rem; max-height: 65vh;
   overflow-y: auto; line-height: 1.45; }
