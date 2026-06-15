@@ -89,6 +89,13 @@
   <dialog id="settings-dialog">
     <form method="dialog">
       <h2>Einstellungen</h2>
+      <label>Rechenleistung
+        <select id="s-ki-backend">
+          <option value="api_key">API-Schlüssel (pro Nutzung bezahlt)</option>
+          <option value="abo">Claude-Abo (Monatsguthaben, kein Schlüssel nötig)</option>
+        </select>
+      </label>
+      <p class="hint" id="ki-backend-hint"></p>
       <label>Anthropic-API-Schlüssel <input id="s-anthropic" type="password"></label>
       <label>imgbb-API-Schlüssel <input id="s-imgbb" type="password"></label>
       <label>KI-Modell für die Texte
