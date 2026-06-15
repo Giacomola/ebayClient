@@ -85,7 +85,7 @@
     <section id="recent" class="info-box recent" hidden>
       <h3>Noch nicht hochgeladen</h3>
       <ul id="recent-list"></ul>
-      <button id="mark-uploaded-btn" type="button">Als zu eBay hochgeladen markieren</button>
+      <button id="archive-file-btn" type="button">Sammeldatei archivieren &amp; neu beginnen</button>
     </section>
 
     <button id="quit-btn" type="button" class="quit">Programm beenden</button>
@@ -120,7 +120,7 @@
       <fieldset class="src-fieldset">
         <legend>Primärquellen für die Recherche</legend>
         <div id="primary-sources"></div>
-        <p class="hint">Häkchen = wird genutzt. Reihenfolge oben = höhere Priorität.
+        <p class="hint">Zahl = Priorität (1 = zuerst). Leer lassen = Quelle wird nicht genutzt.
           Zustand &amp; sichtbare Beschreibung kommen immer aus deinen Fotos, nicht aus diesen Quellen.</p>
       </fieldset>
       <label>Standort <input id="s-location" value="Berlin"></label>
@@ -148,6 +148,10 @@
       <label>Beispiel-Beschreibung <span class="sub">(optional – die KI übernimmt nur Stil und Aufbau, nicht die Inhalte)</span>
         <textarea id="p-examples" rows="1"></textarea>
       </label>
+      <button id="p-derive" type="button">Anweisungen aus Beispiel erzeugen</button>
+      <p class="hint">Schreibt aus deiner Beispiel-Beschreibung die „Allgemeinen Regeln" und
+        die „Beschreibung"-Anweisung. Du kannst sie danach anpassen und musst dann „Speichern".</p>
+      <p class="hint" id="p-derive-status"></p>
       <menu>
         <button id="p-save" value="save">Speichern</button>
         <button value="cancel">Abbrechen</button>

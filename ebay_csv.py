@@ -3,12 +3,12 @@
 Unterstützt eine einzelne Anzeige (build_csv) sowie das Sammeln mehrerer
 Anzeigen in einer gemeinsamen Datei (append_listing)."""
 import os
+import re
+from datetime import date
 
 ACTION = "*Action(SiteID=Germany|Country=DE|Currency=EUR|Version=1193|CC=UTF-8)"
 INFO_LINE = "Info;Version=1.0.0;Template=fx_category_template_EBAY_DE"
 DEFAULT_FILENAME = "ebay-anzeigen.csv"
-# Bereits zu eBay hochgeladene Anzeigen werden hierhin verschoben (nur als Nachweis).
-ARCHIVE_FILENAME = "ebay-anzeigen-erledigt.csv"
 
 COLUMNS = [
     ACTION, "CustomLabel", "*Category", "StoreCategory", "*Title", "Subtitle",
@@ -125,31 +125,41 @@ def title_exists(folder: str, title, filename: str = DEFAULT_FILENAME) -> bool:
                    and line.rstrip("\r\n").split(";")[_TITLE_INDEX] == target
                    for line in f)
 
-def archive_listings(folder: str, filename: str = DEFAULT_FILENAME,
-                     archive_filename: str = ARCHIVE_FILENAME) -> int:
-    """Verschiebt alle Anzeigen aus der aktiven Sammeldatei ins Archiv.
+def _safe_name(name: str) -> str:
+    """Macht aus der Nutzereingabe einen sicheren Dateinamen-Bestandteil:
+    nur Buchstaben (inkl. Umlaute), Ziffern, Leerzeichen, - und _ ; Leerzeichen
+    werden zu Unterstrichen."""
+    name = (name or "").strip()
+    name = re.sub(r"[^\wäöüÄÖÜß \-]", "", name, flags=re.UNICODE)
+    name = re.sub(r"\s+", "_", name).strip("_")
+    return name
 
-    Hängt die Datenzeilen an die Archiv-Datei an (legt sie bei Bedarf mit BOM,
-    Info- und Kopfzeile an) und löscht danach die aktive Datei. So enthält die
-    aktive Datei beim nächsten eBay-Upload nur noch neue Anzeigen.
-    Gibt die Anzahl verschobener Anzeigen zurück (0, wenn nichts da war)."""
+def archive_as_file(folder: str, custom_name: str = "",
+                    filename: str = DEFAULT_FILENAME):
+    """Benennt die aktive Sammeldatei in eine datierte Archivdatei um und gibt so
+    den Platz für eine frische Datei frei (die nächste Anzeige legt sie neu an).
+
+    Der Archivname ist immer ``eBayClient_<JJJJ-MM-TT>[_<Name>].csv``; bei
+    Namensgleichheit wird _2, _3 … angehängt. Gibt (Anzahl Anzeigen, Archivname)
+    zurück – (0, "") wenn nichts zu archivieren war."""
     path = os.path.join(folder, filename)
     if not os.path.exists(path):
-        return 0
+        return 0, ""
     with open(path, "r", encoding="utf-8-sig") as f:
-        rows = [line.rstrip("\r\n") for line in f if line.startswith("Add;")]
-    if not rows:
-        return 0
-    archive_path = os.path.join(folder, archive_filename)
-    new_archive = not os.path.exists(archive_path)
-    encoding = "utf-8-sig" if new_archive else "utf-8"
-    with open(archive_path, "a", encoding=encoding, newline="") as f:
-        if new_archive:
-            f.write(INFO_LINE + "\r\n" + HEADER + "\r\n")
-        for r in rows:
-            f.write(r + "\r\n")
-    os.remove(path)  # aktive Datei ist jetzt leer → einfach entfernen
-    return len(rows)
+        count = sum(1 for line in f if line.startswith("Add;"))
+    if count == 0:
+        return 0, ""
+    base = f"eBayClient_{date.today().isoformat()}"
+    extra = _safe_name(custom_name)
+    if extra:
+        base = f"{base}_{extra}"
+    archive_name = f"{base}.csv"
+    n = 2
+    while os.path.exists(os.path.join(folder, archive_name)):  # Kollision vermeiden
+        archive_name = f"{base}_{n}.csv"
+        n += 1
+    os.rename(path, os.path.join(folder, archive_name))  # ganze Datei wandert ins Archiv
+    return count, archive_name
 
 def recent_listings(folder: str, filename: str = DEFAULT_FILENAME, limit: int = 10):
     """Liest die zuletzt gespeicherten Anzeigen aus der Sammeldatei.

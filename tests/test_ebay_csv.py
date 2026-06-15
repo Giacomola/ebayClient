@@ -1,5 +1,7 @@
+import os
+from datetime import date
 from ebay_csv import (build_csv, append_listing, title_exists,
-                      recent_listings, archive_listings, ARCHIVE_FILENAME, COLUMNS)
+                      recent_listings, archive_as_file, COLUMNS)
 
 def _parse(data: bytes):
     assert data[:3] == b"\xef\xbb\xbf"            # BOM vorhanden
@@ -137,28 +139,39 @@ def test_recent_listings_limit(tmp_path):
         append_listing(folder, title=f"Buch {i}", **gemeinsam)
     assert len(recent_listings(folder, limit=10)) == 10
 
-def test_archive_listings_verschiebt_und_leert(tmp_path):
+def test_archive_as_file_benennt_um_und_macht_platz(tmp_path):
     folder = str(tmp_path)
     gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
                      price="9.99", condition_id="5000", picture_urls=["https://x/1.jpg"])
     append_listing(folder, title="Buch 1", **gemeinsam)
     append_listing(folder, title="Buch 2", **gemeinsam)
-    moved = archive_listings(folder)
-    assert moved == 2
-    assert recent_listings(folder) == []                  # aktive Datei ist weg/leer
-    arch = recent_listings(folder, filename=ARCHIVE_FILENAME, limit=50)
+    count, name = archive_as_file(folder, "Romane")
+    assert count == 2
+    heute = date.today().isoformat()
+    assert name == f"eBayClient_{heute}_Romane.csv"
+    assert os.path.exists(os.path.join(folder, name))     # Archivdatei da
+    assert recent_listings(folder) == []                  # aktive Datei ist weg
+    arch = recent_listings(folder, filename=name, limit=50)
     assert {r["title"] for r in arch} == {"Buch 1", "Buch 2"}
 
-def test_archive_listings_haengt_an_bestehendes_archiv_an(tmp_path):
+def test_archive_as_file_ohne_name_nur_datum(tmp_path):
+    folder = str(tmp_path)
+    append_listing(folder, title="X", author="A", book_title="B", language="Deutsch",
+                   description="D", price="9.99", condition_id="5000",
+                   picture_urls=["https://x/1.jpg"])
+    _, name = archive_as_file(folder)
+    assert name == f"eBayClient_{date.today().isoformat()}.csv"
+
+def test_archive_as_file_vermeidet_namenskollision(tmp_path):
     folder = str(tmp_path)
     gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
                      price="9.99", condition_id="5000", picture_urls=["https://x/1.jpg"])
     append_listing(folder, title="Erst", **gemeinsam)
-    archive_listings(folder)
+    _, erste = archive_as_file(folder)
     append_listing(folder, title="Zweit", **gemeinsam)
-    archive_listings(folder)
-    arch = recent_listings(folder, filename=ARCHIVE_FILENAME, limit=50)
-    assert {r["title"] for r in arch} == {"Erst", "Zweit"}
+    _, zweite = archive_as_file(folder)
+    assert erste != zweite                                # zweiter Name weicht aus (_2)
+    assert zweite.endswith("_2.csv")
 
-def test_archive_listings_leer_macht_nichts(tmp_path):
-    assert archive_listings(str(tmp_path)) == 0           # gar keine Datei
+def test_archive_as_file_leer_macht_nichts(tmp_path):
+    assert archive_as_file(str(tmp_path)) == (0, "")      # gar keine Datei

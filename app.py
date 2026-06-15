@@ -9,9 +9,10 @@ from config import (load_settings, save_settings, build_system_prompt,
                     ensure_anweisungen)
 from ai_client import analyze_book
 from price_analysis import analyze_price
+from derive_instructions import derive_from_example
 from image_host import upload_image
 from ebay_csv import (append_listing, title_exists, title_for,
-                      recent_listings, archive_listings, DEFAULT_FILENAME)
+                      recent_listings, archive_as_file, DEFAULT_FILENAME)
 from draft import load_draft, update_fields, update_images, clear_draft
 
 def _open_in_os(path: str) -> None:
@@ -120,15 +121,19 @@ def create_app(config_path: str = "config.json",
         folder = settings.get("save_folder", "")
         return jsonify({"listings": recent_listings(folder) if folder else []})
 
-    @app.post("/api/mark-uploaded")
-    def mark_uploaded():
-        """Archiviert die aktuelle Sammeldatei (nach dem eBay-Upload), leert sie."""
+    @app.post("/api/archive-file")
+    def archive_file():
+        """Archiviert die aktuelle Sammeldatei unter eBayClient_<Datum>[_Name].csv
+        und gibt den Platz für eine frische Datei frei."""
         settings = load_settings(config_path)
         folder = settings.get("save_folder", "")
         if not folder:
             return jsonify({"error": "Kein Speicherordner gewählt."}), 400
-        moved = archive_listings(folder)
-        return jsonify({"ok": True, "moved": moved})
+        name = (request.get_json(silent=True) or {}).get("name", "")
+        count, archive_name = archive_as_file(folder, name)
+        if count == 0:
+            return jsonify({"error": "Die Sammeldatei ist leer – nichts zu archivieren."}), 400
+        return jsonify({"ok": True, "moved": count, "filename": archive_name})
 
     @app.post("/api/open-csv")
     def open_csv():
@@ -207,6 +212,35 @@ def create_app(config_path: str = "config.json",
             return jsonify({"error": f"KI-Fehler ({e.status_code}): {e.message}"}), 502
         except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
             return jsonify({"error": f"Preis-Recherche fehlgeschlagen: {e}"}), 502
+        return jsonify(result.model_dump())
+
+    @app.post("/api/derive-instructions")
+    def derive_instructions_route():
+        settings = load_settings(config_path)
+        if settings["ki_backend"] != "abo" and not settings["anthropic_api_key"]:
+            return jsonify({"error": "Kein Anthropic-API-Schlüssel hinterlegt. "
+                                     "Bitte in den Einstellungen eintragen."}), 400
+        data = request.get_json(force=True) or {}
+        example = (data.get("example") or "").strip()
+        if not example:
+            return jsonify({"error": "Bitte zuerst eine Beispiel-Beschreibung eingeben."}), 400
+        try:
+            result = derive_from_example(example, api_key=settings["anthropic_api_key"],
+                                         model=settings["model_text"],
+                                         backend=settings["ki_backend"])
+        except anthropic.AuthenticationError:
+            return jsonify({"error": "Der Anthropic-API-Schlüssel fehlt oder ist "
+                                     "ungültig."}), 401
+        except anthropic.APIConnectionError:
+            return jsonify({"error": "Keine Verbindung zu den KI-Servern. Bitte die "
+                                     "Internetverbindung prüfen."}), 503
+        except anthropic.APIStatusError as e:
+            if e.status_code >= 500:
+                return jsonify({"error": "Die KI-Server sind gerade überlastet. Bitte "
+                                         "kurz warten und erneut versuchen."}), 503
+            return jsonify({"error": f"KI-Fehler ({e.status_code}): {e.message}"}), 502
+        except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
+            return jsonify({"error": f"Anweisungen erzeugen fehlgeschlagen: {e}"}), 502
         return jsonify(result.model_dump())
 
     @app.post("/api/choose-folder")

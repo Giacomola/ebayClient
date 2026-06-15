@@ -338,22 +338,25 @@ $("show-entry-btn").addEventListener("click", async () => {
 
 // „Als hochgeladen markieren": archiviert die aktuelle Sammeldatei und leert sie,
 // damit beim nächsten eBay-Upload nicht dieselben Anzeigen noch einmal hochgeladen werden.
-$("mark-uploaded-btn").addEventListener("click", async () => {
-  if (!confirm("Erst klicken, NACHDEM du die Datei zu eBay hochgeladen hast!\n\n"
-               + "Alle Einträge der aktuellen Sammeldatei werden ins Archiv verschoben "
-               + "und aus der aktiven Datei entfernt. So werden sie bei eBay nicht doppelt "
-               + "angelegt.")) return;
+on("archive-file-btn", "click", async () => {
+  const name = prompt("Die aktuelle Sammeldatei wird archiviert und es beginnt eine "
+    + "neue, leere.\n\nOptional: ein Name für die alte Datei (das Datum wird automatisch "
+    + "vorangestellt, z. B. eBayClient_2026-06-15_DeinName.csv).\n\nName (kann leer bleiben):");
+  if (name === null) return;  // Abbrechen
   try {
-    const r = await fetch("/api/mark-uploaded", { method: "POST" });
+    const r = await fetch("/api/archive-file", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
     const d = await r.json();
-    if (!r.ok) { alert(d.error || "Konnte nicht abschließen."); return; }
+    if (!r.ok) { alert(d.error || "Konnte nicht archivieren."); return; }
     $("save-success").hidden = true;
     $("show-entry-btn").hidden = true;
-    status(`✓ ${d.moved} Eintrag/Einträge ins Archiv verschoben. `
-           + `Die aktive Sammeldatei ist nun leer für die nächsten Bücher.`);
+    status(`✓ ${d.moved} Eintrag/Einträge archiviert als „${d.filename}". `
+           + `Die Sammeldatei beginnt nun neu.`);
     loadRecent();  // Liste ist jetzt leer → Bereich blendet sich aus
   } catch (e) {
-    alert("Konnte nicht abschließen.");
+    alert("Konnte nicht archivieren.");
   }
 });
 
@@ -512,27 +515,37 @@ const PRIMARY_SOURCES = [
   ["booklooker", "Booklooker (booklooker.de)"],
   ["wikipedia", "Wikipedia (wikipedia.org)"],
 ];
-// Zeigt die Quellen als Häkchen-Liste, vorausgewählt nach den gespeicherten Werten.
+// Zeigt je Quelle ein kleines Zahlenfeld für die Priorität. Vorbelegt nach der
+// gespeicherten Reihenfolge (Position 1, 2, 3 …); leer = Quelle wird nicht genutzt.
 function renderPrimarySources(selected) {
   const box = $("primary-sources");
   if (!box) return;
-  const chosen = Array.isArray(selected) ? selected : [];
+  const order = Array.isArray(selected) ? selected : [];
   box.innerHTML = "";
   for (const [key, label] of PRIMARY_SOURCES) {
+    const pos = order.indexOf(key);          // -1 = nicht gewählt
     const row = document.createElement("label");
     row.className = "src-row";
-    const cb = document.createElement("input");
-    cb.type = "checkbox"; cb.id = "src-" + key; cb.checked = chosen.includes(key);
-    row.appendChild(cb);
+    const num = document.createElement("input");
+    num.type = "number"; num.min = "1"; num.step = "1";
+    num.className = "src-prio"; num.id = "src-" + key; num.placeholder = "–";
+    num.value = pos >= 0 ? String(pos + 1) : "";
+    row.appendChild(num);
     row.appendChild(document.createTextNode(" " + label));
     box.appendChild(row);
   }
 }
-// Sammelt die angehakten Quellen in Katalog-Reihenfolge (= Priorität).
+// Sammelt die Quellen mit Priorität, sortiert nach der Zahl (1 = zuerst). Bei
+// gleicher Zahl entscheidet die Katalog-Reihenfolge. Leer/0 = nicht genutzt.
 function collectPrimarySources() {
-  return PRIMARY_SOURCES
-    .map(([key]) => key)
-    .filter((key) => { const cb = $("src-" + key); return cb && cb.checked; });
+  const withPrio = [];
+  PRIMARY_SOURCES.forEach(([key], idx) => {
+    const el = $("src-" + key);
+    const n = el ? parseInt(el.value, 10) : NaN;
+    if (Number.isFinite(n) && n >= 1) withPrio.push({ key, n, idx });
+  });
+  withPrio.sort((a, b) => a.n - b.n || a.idx - b.idx);
+  return withPrio.map((x) => x.key);
 }
 
 const dlg = $("settings-dialog");

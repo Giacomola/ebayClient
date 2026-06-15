@@ -3,6 +3,7 @@ from unittest.mock import patch
 from app import create_app
 from ai_client import BookFields
 from price_analysis import PriceAnalysis
+from derive_instructions import DerivedInstructions
 
 def _client(tmp_path):
     app = create_app(config_path=str(tmp_path / "config.json"))
@@ -82,7 +83,7 @@ def test_listings_ohne_ordner_leer(tmp_path):
     assert r.status_code == 200
     assert r.get_json()["listings"] == []
 
-def test_mark_uploaded_archiviert_und_leert(tmp_path):
+def test_archive_file_archiviert_und_beginnt_neu(tmp_path):
     from ebay_csv import append_listing
     c = _client(tmp_path)
     folder = tmp_path / "out"
@@ -91,14 +92,24 @@ def test_mark_uploaded_archiviert_und_leert(tmp_path):
                    language="Deutsch", description="D", price="9.99",
                    condition_id="5000", picture_urls=["https://x/1.jpg"])
     c.post("/api/settings", json={"save_folder": str(folder)})
-    r = c.post("/api/mark-uploaded")
+    r = c.post("/api/archive-file", json={"name": "Romane"})
     assert r.status_code == 200
-    assert r.get_json()["moved"] == 1
+    body = r.get_json()
+    assert body["moved"] == 1
+    assert body["filename"].startswith("eBayClient_") and body["filename"].endswith("_Romane.csv")
     assert c.get("/api/listings").get_json()["listings"] == []   # Liste jetzt leer
 
-def test_mark_uploaded_ohne_ordner_fehler(tmp_path):
+def test_archive_file_leer_gibt_fehler(tmp_path):
     c = _client(tmp_path)
-    r = c.post("/api/mark-uploaded")
+    folder = tmp_path / "leer"
+    folder.mkdir()
+    c.post("/api/settings", json={"save_folder": str(folder)})
+    r = c.post("/api/archive-file", json={"name": ""})
+    assert r.status_code == 400
+
+def test_archive_file_ohne_ordner_fehler(tmp_path):
+    c = _client(tmp_path)
+    r = c.post("/api/archive-file", json={"name": ""})
     assert r.status_code == 400
 
 def test_create_csv_fragt_bei_dublette(tmp_path):
@@ -193,3 +204,25 @@ def test_price_ruft_analyze_price(tmp_path):
     assert m.called
     # Preis-Aufruf nutzt das (schnellere) Preis-Modell (Standard Sonnet).
     assert m.call_args.kwargs["model"] == "claude-sonnet-4-6"
+
+def test_derive_instructions_fuellt_felder(tmp_path):
+    c = _client(tmp_path)
+    c.post("/api/settings", json={"anthropic_api_key": "x"})
+    fake = DerivedInstructions(prompt_general="REGELN", description="BESCHREIBUNG")
+    with patch("app.derive_from_example", return_value=fake) as m:
+        r = c.post("/api/derive-instructions", json={"example": "Ein Mustertext."})
+    assert r.status_code == 200
+    body = r.get_json()
+    assert body["prompt_general"] == "REGELN"
+    assert body["description"] == "BESCHREIBUNG"
+    assert m.called
+    # nutzt das Textmodell und reicht das Beispiel als erstes Argument durch.
+    assert m.call_args.kwargs["model"] == "claude-opus-4-8"
+    assert m.call_args.args[0] == "Ein Mustertext."
+
+def test_derive_instructions_leeres_beispiel_400(tmp_path):
+    c = _client(tmp_path)
+    c.post("/api/settings", json={"anthropic_api_key": "x"})
+    r = c.post("/api/derive-instructions", json={"example": "   "})
+    assert r.status_code == 400
+    assert "Beispiel" in r.get_json()["error"]
