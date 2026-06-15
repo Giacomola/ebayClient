@@ -25,6 +25,20 @@ function renderSources(sources) {
   }
   box.hidden = list.children.length === 0;
 }
+// Zeigt zwei anklickbare Titelvorschläge. Ein Klick übernimmt den Titel ins Feld.
+// Sind beide gleich (oder fehlt einer), werden keine Vorschläge angezeigt.
+function renderTitleOptions(t1, t2) {
+  const box = $("title-suggestions");
+  const uniq = [...new Set([t1, t2].map((s) => (s || "").trim()).filter(Boolean))];
+  if (uniq.length < 2) { box.hidden = true; return; }
+  $("title-opt-1").textContent = uniq[0];
+  $("title-opt-2").textContent = uniq[1];
+  box.hidden = false;
+}
+function chooseTitle(el) {
+  $("f-title").value = el.textContent;
+  saveFieldsSoon();
+}
 // Zeigt nur die gefundenen Beispielpreise mit Quelle – bewusst keine Empfehlung.
 function renderPrice(d) {
   $("price-box").hidden = false;
@@ -205,6 +219,7 @@ generateBtn.addEventListener("click", async () => {
       $("f-" + key).value = data[key] || "";
     }
     $("f-description").innerHTML = data.description || "";  // HTML gerendert anzeigen
+    renderTitleOptions(data.title, data.title_alt);  // zwei Titelvorschläge zur Auswahl
     applyBadges(data.web_sourced_fields || []);
     renderSources(data.sources || []);
     $("result").hidden = false;
@@ -222,6 +237,10 @@ generateBtn.addEventListener("click", async () => {
 // Preissuche nur auf Knopfdruck (sie dauert länger und ist nur eine Empfehlung).
 on("price-btn", "click", fetchPrice);
 
+// Klick auf einen der beiden Titelvorschläge übernimmt ihn ins Titel-Feld.
+on("title-opt-1", "click", (e) => chooseTitle(e.currentTarget));
+on("title-opt-2", "click", (e) => chooseTitle(e.currentTarget));
+
 // Jede Änderung in den Ergebnis-Feldern wird (verzögert) gespeichert.
 for (const key of RESULT_FIELDS) $("f-" + key).addEventListener("input", saveFieldsSoon);
 $("f-price").addEventListener("input", saveFieldsSoon);
@@ -237,6 +256,7 @@ on("new-case-btn", "click", async () => {
   $("f-price").value = "9.99";
   $("f-condition").value = "5000";
   $("result").hidden = true;
+  $("title-suggestions").hidden = true;
   applyBadges([]);
   renderSources([]);
   $("price-box").hidden = true;

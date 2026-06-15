@@ -24,10 +24,6 @@ _Fotos reinziehen, Ordnerwahl, Upload zu imgbb, Vorschau._
 ## ✍️ KI-Anzeigentext
 _Claude-Generierung, Felder (Titel, Beschreibung, Merkmale), Preis, Zustand, Stilvorlage._
 
-- [ ] Zwei Titelvorschläge ausgeben (Auswahl über anklicken)  `→ ai_client.py, app.py, index.html, app.js`
-- [ ] Strukturierte antiquarische Beschreibung als Vorlage für KI-Generierung (über das „Beispiel-Beschreibung"-Feld)  `→ anweisungen.txt, config.py`
-- [ ] Textfeld der Beschreibung sollte sich dem Platz auf dem Bildschirm anpassen (maximale Anzeigegröße)  `→ index.html`
-- [ ] Zur Suche DNB und DBB als Primärquelle verwenden, andere Quellen nur wenn nichts anderes vorhanden  `→ anweisungen.txt`
 
 ## 📄 CSV-Export
 _eBay-File-Exchange-CSV erzeugen, Sammel-CSV, Zielordner, Feld-Grenzen._
@@ -54,3 +50,7 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 DnB/DDB als bevorzugte Quelle im Recherche-Prompt verankert (anweisungen.txt).
 - [x] 2026-06-15 Preis-Suchbegriff: erste 4 Wörter des Buchtitels + Jahr als empfohlene Suchanfrage (price_analysis.py).
 - [x] 2026-06-15 Preisvergleich: Beispielpreise zeigen den Preis fett hervorgehoben + anklickbaren Link (app.js).
+- [x] 2026-06-15 Zwei anklickbare Titelvorschläge (title + title_alt), Klick übernimmt den Titel (ai_client.py, index.html, app.js, style.css).
+- [x] 2026-06-15 Strukturierte antiquarische Beispiel-Beschreibung in reinem HTML als Stil-Vorlage (anweisungen.txt).
+- [x] 2026-06-15 Beschreibungs-Textfeld nutzt mehr Bildschirmhöhe (max-height 65vh) (style.css).
+- [x] 2026-06-15 DNB/DDB als Primärquelle der Recherche, andere Quellen nur als Rückfall (anweisungen.txt).

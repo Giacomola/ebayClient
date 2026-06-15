@@ -10,8 +10,11 @@ JSON_INSTRUCTIONS = (
     "\n\nNutze die Websuche, um die EXAKTE Ausgabe des Buches zu bestimmen (Auflage, "
     "Druck, Erscheinungsjahr) und fehlende Angaben zu ergänzen. Ergänze großzügig, aber "
     "nur Belegbares. Antworte AUSSCHLIESSLICH mit einem JSON-Objekt (sonst kein Text) mit "
-    "genau diesen Schlüsseln: title, author, book_title, language, description, publisher, "
-    "publication_year, book_format, web_sourced_fields, sources. "
+    "genau diesen Schlüsseln: title, title_alt, author, book_title, language, description, "
+    "publisher, publication_year, book_format, web_sourced_fields, sources. "
+    "title und title_alt sind ZWEI unterschiedliche eBay-Titelvorschläge nach denselben "
+    "Regeln (je höchstens 80 Zeichen); title_alt setzt einen anderen Schwerpunkt (z. B. "
+    "andere Reihenfolge oder andere Schlüsselwörter), damit der Verkäufer wählen kann. "
     "web_sourced_fields ist eine Liste der Feldnamen, deren Inhalt aus der Websuche stammt "
     "(z. B. [\"publication_year\", \"publisher\"]). sources ist eine Liste von Objekten "
     "{\"title\": ..., \"url\": ...} mit den verwendeten Quellen (leer lassen, wenn keine "
@@ -24,6 +27,7 @@ class Source(BaseModel):
 
 class BookFields(BaseModel):
     title: str
+    title_alt: str = ""   # zweiter, alternativer Titelvorschlag (zur Auswahl)
     author: str
     book_title: str
     language: str

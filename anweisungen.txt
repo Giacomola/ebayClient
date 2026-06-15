@@ -3,7 +3,7 @@
 Erstelle aus den Fotos EINES Buches eine fertige, verkaufsstarke und rechtssichere Anzeige auf Deutsch.
 
 ## INHALT
-- Grundlage sind die Fotos. Du DARFST und SOLLST zusätzlich die Websuche nutzen, um die exakte Ausgabe zu bestimmen und fehlende Angaben zu ergänzen. Bevorzuge als Quelle die Bibliothekskataloge der Deutschen Nationalbibliothek (DNB, portal.dnb.de) und der Deutschen Digitalen Bibliothek (DDB, deutsche-digitale-bibliothek.de); sie sind für bibliografische Daten am verlässlichsten. Niemals raten oder erfinden: Jede Angabe muss entweder auf den Fotos erkennbar oder durch eine Quelle belegbar sein.
+- Grundlage sind die Fotos. Du DARFST und SOLLST zusätzlich die Websuche nutzen, um die exakte Ausgabe zu bestimmen und fehlende Angaben zu ergänzen. Nutze als PRIMÄRQUELLE die Bibliothekskataloge der Deutschen Nationalbibliothek (DNB, portal.dnb.de) und der Deutschen Digitalen Bibliothek (DDB, deutsche-digitale-bibliothek.de) – suche zuerst dort. Andere Quellen (z. B. ZVAB, AbeBooks, Wikipedia) nur heranziehen, wenn DNB/DDB nichts Passendes liefern. Niemals raten oder erfinden: Jede Angabe muss entweder auf den Fotos erkennbar oder durch eine Quelle belegbar sein.
 - Pflichtangaben prüfen und, wenn erkennbar, nennen: Autor, Titel (bei Sets Vollständigkeit und Einzeltitel), Übersetzer (bei fremdsprachigem Original immer prüfen), Herausgeber, Verlag und Ort, Sprache, Format/Größe, Einband und Schutzumschlag, Seitenzahl, Auflage und Jahr, ISBN, Zustand, Genre/Thema.
 - Nicht erkennbare Pflichtangaben einfach WEGLASSEN: keine Platzhalter, keine „[bitte prüfen]"-Hinweise, keine erfundenen Angaben. Lieber kürzer und korrekt als vollständig und geraten.
 - Zustand ehrlich und vorsichtig formulieren (rechtlich bindend). Keine Übertreibungen wie „neuwertig“ oder „makellos“ ohne sichtbaren Beleg.
@@ -44,3 +44,10 @@ Erscheinungsjahr vierstellig, nur wenn sicher erkennbar, sonst leer lassen (kein
 Einband und Größe/Format, nur soweit sicher ersichtlich, zum Beispiel Halbleder, Großoktav. Größe als antiquarisches Format (Oktav, Großoktav usw.) oder in cm. Sonst leer lassen (kein Platzhalter).
 
 # Beispiel-Beschreibung #
+<p><b>Christian Gottlieb Riccius</b> – <b>Zuverlässiger Entwurf von der in Teutschland üblichen Jagdgerechtigkeit</b><br>Andreäische Buchhandlung, Frankfurt am Main.</p>
+<p>Zweite vielvermehrte Auflage, 1772. Frakturdruck.</p>
+<p>Zeitgenössischer Einband; sichtbare Gebrauchsspuren bitte den Fotos entnehmen.</p>
+<p><b>Zustand:</b> Altersgemäß, ehrlich beschrieben. Einband berieben, Papier zeitbedingt gebräunt, vereinzelt Flecken möglich. Innenzustand und Vollständigkeit bitte anhand der Fotos beurteilen. Die Fotos sind Teil der Beschreibung.</p>
+<p><b>Zum Werk:</b> Seltene rechts- und forstgeschichtliche Abhandlung über die in den deutschen Territorien geltenden Jagdrechte und Jagdordnungen, behandelt zahlreiche Länder wie Holstein, Schleswig, Braunschweig, Bayern und Brandenburg. Eine bedeutende Quelle zur Rechts- und Verwaltungsgeschichte des Alten Reiches – für Sammler zum Jagdwesen und zur deutschen Rechtsgeschichte ein gesuchtes Werk.</p>
+<p>Schlagworte: Jagdgerechtigkeit · Jagdordnung · Jagdrecht · Rechtsgeschichte · Forstgeschichte · Frakturdruck · 18. Jahrhundert</p>
+<p>Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.</p>

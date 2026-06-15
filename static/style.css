@@ -21,7 +21,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .result input, .result textarea, .result select { font-size: 1rem; padding: .5rem;
   border: 1px solid #c9c3b5; border-radius: 6px; }
 .result .rich { font-size: 1rem; padding: .6rem .7rem; border: 1px solid #c9c3b5;
-  border-radius: 6px; background: #fff; min-height: 6rem; max-height: 18rem;
+  border-radius: 6px; background: #fff; min-height: 6rem; max-height: 65vh;
   overflow-y: auto; line-height: 1.45; }
 .result .rich:focus { outline: 2px solid #c4623a; outline-offset: -1px; }
 .result .rich p { margin: 0 0 .6rem; }
@@ -56,6 +56,11 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 .info-box h3 { margin: 0 0 .5rem; font-size: 1rem; }
 .info-box ul { margin: 0; padding-left: 1.2rem; }
 .info-box li { margin-bottom: .3rem; }
+.title-suggestions { display: flex; flex-direction: column; gap: .35rem;
+  margin: -.4rem 0 .2rem; }
+.title-opt { text-align: left; background: #f0eee8; border: 1px solid #d9d3c5;
+  border-radius: 6px; padding: .45rem .6rem; cursor: pointer; font-size: .95rem; }
+.title-opt:hover { background: #e7f3ec; border-color: #2b6a4b; }
 .price-line { display: flex; gap: .5rem; align-items: center; }
 .price-line input { flex: 1; }
 .price-line button { white-space: nowrap; }
