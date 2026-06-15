@@ -30,16 +30,20 @@
     <p id="status" class="status"></p>
 
     <section id="result" class="result" hidden>
-      <label>Titel <input id="f-title" maxlength="80"></label>
-      <label>Autor <input id="f-author"></label>
-      <label>Buchtitel <input id="f-book_title"></label>
-      <label>Sprache <input id="f-language"></label>
-      <label>Verlag <input id="f-publisher"></label>
-      <label>Erscheinungsjahr <input id="f-publication_year"></label>
-      <label>Format <input id="f-book_format"></label>
-      <label>Beschreibung <span class="sub">(so erscheint sie ungefähr bei eBay – direkt bearbeitbar)</span>
+      <label>Titel <span class="web-badge" data-key="title" hidden>🌐 aus Websuche</span> <input id="f-title" maxlength="80"></label>
+      <label>Autor <span class="web-badge" data-key="author" hidden>🌐 aus Websuche</span> <input id="f-author"></label>
+      <label>Buchtitel <span class="web-badge" data-key="book_title" hidden>🌐 aus Websuche</span> <input id="f-book_title"></label>
+      <label>Sprache <span class="web-badge" data-key="language" hidden>🌐 aus Websuche</span> <input id="f-language"></label>
+      <label>Verlag <span class="web-badge" data-key="publisher" hidden>🌐 aus Websuche</span> <input id="f-publisher"></label>
+      <label>Erscheinungsjahr <span class="web-badge" data-key="publication_year" hidden>🌐 aus Websuche</span> <input id="f-publication_year"></label>
+      <label>Format <span class="web-badge" data-key="book_format" hidden>🌐 aus Websuche</span> <input id="f-book_format"></label>
+      <label>Beschreibung <span class="web-badge" data-key="description" hidden>🌐 aus Websuche</span> <span class="sub">(so erscheint sie ungefähr bei eBay – direkt bearbeitbar)</span>
         <div id="f-description" class="rich" contenteditable="true"></div>
       </label>
+      <section id="sources-box" class="info-box" hidden>
+        <h3>Quellen</h3>
+        <ul id="sources-list"></ul>
+      </section>
       <label>Preis (EUR, z. B. 9.99) <input id="f-price" value="9.99"></label>
       <label>Zustand
         <select id="f-condition">
@@ -50,6 +54,13 @@
           <option value="6000">Akzeptabel</option>
         </select>
       </label>
+      <section id="price-box" class="info-box" hidden>
+        <h3>Preisempfehlung</h3>
+        <p id="price-range"></p>
+        <ul id="price-comparables"></ul>
+        <p id="price-note" class="sub"></p>
+        <button id="price-apply" type="button">in Preisfeld übernehmen</button>
+      </section>
       <div class="save-area">
         <div class="folder-line">
           <span>Speicherordner:</span>

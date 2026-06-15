@@ -3,6 +3,78 @@ let selectedFiles = [];
 const $ = (id) => document.getElementById(id);
 const status = (msg) => { $("status").textContent = msg; };
 
+// Zeigt die 🌐-Abzeichen nur an den Feldern, die aus der Websuche stammen.
+function applyBadges(keys) {
+  document.querySelectorAll(".web-badge").forEach((b) => {
+    b.hidden = !keys.includes(b.dataset.key);
+  });
+}
+// Listet die Quellen als anklickbare Links.
+function renderSources(sources) {
+  const box = $("sources-box");
+  const list = $("sources-list");
+  list.innerHTML = "";
+  for (const s of sources || []) {
+    if (!s.url) continue;
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = s.url; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = s.title || s.url;
+    li.appendChild(a);
+    list.appendChild(li);
+  }
+  box.hidden = list.children.length === 0;
+}
+// Zeigt Preisspanne, Vergleichsangebote und Hinweis.
+function renderPrice(d) {
+  $("price-box").hidden = false;
+  if (d.price_low || d.price_high) {
+    $("price-range").textContent = `ca. ${d.price_low} – ${d.price_high} ${d.currency || "EUR"}`;
+  } else {
+    $("price-range").textContent = "Keine Preise gefunden.";
+  }
+  const list = $("price-comparables");
+  list.innerHTML = "";
+  for (const c of d.comparables || []) {
+    const li = document.createElement("li");
+    if (c.url) {
+      const a = document.createElement("a");
+      a.href = c.url; a.target = "_blank"; a.rel = "noopener";
+      a.textContent = `${c.title || c.source} – ${c.price}`;
+      li.appendChild(a);
+    } else {
+      li.textContent = `${c.title || c.source} – ${c.price}`;
+    }
+    list.appendChild(li);
+  }
+  $("price-note").textContent = d.note || "";
+}
+// Holt die Preisempfehlung anhand der aktuellen Feldwerte.
+async function fetchPrice() {
+  $("price-box").hidden = false;
+  $("price-range").textContent = "💶 prüfe Preise …";
+  $("price-comparables").innerHTML = "";
+  $("price-note").textContent = "";
+  const body = {};
+  for (const key of ["title", "author", "book_title", "language",
+                     "publication_year", "publisher", "book_format"]) {
+    body[key] = $("f-" + key).value;
+  }
+  let r, d;
+  try {
+    r = await fetch("/api/price", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    d = await r.json();
+  } catch (e) {
+    $("price-range").textContent = "Preisprüfung nicht möglich.";
+    return;
+  }
+  if (!r.ok) { $("price-range").textContent = d.error || "Preise nicht ermittelbar."; return; }
+  renderPrice(d);
+}
+
 // Hängt einen Listener nur an, wenn das Element existiert. So legt ein einzelnes
 // fehlendes Element (z. B. nach einer veralteten Seite) nie die ganze Seite lahm.
 function on(id, event, handler) {
@@ -96,7 +168,10 @@ $("choose-btn").addEventListener("click", () => $("file-input").click());
 $("file-input").addEventListener("change", (e) => addFiles(e.target.files));
 
 $("generate-btn").addEventListener("click", async () => {
-  status("KI analysiert die Fotos …");
+  status("🔎 recherchiere im Netz … (das kann ~30–60 Sekunden dauern)");
+  applyBadges([]);
+  renderSources([]);
+  $("price-box").hidden = true;
   const fd = new FormData();
   selectedFiles.forEach((f) => fd.append("images", f));
   const r = await fetch("/api/generate", { method: "POST", body: fd });
@@ -107,9 +182,23 @@ $("generate-btn").addEventListener("click", async () => {
     $("f-" + key).value = data[key] || "";
   }
   $("f-description").innerHTML = data.description || "";  // HTML gerendert anzeigen
+  applyBadges(data.web_sourced_fields || []);
+  renderSources(data.sources || []);
   $("result").hidden = false;
-  status("Fertig – bitte prüfen und bei Bedarf bearbeiten.");
+  status("Text fertig – prüfe jetzt die Preise …");
   saveFieldsNow();  // Ergebnis sofort in den Entwurf übernehmen
+  fetchPrice();
+});
+
+// Übernimmt den Mittelwert der Preisspanne ins Preisfeld (manuell, auf Wunsch).
+on("price-apply", "click", () => {
+  const text = $("price-range").textContent.match(/[\d.,]+/g);
+  if (!text || text.length < 2) return;
+  const low = parseFloat(text[0].replace(",", "."));
+  const high = parseFloat(text[1].replace(",", "."));
+  if (isNaN(low) || isNaN(high)) return;
+  $("f-price").value = ((low + high) / 2).toFixed(2);
+  saveFieldsSoon();
 });
 
 // Jede Änderung in den Ergebnis-Feldern wird (verzögert) gespeichert.
@@ -127,6 +216,9 @@ on("new-case-btn", "click", async () => {
   $("f-price").value = "9.99";
   $("f-condition").value = "5000";
   $("result").hidden = true;
+  applyBadges([]);
+  renderSources([]);
+  $("price-box").hidden = true;
   await fetch("/api/draft/clear", { method: "POST" });
   status("Neuer Fall – bereit für die nächsten Fotos.");
 });

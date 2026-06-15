@@ -45,3 +45,12 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 #prompt-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
 .hint { font-size: .85rem; color: #6b665c; margin: 0 0 1rem; }
 .quit { display: block; margin: 2.5rem auto 0; color: #8a3b22; }
+.web-badge { font-weight: normal; color: #2b6a4b; font-size: .75rem;
+  background: #e7f3ec; padding: .05rem .35rem; border-radius: 4px; }
+.info-box { background: #faf9f6; border: 1px solid #e3e0d8; border-radius: 8px;
+  padding: .8rem 1rem; }
+.info-box h3 { margin: 0 0 .5rem; font-size: 1rem; }
+.info-box ul { margin: 0; padding-left: 1.2rem; }
+.info-box li { margin-bottom: .3rem; }
+#price-range { font-size: 1.1rem; font-weight: 600; margin: 0 0 .5rem; }
+#price-apply { margin-top: .6rem; }
