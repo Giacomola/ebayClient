@@ -3,7 +3,8 @@ import subprocess
 import sys
 import anthropic
 from flask import Flask, request, jsonify, render_template
-from config import load_settings, save_settings, build_system_prompt
+from config import (load_settings, save_settings, build_system_prompt,
+                    ensure_anweisungen)
 from ai_client import analyze_book
 from price_analysis import analyze_price
 from image_host import upload_image
@@ -31,6 +32,7 @@ def _pick_folder_dialog() -> str:
 def create_app(config_path: str = "config.json",
                draft_path: str = "draft.json") -> Flask:
     app = Flask(__name__)
+    ensure_anweisungen(config_path)  # anweisungen.txt anlegen, falls sie fehlt
 
     @app.get("/")
     def index():

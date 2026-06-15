@@ -1,6 +1,8 @@
 import json
 import os
 
+import anweisungen
+
 # Allgemeine Regeln, die für die ganze KI-Analyse gelten.
 DEFAULT_PROMPT_GENERAL = (
     "Du bist ein Assistent für den Verkauf antiquarischer und gebrauchter Bücher auf "
@@ -61,6 +63,8 @@ PROMPT_FIELDS = [
 # Praktische Hilfs-Strukturen, abgeleitet aus PROMPT_FIELDS.
 DEFAULT_FIELD_PROMPTS = {key: instr for key, _label, instr in PROMPT_FIELDS}
 FIELD_LABELS = {key: label for key, label, _instr in PROMPT_FIELDS}
+# (key, label)-Paare in Anzeige-Reihenfolge – Überschriften für anweisungen.txt.
+_FIELD_LABELS = [(key, label) for key, label, _instr in PROMPT_FIELDS]
 
 DEFAULTS = {
     "anthropic_api_key": "",
@@ -90,6 +94,16 @@ def load_settings(path: str = "config.json") -> dict:
         settings.update(loaded)
         if isinstance(loaded_fields, dict):
             settings["prompt_fields"].update(loaded_fields)
+    # Die Anweisungen leben in anweisungen.txt (Quelle der Wahrheit). Ist die Datei
+    # vorhanden, überschreibt sie die Prompt-Werte. Fehlende Abschnitte behalten ihren
+    # bisherigen Wert (die Datei kann also nichts versehentlich leeren).
+    parsed = anweisungen.load(path, _FIELD_LABELS)
+    if parsed:
+        if "prompt_general" in parsed:
+            settings["prompt_general"] = parsed["prompt_general"]
+        if "prompt_examples" in parsed:
+            settings["prompt_examples"] = parsed["prompt_examples"]
+        settings["prompt_fields"].update(parsed.get("prompt_fields", {}))
     return settings
 
 def save_settings(settings: dict, path: str = "config.json") -> None:
@@ -101,8 +115,21 @@ def save_settings(settings: dict, path: str = "config.json") -> None:
         fields = dict(DEFAULT_FIELD_PROMPTS)
         fields.update(incoming_fields)
         merged["prompt_fields"] = fields
+    # Anweisungen in die .txt schreiben (Quelle der Wahrheit) …
+    anweisungen.save(merged.get("prompt_general", ""), merged["prompt_fields"],
+                     merged.get("prompt_examples", ""), _FIELD_LABELS, path)
+    # … und die config.json OHNE die Prompt-Schlüssel speichern (liegen jetzt in der .txt).
+    for key in ("prompt_general", "prompt_fields", "prompt_examples"):
+        merged.pop(key, None)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(merged, f, ensure_ascii=False, indent=2)
+
+def ensure_anweisungen(path: str = "config.json") -> None:
+    """Legt anweisungen.txt einmalig aus den aktuell wirksamen Anweisungen an,
+    falls die Datei noch fehlt. So gibt es immer eine Datei zum Direkt-Bearbeiten."""
+    s = load_settings(path)
+    anweisungen.ensure(s.get("prompt_general", ""), s["prompt_fields"],
+                       s.get("prompt_examples", ""), _FIELD_LABELS, path)
 
 def build_system_prompt(settings: dict) -> str:
     """Setzt aus allgemeinen Regeln und den Feld-Anweisungen einen KI-Prompt zusammen."""

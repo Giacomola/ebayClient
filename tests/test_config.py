@@ -43,8 +43,8 @@ def test_save_keeps_custom_and_default_fields(tmp_path):
     assert loaded["prompt_fields"]["title"] == "Kurz halten"
     assert loaded["prompt_fields"]["language"] == DEFAULT_FIELD_PROMPTS["language"]
 
-def test_build_system_prompt_examples_optional():
-    settings = load_settings("gibt-es-nicht.json")
+def test_build_system_prompt_examples_optional(tmp_path):
+    settings = load_settings(str(tmp_path / "config.json"))
     ohne = build_system_prompt(settings)
     assert "Beispiel-Beschreibung" not in ohne          # leer -> kein Abschnitt
     settings["prompt_examples"] = "Mustertext, fett und schön formuliert."
@@ -53,8 +53,8 @@ def test_build_system_prompt_examples_optional():
     assert "NICHT die konkreten Angaben" in mit          # Schutz vor Faktenklau
     assert DEFAULTS["prompt_examples"] == ""
 
-def test_build_system_prompt_includes_general_and_fields():
-    settings = load_settings("does-not-exist.json")
+def test_build_system_prompt_includes_general_and_fields(tmp_path):
+    settings = load_settings(str(tmp_path / "config.json"))
     settings["prompt_general"] = "Allgemeiner Hinweis."
     settings["prompt_fields"]["title"] = "Titel-Sonderregel."
     text = build_system_prompt(settings)
