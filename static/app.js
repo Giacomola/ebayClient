@@ -468,16 +468,19 @@ on("quit-btn", "click", async () => {
 const dlg = $("settings-dialog");
 // Hinweistext unter dem Rechenleistung-Schalter passend zur Auswahl setzen.
 function updateKiBackendHint() {
-  const abo = $("s-ki-backend").value === "abo";
-  $("ki-backend-hint").textContent = abo
+  const sel = $("s-ki-backend");
+  const hint = $("ki-backend-hint");
+  if (!sel || !hint) return;   // fehlt ein Element, lieber nichts tun als abstürzen
+  hint.textContent = sel.value === "abo"
     ? "Läuft über dein Claude-Abo (Claude Code muss installiert und eingeloggt sein). Der API-Schlüssel wird dann nicht gebraucht."
     : "Läuft über den Anthropic-API-Schlüssel und wird pro Nutzung abgerechnet.";
 }
-$("s-ki-backend").addEventListener("change", updateKiBackendHint);
+on("s-ki-backend", "change", updateKiBackendHint);
 
 $("settings-btn").addEventListener("click", async () => {
   const s = await (await fetch("/api/settings")).json();
-  $("s-ki-backend").value = s.ki_backend || "api_key";
+  const kbSel = $("s-ki-backend");
+  if (kbSel) kbSel.value = s.ki_backend || "api_key";
   updateKiBackendHint();
   $("s-anthropic").value = s.anthropic_api_key || "";
   $("s-imgbb").value = s.imgbb_api_key || "";
