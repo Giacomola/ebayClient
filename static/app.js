@@ -485,9 +485,10 @@ on("new-case-btn", "click", async () => {
 
 // Liste „Aktive Fälle": begonnene, noch nicht abgesendete Fälle zum Weitermachen.
 async function loadCases() {
-  let data;
+  $("active-cases").hidden = false;   // Bereich ist immer sichtbar, auch wenn leer/Fehler
+  let data = { cases: [] };
   try { data = await (await fetch("/api/cases")).json(); }
-  catch (e) { return; }   // ohne Liste bleibt die App benutzbar
+  catch (e) { /* offline o. Ä. – dann eben leere Liste */ }
   const list = $("active-cases-list");
   list.innerHTML = "";
   for (const c of data.cases || []) {
@@ -510,7 +511,15 @@ async function loadCases() {
     li.append(info, oeffnen, del);
     list.appendChild(li);
   }
-  $("active-cases").hidden = list.children.length === 0;
+  if (!list.children.length) {
+    // Leerer Zustand: Bereich bleibt sichtbar, damit man die Funktion findet.
+    const li = document.createElement("li");
+    li.className = "sub";
+    li.textContent = `Noch keine aktiven Fälle. Sobald du einen begonnenen Fall mit `
+      + `„Neuen Fall starten" beiseitelegst, erscheint er hier.`;
+    list.appendChild(li);
+  }
+  $("active-cases").hidden = false;   // immer sichtbar (auch wenn leer)
 }
 
 function formatDatum(ts) {
