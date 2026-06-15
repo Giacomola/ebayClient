@@ -16,6 +16,12 @@ def test_settings_speichern_und_lesen(tmp_path):
     r2 = c.get("/api/settings")
     assert r2.get_json()["model"] == "claude-opus-4-8"
 
+def test_primary_sources_persistiert(tmp_path):
+    c = _client(tmp_path)
+    r = c.post("/api/settings", json={"primary_sources": ["dnb", "zvab"]})
+    assert r.status_code == 200
+    assert c.get("/api/settings").get_json()["primary_sources"] == ["dnb", "zvab"]
+
 def test_open_anweisungen_oeffnet_datei(tmp_path):
     c = _client(tmp_path)  # create_app legt tmp/anweisungen.txt an
     with patch("app.subprocess.run") as m:

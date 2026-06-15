@@ -465,6 +465,38 @@ on("quit-btn", "click", async () => {
     "Programm beendet. Sie können diesen Tab jetzt schließen.</p></main>";
 });
 
+// Auswählbare Recherche-Quellen (gleiche Reihenfolge/Keys wie SOURCE_CATALOG in config.py).
+const PRIMARY_SOURCES = [
+  ["zvab", "ZVAB (zvab.com)"],
+  ["dnb", "DNB (portal.dnb.de)"],
+  ["ddb", "DDB (deutsche-digitale-bibliothek.de)"],
+  ["abebooks", "AbeBooks (abebooks.de)"],
+  ["booklooker", "Booklooker (booklooker.de)"],
+  ["wikipedia", "Wikipedia (wikipedia.org)"],
+];
+// Zeigt die Quellen als Häkchen-Liste, vorausgewählt nach den gespeicherten Werten.
+function renderPrimarySources(selected) {
+  const box = $("primary-sources");
+  if (!box) return;
+  const chosen = Array.isArray(selected) ? selected : [];
+  box.innerHTML = "";
+  for (const [key, label] of PRIMARY_SOURCES) {
+    const row = document.createElement("label");
+    row.className = "src-row";
+    const cb = document.createElement("input");
+    cb.type = "checkbox"; cb.id = "src-" + key; cb.checked = chosen.includes(key);
+    row.appendChild(cb);
+    row.appendChild(document.createTextNode(" " + label));
+    box.appendChild(row);
+  }
+}
+// Sammelt die angehakten Quellen in Katalog-Reihenfolge (= Priorität).
+function collectPrimarySources() {
+  return PRIMARY_SOURCES
+    .map(([key]) => key)
+    .filter((key) => { const cb = $("src-" + key); return cb && cb.checked; });
+}
+
 const dlg = $("settings-dialog");
 // Hinweistext unter dem Rechenleistung-Schalter passend zur Auswahl setzen.
 function updateKiBackendHint() {
@@ -488,6 +520,7 @@ $("settings-btn").addEventListener("click", async () => {
   $("s-model-price").value = s.model_price || "claude-sonnet-4-6";
   $("s-location").value = s.location;
   $("s-shipping_cost").value = s.shipping_cost;
+  renderPrimarySources(s.primary_sources);
   dlg.showModal();
 });
 $("s-save").addEventListener("click", async (e) => {
@@ -502,6 +535,7 @@ $("s-save").addEventListener("click", async (e) => {
       model_price: $("s-model-price").value,
       location: $("s-location").value,
       shipping_cost: $("s-shipping_cost").value,
+      primary_sources: collectPrimarySources(),
     }),
   });
   dlg.close();

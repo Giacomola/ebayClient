@@ -68,6 +68,49 @@ FIELD_LABELS = {key: label for key, label, _instr in PROMPT_FIELDS}
 # (key, label)-Paare in Anzeige-Reihenfolge – Überschriften für anweisungen.txt.
 _FIELD_LABELS = [(key, label) for key, label, _instr in PROMPT_FIELDS]
 
+# Auswählbare Recherche-Quellen (key, Anzeigename, Domain). Reihenfolge in der
+# gespeicherten Liste = Priorität. Der Platzhalter {PRIMAERQUELLEN} in den
+# Allgemeinen Regeln wird durch den daraus gebauten Satz ersetzt.
+SOURCE_CATALOG = [
+    ("zvab", "ZVAB", "zvab.com"),
+    ("dnb", "DNB", "portal.dnb.de"),
+    ("ddb", "DDB", "deutsche-digitale-bibliothek.de"),
+    ("abebooks", "AbeBooks", "abebooks.de"),
+    ("booklooker", "Booklooker", "booklooker.de"),
+    ("wikipedia", "Wikipedia", "wikipedia.org"),
+]
+_SOURCE_BY_KEY = {key: (label, domain) for key, label, domain in SOURCE_CATALOG}
+DEFAULT_PRIMARY_SOURCES = ["zvab", "dnb", "ddb"]
+PRIMARY_SOURCES_PLACEHOLDER = "{PRIMAERQUELLEN}"
+
+def _clean_sources(value):
+    """Behält nur bekannte Quellen-Schlüssel, in gegebener Reihenfolge, ohne Dubletten."""
+    if not isinstance(value, list):
+        return list(DEFAULT_PRIMARY_SOURCES)
+    seen, out = set(), []
+    for key in value:
+        if key in _SOURCE_BY_KEY and key not in seen:
+            seen.add(key)
+            out.append(key)
+    return out
+
+def primary_sources_sentence(settings: dict) -> str:
+    """Baut aus den gewählten Primärquellen den Recherche-Hinweis für den Prompt."""
+    keys = _clean_sources(settings.get("primary_sources"))
+    if not keys:
+        return ("Nutze für Fakten zuverlässige Buch- und Bibliothekskataloge. "
+                "Niemals raten oder erfinden.")
+    parts = [f"{_SOURCE_BY_KEY[k][0]} ({_SOURCE_BY_KEY[k][1]})" for k in keys]
+    liste = parts[0] if len(parts) == 1 else ", dann ".join(parts)
+    return (
+        "Nutze als Primärquellen in dieser Reihenfolge: " + liste + ". "
+        "Andere Quellen nur heranziehen, wenn diese nichts Passendes liefern. "
+        "Übernimm aus diesen Quellen nur Werk- und Ausgabe-Angaben, NICHT den Zustand "
+        "(der Zustand stammt ausschließlich aus den Fotos dieses Exemplars). "
+        "Fremde Beschreibungstexte nicht wörtlich kopieren, sondern in eigenen Worten "
+        "zusammenfassen. Niemals raten oder erfinden."
+    )
+
 DEFAULTS = {
     # Woher die Rechenleistung kommt: "api_key" = Anthropic-API (pro Nutzung bezahlt,
     # Standard), "abo" = Claude-Abo über die Claude-Code-CLI (Verbrauch geht aufs
@@ -86,6 +129,8 @@ DEFAULTS = {
     "shipping_cost": "5.49",
     "dispatch_time_max": "3",
     "save_folder": "",
+    # Recherche-Quellen in Prioritätsreihenfolge (siehe SOURCE_CATALOG).
+    "primary_sources": list(DEFAULT_PRIMARY_SOURCES),
     "prompt_general": DEFAULT_PROMPT_GENERAL,
     "prompt_fields": dict(DEFAULT_FIELD_PROMPTS),
     "prompt_examples": "",   # optionale Beispiel-Beschreibung(en) als Stil-Vorlage
@@ -115,6 +160,7 @@ def load_settings(path: str = "config.json") -> dict:
         if "prompt_examples" in parsed:
             settings["prompt_examples"] = parsed["prompt_examples"]
         settings["prompt_fields"].update(parsed.get("prompt_fields", {}))
+    settings["primary_sources"] = _clean_sources(settings.get("primary_sources"))
     return settings
 
 def save_settings(settings: dict, path: str = "config.json") -> None:
@@ -126,6 +172,7 @@ def save_settings(settings: dict, path: str = "config.json") -> None:
         fields = dict(DEFAULT_FIELD_PROMPTS)
         fields.update(incoming_fields)
         merged["prompt_fields"] = fields
+    merged["primary_sources"] = _clean_sources(merged.get("primary_sources"))
     # Anweisungen in die .txt schreiben (Quelle der Wahrheit) …
     anweisungen.save(merged.get("prompt_general", ""), merged["prompt_fields"],
                      merged.get("prompt_examples", ""), _FIELD_LABELS, path)
@@ -145,6 +192,12 @@ def ensure_anweisungen(path: str = "config.json") -> None:
 def build_system_prompt(settings: dict) -> str:
     """Setzt aus allgemeinen Regeln und den Feld-Anweisungen einen KI-Prompt zusammen."""
     general = settings.get("prompt_general", DEFAULT_PROMPT_GENERAL)
+    # Die gewählten Primärquellen einsetzen: an den Platzhalter, sonst anhängen.
+    sources = primary_sources_sentence(settings)
+    if PRIMARY_SOURCES_PLACEHOLDER in general:
+        general = general.replace(PRIMARY_SOURCES_PLACEHOLDER, sources)
+    else:
+        general = general + "\n\n" + sources
     fields = settings.get("prompt_fields", DEFAULT_FIELD_PROMPTS)
     lines = [general, "", "Vorgaben für die einzelnen Felder:"]
     for key, label, _default in PROMPT_FIELDS:

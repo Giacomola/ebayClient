@@ -1,6 +1,7 @@
 import json
 from config import (load_settings, save_settings, build_system_prompt,
-                    DEFAULTS, DEFAULT_FIELD_PROMPTS)
+                    primary_sources_sentence, DEFAULTS, DEFAULT_FIELD_PROMPTS,
+                    DEFAULT_PRIMARY_SOURCES)
 
 def test_load_missing_file_returns_defaults(tmp_path):
     p = tmp_path / "config.json"
@@ -71,3 +72,43 @@ def test_general_prompt_nennt_verkauf_und_websuche():
     text = DEFAULTS["prompt_general"].lower()
     assert "websuche" in text
     assert "käufer" in text or "verkauf" in text
+
+def test_default_primary_sources_zvab_zuerst():
+    assert DEFAULTS["primary_sources"] == ["zvab", "dnb", "ddb"]
+    assert DEFAULT_PRIMARY_SOURCES[0] == "zvab"
+
+def test_primary_sources_sentence_reihenfolge():
+    satz = primary_sources_sentence({"primary_sources": ["zvab", "dnb"]})
+    assert "ZVAB (zvab.com), dann DNB (portal.dnb.de)" in satz
+    # ZVAB steht vor DNB (Priorität)
+    assert satz.index("ZVAB") < satz.index("DNB")
+    # Zustand-Schutz ist immer dabei
+    assert "NICHT den Zustand" in satz
+
+def test_primary_sources_leer_gibt_neutralen_satz():
+    satz = primary_sources_sentence({"primary_sources": []})
+    assert "zuverlässige" in satz.lower()
+    assert "ZVAB" not in satz
+
+def test_build_system_prompt_ersetzt_platzhalter(tmp_path):
+    settings = load_settings(str(tmp_path / "config.json"))
+    settings["prompt_general"] = "Vorher {PRIMAERQUELLEN} Nachher"
+    settings["primary_sources"] = ["dnb"]
+    text = build_system_prompt(settings)
+    assert "{PRIMAERQUELLEN}" not in text           # Platzhalter ist ersetzt
+    assert "DNB (portal.dnb.de)" in text
+    assert "Vorher" in text and "Nachher" in text
+
+def test_build_system_prompt_haengt_quellen_an_ohne_platzhalter(tmp_path):
+    settings = load_settings(str(tmp_path / "config.json"))
+    settings["prompt_general"] = "Nur Text ohne Platzhalter."
+    settings["primary_sources"] = ["zvab"]
+    text = build_system_prompt(settings)
+    assert "ZVAB (zvab.com)" in text
+
+def test_primary_sources_roundtrip_und_bereinigung(tmp_path):
+    p = tmp_path / "config.json"
+    # unbekannte Quelle + Dublette werden herausgefiltert
+    save_settings({"primary_sources": ["dnb", "zvab", "zvab", "unbekannt"]}, str(p))
+    loaded = load_settings(str(p))
+    assert loaded["primary_sources"] == ["dnb", "zvab"]
