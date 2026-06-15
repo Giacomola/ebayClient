@@ -21,8 +21,12 @@ nach Abschluss entfernen._
 ## 📷 Eingabe/Fotos
 _Fotos reinziehen, Ordnerwahl, Upload zu imgbb, Vorschau._
 
+- [ ] Bei mehr als 2 Fotos auswählbar machen, welche Fotos analysiert werden (max 5)  `→ app.py, index.html, app.js`
+
 ## ✍️ KI-Anzeigentext
 _Claude-Generierung, Felder (Titel, Beschreibung, Merkmale), Preis, Zustand, Stilvorlage._
+
+- [ ] Bearbeitungstool für Text-Formatierung (Fett, Kursiv, Unterstrichen, Schriftgröße); Formatierung bleibt beim eBay-Export erhalten  `→ index.html, app.js, style.css, ebay_csv.py`
 
 
 
@@ -32,12 +36,16 @@ _eBay-File-Exchange-CSV erzeugen, Sammel-CSV, Zielordner, Feld-Grenzen._
 ## 💰 Preisvergleich
 _Preis-Recherche, Vergleichsanzeigen, Suchlogik._
 
+- [ ] Preisvergleich übersichtlicher gestalten  `→ app.js, index.html, style.css`
+
 
 ## ⚙️ Einstellungen
 _API-Schlüssel (Anthropic, imgbb), Konfiguration, Speicherorte._
 
 ## 🌐 Allgemein
 _Tab-übergreifend: Start/Beenden, App-Launcher, Tempo, Dokumentation._
+
+- [ ] Fehlermeldung für "Token Limit erreicht" einrichten  `→ app.py, ai_client.py, index.html`
 
 ## 🕓 Später (zurückgestellt)
 _Bewusst auf später verschoben — nicht ohne Ansage starten._
