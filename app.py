@@ -13,10 +13,19 @@ from derive_instructions import derive_from_example
 from image_host import upload_image
 from ebay_csv import (append_listing, title_exists, title_for,
                       recent_listings, archive_as_file, DEFAULT_FILENAME)
-from draft import load_draft, update_fields, update_images, clear_draft
+from draft import (load_draft, update_fields, update_images, clear_draft,
+                   save_draft, mark_completed, EMPTY)
+from cases import list_cases, save_case, load_case, delete_case
 
 # Port, auf dem das Programm läuft (auch in der Handy-Adresse verwendet).
 PORT = 5050
+
+def _has_content(draft: dict) -> bool:
+    """True, wenn der Fall etwas enthält (mindestens ein Foto oder ein gefülltes Feld)."""
+    if draft.get("images"):
+        return True
+    return any(isinstance(v, str) and v.strip()
+               for v in draft.get("fields", {}).values())
 
 def _handy_qr_svg(url: str) -> str:
     """Erzeugt einen QR-Code als SVG-Text (skaliert sauber, braucht kein Pillow).
@@ -96,7 +105,8 @@ def _pick_folder_dialog() -> str:
         return ""
 
 def create_app(config_path: str = "config.json",
-               draft_path: str = "draft.json") -> Flask:
+               draft_path: str = "draft.json",
+               cases_dir: str = "cases") -> Flask:
     app = Flask(__name__)
     # Statische Dateien (app.js/style.css) nicht im Browser zwischenspeichern, damit
     # nach einem Update ein normales Neuladen reicht (sonst läuft veralteter Code).
@@ -140,8 +150,41 @@ def create_app(config_path: str = "config.json",
 
     @app.post("/api/draft/clear")
     def post_draft_clear():
+        # „Neuen Fall starten": einen offenen Fall mit Inhalt zuerst parken
+        # (in die Liste „Aktive Fälle"), damit keine unfertige Arbeit verloren geht.
+        d = load_draft(draft_path)
+        parked = False
+        if _has_content(d) and not d.get("completed"):
+            save_case(d, cases_dir)
+            parked = True
         clear_draft(draft_path)
+        return jsonify({"ok": True, "parked": parked})
+
+    @app.get("/api/cases")
+    def get_cases():
+        """Liste der geparkten Fälle (begonnen, aber noch nicht abgeschlossen)."""
+        return jsonify({"cases": list_cases(cases_dir)})
+
+    @app.post("/api/cases/<case_id>/open")
+    def open_case(case_id):
+        target = load_case(case_id, cases_dir)
+        if target is None:
+            return jsonify({"error": "Fall nicht gefunden."}), 404
+        cur = load_draft(draft_path)
+        if _has_content(cur) and not cur.get("completed"):
+            save_case(cur, cases_dir)   # aktuellen offenen Fall nicht verlieren
+        new_draft = dict(EMPTY)
+        new_draft["fields"] = target.get("fields", {})
+        new_draft["images"] = target.get("images", [])
+        new_draft["result_visible"] = target.get("result_visible", False)
+        new_draft["images_rev"] = int(cur.get("images_rev", 0))  # Zähler nicht zurückwerfen
+        save_draft(new_draft, draft_path)
+        delete_case(case_id, cases_dir)
         return jsonify({"ok": True})
+
+    @app.post("/api/cases/<case_id>/delete")
+    def remove_case(case_id):
+        return jsonify({"ok": delete_case(case_id, cases_dir)})
 
     @app.post("/api/shutdown")
     def shutdown():
@@ -332,6 +375,7 @@ def create_app(config_path: str = "config.json",
             )
         except Exception as e:  # noqa: BLE001
             return jsonify({"error": f"Datei konnte nicht gespeichert werden: {e}"}), 500
+        mark_completed(draft_path)  # Fall gilt jetzt als abgeschlossen (wird nicht geparkt)
         return jsonify({"ok": True, "folder": folder,
                         "filename": DEFAULT_FILENAME, "path": path, "count": count})
 

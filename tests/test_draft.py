@@ -1,8 +1,22 @@
-from draft import load_draft, update_fields, update_images, clear_draft, EMPTY
+from draft import (load_draft, update_fields, update_images, clear_draft,
+                   mark_completed, EMPTY)
 
 def test_load_missing_returns_empty(tmp_path):
     d = load_draft(str(tmp_path / "draft.json"))
     assert d == EMPTY
+
+def test_mark_completed_setzt_flag(tmp_path):
+    p = str(tmp_path / "draft.json")
+    update_fields({"title": "X"}, True, p)
+    assert load_draft(p)["completed"] is False
+    mark_completed(p)
+    assert load_draft(p)["completed"] is True
+
+def test_clear_setzt_completed_zurueck(tmp_path):
+    p = str(tmp_path / "draft.json")
+    mark_completed(p)
+    clear_draft(p)
+    assert load_draft(p)["completed"] is False
 
 def test_update_images_erhoeht_rev(tmp_path):
     p = str(tmp_path / "draft.json")

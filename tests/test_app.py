@@ -6,9 +6,11 @@ from price_analysis import PriceAnalysis
 from derive_instructions import DerivedInstructions
 
 def _client(tmp_path):
-    # draft_path mit isolieren, damit Tests nicht die echte draft.json verändern.
+    # draft_path und cases_dir mit isolieren, damit Tests weder die echte
+    # draft.json verändern noch einen echten cases/-Ordner anlegen.
     app = create_app(config_path=str(tmp_path / "config.json"),
-                     draft_path=str(tmp_path / "draft.json"))
+                     draft_path=str(tmp_path / "draft.json"),
+                     cases_dir=str(tmp_path / "cases"))
     app.config.update(TESTING=True)
     return app.test_client()
 
@@ -301,3 +303,81 @@ def test_derive_instructions_leeres_beispiel_400(tmp_path):
     r = c.post("/api/derive-instructions", json={"example": "   "})
     assert r.status_code == 400
     assert "Beispiel" in r.get_json()["error"]
+
+# --- Aktive Fälle (parken / öffnen / löschen) -------------------------------
+
+def _save_offenen_fall(c, title="Faust"):
+    """Legt einen offenen Fall mit Foto und Titel in der aktuellen draft.json an."""
+    c.post("/api/draft", json={"fields": {"title": title, "author": "Goethe",
+                                          "book_title": title}, "result_visible": True})
+    c.post("/api/draft/images", data={"images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")},
+           content_type="multipart/form-data")
+
+def test_neuer_fall_parkt_offenen_fall(tmp_path):
+    c = _client(tmp_path)
+    _save_offenen_fall(c, "Faust")
+    r = c.post("/api/draft/clear")
+    assert r.get_json()["parked"] is True
+    cases = c.get("/api/cases").get_json()["cases"]
+    assert len(cases) == 1
+    assert cases[0]["name"] == "Goethe – Faust"
+    assert cases[0]["photo_count"] == 1
+    # draft.json ist jetzt leer für den neuen Fall
+    assert c.get("/api/draft").get_json()["fields"] == {}
+
+def test_neuer_fall_parkt_leeren_fall_nicht(tmp_path):
+    c = _client(tmp_path)
+    r = c.post("/api/draft/clear")
+    assert r.get_json()["parked"] is False
+    assert c.get("/api/cases").get_json()["cases"] == []
+
+def test_abgeschlossener_fall_wird_nicht_geparkt(tmp_path):
+    c = _client(tmp_path)
+    _save_offenen_fall(c, "Werther")
+    # Fall in die Sammeldatei übernehmen -> gilt als abgeschlossen
+    folder = tmp_path / "out"
+    folder.mkdir()
+    c.post("/api/settings", json={"imgbb_api_key": "k", "save_folder": str(folder)})
+    with patch("app.upload_image", return_value="https://img/1.jpg"):
+        c.post("/api/create-csv",
+               data={"title": "Werther", "images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")},
+               content_type="multipart/form-data")
+    r = c.post("/api/draft/clear")
+    assert r.get_json()["parked"] is False          # abgeschlossen -> nicht parken
+    assert c.get("/api/cases").get_json()["cases"] == []
+
+def test_fall_oeffnen_macht_ihn_zum_aktuellen(tmp_path):
+    c = _client(tmp_path)
+    _save_offenen_fall(c, "Faust")
+    c.post("/api/draft/clear")                       # Faust parken, neu beginnen
+    cid = c.get("/api/cases").get_json()["cases"][0]["id"]
+    r = c.post(f"/api/cases/{cid}/open")
+    assert r.status_code == 200
+    assert c.get("/api/draft").get_json()["fields"]["book_title"] == "Faust"
+    assert c.get("/api/cases").get_json()["cases"] == []   # nicht mehr in der Liste
+
+def test_fall_oeffnen_parkt_aktuellen_offenen(tmp_path):
+    c = _client(tmp_path)
+    _save_offenen_fall(c, "Faust")
+    c.post("/api/draft/clear")                       # Faust geparkt
+    _save_offenen_fall(c, "Werther")                 # neuer offener Fall im draft
+    cid = c.get("/api/cases").get_json()["cases"][0]["id"]   # Faust
+    c.post(f"/api/cases/{cid}/open")
+    # Faust ist jetzt aktiv, Werther wurde dabei geparkt
+    assert c.get("/api/draft").get_json()["fields"]["book_title"] == "Faust"
+    namen = [x["name"] for x in c.get("/api/cases").get_json()["cases"]]
+    assert namen == ["Goethe – Werther"]
+
+def test_fall_oeffnen_unbekannt_404(tmp_path):
+    c = _client(tmp_path)
+    r = c.post("/api/cases/case_999/open")
+    assert r.status_code == 404
+
+def test_fall_loeschen(tmp_path):
+    c = _client(tmp_path)
+    _save_offenen_fall(c, "Faust")
+    c.post("/api/draft/clear")
+    cid = c.get("/api/cases").get_json()["cases"][0]["id"]
+    r = c.post(f"/api/cases/{cid}/delete")
+    assert r.get_json()["ok"] is True
+    assert c.get("/api/cases").get_json()["cases"] == []

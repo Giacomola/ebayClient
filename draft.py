@@ -9,7 +9,10 @@ import os
 
 # images_rev zählt nur bei Foto-Änderungen hoch. So erkennt die Computerseite,
 # wenn vom Handy ein Foto dazukam, ohne bei jeder Textänderung neu zu laden.
-EMPTY = {"fields": {}, "images": [], "result_visible": False, "images_rev": 0}
+# completed = True, sobald der Fall in die eBay-Sammeldatei übernommen wurde
+# („abgeschlossen"); ein offener Fall wird beim Neubeginn automatisch geparkt.
+EMPTY = {"fields": {}, "images": [], "result_visible": False,
+         "images_rev": 0, "completed": False}
 
 def load_draft(path: str = "draft.json") -> dict:
     if os.path.exists(path):
@@ -43,6 +46,13 @@ def update_images(images: list, path: str = "draft.json") -> dict:
     draft["images_rev"] = int(draft.get("images_rev", 0)) + 1
     save_draft(draft, path)
     return draft
+
+def mark_completed(path: str = "draft.json") -> None:
+    """Markiert den aktuellen Fall als abgeschlossen (in die Sammeldatei übernommen).
+    Ein so markierter Fall wird beim Neubeginn nicht mehr geparkt."""
+    draft = load_draft(path)
+    draft["completed"] = True
+    save_draft(draft, path)
 
 def clear_draft(path: str = "draft.json") -> None:
     """Setzt den Entwurf zurück (für 'Neuen Fall starten')."""

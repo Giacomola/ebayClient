@@ -473,9 +473,67 @@ on("new-case-btn", "click", async () => {
   $("price-box").hidden = true;
   $("save-success").hidden = true;
   $("show-entry-btn").hidden = true;
-  await fetch("/api/draft/clear", { method: "POST" });
-  status("Neuer Fall – bereit für die nächsten Fotos.");
+  knownImagesRev = 0;   // frischer Fall: Foto-Version zurücksetzen (kein Fehl-Reload)
+  let parked = false;
+  try { parked = (await (await fetch("/api/draft/clear", { method: "POST" })).json()).parked; }
+  catch (e) {}
+  loadCases();          // ein gerade geparkter Fall erscheint in der Liste
+  status(parked
+    ? `Fall geparkt – du findest ihn unter „Aktive Fälle". Neuer Fall bereit.`
+    : "Neuer Fall – bereit für die nächsten Fotos.");
 });
+
+// Liste „Aktive Fälle": begonnene, noch nicht abgesendete Fälle zum Weitermachen.
+async function loadCases() {
+  let data;
+  try { data = await (await fetch("/api/cases")).json(); }
+  catch (e) { return; }   // ohne Liste bleibt die App benutzbar
+  const list = $("active-cases-list");
+  list.innerHTML = "";
+  for (const c of data.cases || []) {
+    const li = document.createElement("li");
+    li.className = "case-row";
+    const info = document.createElement("span");
+    info.className = "case-info";
+    const fotos = c.photo_count === 1 ? "1 Foto" : `${c.photo_count} Fotos`;
+    info.textContent = `${c.name} · ${fotos} · ${formatDatum(c.saved_at)}`;
+    const oeffnen = document.createElement("button");
+    oeffnen.type = "button";
+    oeffnen.textContent = "Öffnen";
+    oeffnen.addEventListener("click", () => openCase(c.id));
+    const del = document.createElement("button");
+    del.type = "button";
+    del.className = "case-del";
+    del.textContent = "×";
+    del.title = "Fall löschen";
+    del.addEventListener("click", () => deleteCase(c.id, c.name));
+    li.append(info, oeffnen, del);
+    list.appendChild(li);
+  }
+  $("active-cases").hidden = list.children.length === 0;
+}
+
+function formatDatum(ts) {
+  if (!ts) return "";
+  const d = new Date(ts * 1000);
+  return d.toLocaleDateString("de-DE") + " "
+       + d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+}
+
+// Öffnen: Backend macht den Fall zum aktuellen (und parkt den bisherigen offenen).
+// Danach die Seite neu laden – die Start-Logik stellt den Fall sauber wieder her.
+async function openCase(id) {
+  status("Fall wird geöffnet …");
+  await fetch("/api/cases/" + id + "/open", { method: "POST" });
+  location.reload();
+}
+
+async function deleteCase(id, name) {
+  if (!confirm(`Fall „${name}" wirklich löschen? Das lässt sich nicht rückgängig machen.`))
+    return;
+  await fetch("/api/cases/" + id + "/delete", { method: "POST" });
+  loadCases();
+}
 
 // Zeigt unten die zuletzt gespeicherten Anzeigen aus der Sammeldatei.
 async function loadRecent() {
@@ -587,6 +645,7 @@ $("choose-folder-btn").addEventListener("click", async () => {
   const s = await (await fetch("/api/settings")).json();
   if (s.save_folder) $("folder-path").textContent = s.save_folder;
   loadRecent();  // zuletzt gespeicherte Anzeigen unten zeigen
+  loadCases();   // begonnene, noch nicht abgesendete Fälle zeigen
 
   const draft = await (await fetch("/api/draft")).json();
   knownImagesRev = draft.images_rev ?? 0;   // Ausgangsstand merken (sonst Fehl-Reload)
