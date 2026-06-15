@@ -11,12 +11,13 @@ den Tab davor (z. B. „KI-Text: …").
 
 ## KI-Anzeigentext
 
+## Preisvergleich
+
 ## CSV-Export
 
 ## Einstellungen
 
 ## Allgemein
-
 
 ### Keep
 
