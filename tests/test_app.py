@@ -76,6 +76,25 @@ def test_listings_ohne_ordner_leer(tmp_path):
     assert r.status_code == 200
     assert r.get_json()["listings"] == []
 
+def test_mark_uploaded_archiviert_und_leert(tmp_path):
+    from ebay_csv import append_listing
+    c = _client(tmp_path)
+    folder = tmp_path / "out"
+    folder.mkdir()
+    append_listing(str(folder), title="Mein Buch", author="A", book_title="B",
+                   language="Deutsch", description="D", price="9.99",
+                   condition_id="5000", picture_urls=["https://x/1.jpg"])
+    c.post("/api/settings", json={"save_folder": str(folder)})
+    r = c.post("/api/mark-uploaded")
+    assert r.status_code == 200
+    assert r.get_json()["moved"] == 1
+    assert c.get("/api/listings").get_json()["listings"] == []   # Liste jetzt leer
+
+def test_mark_uploaded_ohne_ordner_fehler(tmp_path):
+    c = _client(tmp_path)
+    r = c.post("/api/mark-uploaded")
+    assert r.status_code == 400
+
 def test_create_csv_fragt_bei_dublette(tmp_path):
     from ebay_csv import append_listing
     c = _client(tmp_path)
@@ -156,8 +175,7 @@ def test_price_ohne_schluessel_gibt_fehler(tmp_path):
 def test_price_ruft_analyze_price(tmp_path):
     c = _client(tmp_path)
     c.post("/api/settings", json={"anthropic_api_key": "sk-x"})
-    fake = PriceAnalysis(price_low="8.00", price_high="15.00",
-                         comparables=[{"title": "X", "price": "12.00",
+    fake = PriceAnalysis(comparables=[{"title": "X", "price": "12.00",
                                        "url": "https://y", "source": "ZVAB"}],
                          note="ok")
     with patch("app.analyze_price", return_value=fake) as m:
@@ -165,7 +183,7 @@ def test_price_ruft_analyze_price(tmp_path):
                                        "language": "Deutsch", "publication_year": "1957",
                                        "publisher": "", "book_format": ""})
     assert r.status_code == 200
-    assert r.get_json()["price_low"] == "8.00"
+    assert r.get_json()["comparables"][0]["price"] == "12.00"
     assert m.called
     # Preis-Aufruf nutzt das (schnellere) Preis-Modell (Standard Sonnet).
     assert m.call_args.kwargs["model"] == "claude-sonnet-4-6"

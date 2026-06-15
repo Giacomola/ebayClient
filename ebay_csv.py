@@ -7,6 +7,8 @@ import os
 ACTION = "*Action(SiteID=Germany|Country=DE|Currency=EUR|Version=1193|CC=UTF-8)"
 INFO_LINE = "Info;Version=1.0.0;Template=fx_category_template_EBAY_DE"
 DEFAULT_FILENAME = "ebay-anzeigen.csv"
+# Bereits zu eBay hochgeladene Anzeigen werden hierhin verschoben (nur als Nachweis).
+ARCHIVE_FILENAME = "ebay-anzeigen-erledigt.csv"
 
 COLUMNS = [
     ACTION, "CustomLabel", "*Category", "StoreCategory", "*Title", "Subtitle",
@@ -122,6 +124,32 @@ def title_exists(folder: str, title, filename: str = DEFAULT_FILENAME) -> bool:
         return any(line.startswith("Add;")
                    and line.rstrip("\r\n").split(";")[_TITLE_INDEX] == target
                    for line in f)
+
+def archive_listings(folder: str, filename: str = DEFAULT_FILENAME,
+                     archive_filename: str = ARCHIVE_FILENAME) -> int:
+    """Verschiebt alle Anzeigen aus der aktiven Sammeldatei ins Archiv.
+
+    Hängt die Datenzeilen an die Archiv-Datei an (legt sie bei Bedarf mit BOM,
+    Info- und Kopfzeile an) und löscht danach die aktive Datei. So enthält die
+    aktive Datei beim nächsten eBay-Upload nur noch neue Anzeigen.
+    Gibt die Anzahl verschobener Anzeigen zurück (0, wenn nichts da war)."""
+    path = os.path.join(folder, filename)
+    if not os.path.exists(path):
+        return 0
+    with open(path, "r", encoding="utf-8-sig") as f:
+        rows = [line.rstrip("\r\n") for line in f if line.startswith("Add;")]
+    if not rows:
+        return 0
+    archive_path = os.path.join(folder, archive_filename)
+    new_archive = not os.path.exists(archive_path)
+    encoding = "utf-8-sig" if new_archive else "utf-8"
+    with open(archive_path, "a", encoding=encoding, newline="") as f:
+        if new_archive:
+            f.write(INFO_LINE + "\r\n" + HEADER + "\r\n")
+        for r in rows:
+            f.write(r + "\r\n")
+    os.remove(path)  # aktive Datei ist jetzt leer → einfach entfernen
+    return len(rows)
 
 def recent_listings(folder: str, filename: str = DEFAULT_FILENAME, limit: int = 10):
     """Liest die zuletzt gespeicherten Anzeigen aus der Sammeldatei.

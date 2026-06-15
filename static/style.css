@@ -35,6 +35,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .save-success { color: #2b6a4b; font-weight: 600; margin: .8rem 0 .5rem; }
 #show-entry-btn { width: 100%; }
 .recent { margin-top: 1.5rem; }
+#mark-uploaded-btn { width: 100%; margin-top: .8rem; }
 .status { min-height: 1.4rem; color: #c4623a; }
 .header-buttons { display: flex; gap: .5rem; }
 dialog { border: none; border-radius: 12px; padding: 1.5rem; min-width: 320px; }
@@ -55,8 +56,6 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 .info-box h3 { margin: 0 0 .5rem; font-size: 1rem; }
 .info-box ul { margin: 0; padding-left: 1.2rem; }
 .info-box li { margin-bottom: .3rem; }
-#price-range { font-size: 1.1rem; font-weight: 600; margin: 0 0 .5rem; }
-#price-apply { margin-top: .6rem; }
 .price-line { display: flex; gap: .5rem; align-items: center; }
 .price-line input { flex: 1; }
 .price-line button { white-space: nowrap; }

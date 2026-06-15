@@ -3,13 +3,13 @@
 Erstelle aus den Fotos EINES Buches eine fertige, verkaufsstarke und rechtssichere Anzeige auf Deutsch.
 
 ## INHALT
-- Nur was auf den Fotos sicher erkennbar ist. Niemals raten oder erfinden. Du hast NUR die Fotos – nicht recherchieren.
+- Grundlage sind die Fotos. Du DARFST und SOLLST zusätzlich die Websuche nutzen, um die exakte Ausgabe zu bestimmen und fehlende Angaben zu ergänzen. Niemals raten oder erfinden: Jede Angabe muss entweder auf den Fotos erkennbar oder durch eine Quelle belegbar sein.
 - Pflichtangaben prüfen und, wenn erkennbar, nennen: Autor, Titel (bei Sets Vollständigkeit und Einzeltitel), Übersetzer (bei fremdsprachigem Original immer prüfen), Herausgeber, Verlag und Ort, Sprache, Format/Größe, Einband und Schutzumschlag, Seitenzahl, Auflage und Jahr, ISBN, Zustand, Genre/Thema.
-- Nicht erkennbare Pflichtangabe an Ort und Stelle als FARBIGEN Platzhalter einsetzen, exakt so: <span style="color:#c00">[Angabe – bitte prüfen]</span> (zum Beispiel <span style="color:#c00">[Jahr – bitte prüfen]</span>).
+- Nicht erkennbare Pflichtangabe an Ort und Stelle als FARBIGEN Platzhalter einsetzen, exakt so: <span style='color:#c00'>[Angabe – bitte prüfen]</span> (zum Beispiel <span style='color:#c00'>[Jahr – bitte prüfen]</span>). WICHTIG: im HTML immer einfache Anführungszeichen ' verwenden, niemals doppelte ".
 - Zustand ehrlich und vorsichtig formulieren (rechtlich bindend). Keine Übertreibungen wie „neuwertig“ oder „makellos“ ohne sichtbaren Beleg.
 
 ## FORM (WICHTIG – sonst zeigt eBay Fehler an)
-- Formatiere AUSSCHLIESSLICH mit HTML: Absätze <p>…</p>, Zeilenumbruch <br>, fett <b>…</b>, Farbe <span style="color:#c00">…</span>.
+- Formatiere AUSSCHLIESSLICH mit HTML: Absätze <p>…</p>, Zeilenumbruch <br>, fett <b>…</b>, Farbe <span style='color:#c00'>…</span>. HTML-Attribute immer mit einfachen Anführungszeichen ' schreiben, nie mit doppelten ".
 - NIEMALS Markdown (kein **, *, #, -). NIEMALS Semikolons. KEINE echten Zeilenumbrüche – nur die HTML-Tags.
 
 # Titel #

@@ -69,7 +69,12 @@ _FIELD_LABELS = [(key, label) for key, label, _instr in PROMPT_FIELDS]
 DEFAULTS = {
     "anthropic_api_key": "",
     "imgbb_api_key": "",
+    # Getrennt wählbar: starkes Modell für die Texte, schnelleres für die
+    # Preissuche (der Preis ist nur eine Empfehlung). "model" bleibt als
+    # Alt-Schlüssel erhalten, wird aber nicht mehr verwendet.
     "model": "claude-opus-4-8",
+    "model_text": "claude-opus-4-8",
+    "model_price": "claude-sonnet-4-6",
     "location": "Berlin",
     "shipping_service": "DE_DHLPaket",
     "shipping_cost": "5.49",

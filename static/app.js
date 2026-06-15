@@ -25,36 +25,34 @@ function renderSources(sources) {
   }
   box.hidden = list.children.length === 0;
 }
-// Zeigt Preisspanne, Vergleichsangebote und Hinweis.
+// Zeigt nur die gefundenen Beispielpreise mit Quelle – bewusst keine Empfehlung.
 function renderPrice(d) {
   $("price-box").hidden = false;
-  if (d.price_low || d.price_high) {
-    $("price-range").textContent = `ca. ${d.price_low} – ${d.price_high} ${d.currency || "EUR"}`;
-  } else {
-    $("price-range").textContent = "Keine Preise gefunden.";
-  }
   const list = $("price-comparables");
   list.innerHTML = "";
   for (const c of d.comparables || []) {
     const li = document.createElement("li");
+    const label = `${c.title || c.source || "Angebot"} – ${c.price}`;
     if (c.url) {
       const a = document.createElement("a");
       a.href = c.url; a.target = "_blank"; a.rel = "noopener";
-      a.textContent = `${c.title || c.source} – ${c.price}`;
+      a.textContent = label;
       li.appendChild(a);
     } else {
-      li.textContent = `${c.title || c.source} – ${c.price}`;
+      li.textContent = label;
     }
     list.appendChild(li);
   }
+  $("price-status").textContent =
+    list.children.length === 0 ? "Keine Beispielpreise gefunden." : "";
   $("price-note").textContent = d.note || "";
 }
-// Holt die Preisempfehlung anhand der aktuellen Feldwerte.
+// Holt die Beispielpreise anhand der aktuellen Feldwerte.
 async function fetchPrice() {
   const btn = $("price-btn");
   if (btn) btn.disabled = true;  // Doppelklick während der Suche verhindern
   $("price-box").hidden = false;
-  $("price-range").textContent = "💶 prüfe Preise …";
+  $("price-status").textContent = "💶 suche Beispielpreise …";
   $("price-comparables").innerHTML = "";
   $("price-note").textContent = "";
   const body = {};
@@ -70,12 +68,12 @@ async function fetchPrice() {
     });
     d = await r.json();
   } catch (e) {
-    $("price-range").textContent = "Preisprüfung nicht möglich.";
+    $("price-status").textContent = "Preissuche nicht möglich.";
     return;
   } finally {
     if (btn) btn.disabled = false;
   }
-  if (!r.ok) { $("price-range").textContent = d.error || "Preise nicht ermittelbar."; return; }
+  if (!r.ok) { $("price-status").textContent = d.error || "Preise nicht ermittelbar."; return; }
   renderPrice(d);
 }
 
@@ -204,7 +202,7 @@ generateBtn.addEventListener("click", async () => {
     applyBadges(data.web_sourced_fields || []);
     renderSources(data.sources || []);
     $("result").hidden = false;
-    status("Text fertig. Preis bei Bedarf mit „Preis recherchieren" prüfen.");
+    status("Text fertig. Preis bei Bedarf mit „Preis recherchieren“ prüfen.");
     saveFieldsNow();  // Ergebnis sofort in den Entwurf übernehmen
   } catch (e) {
     // Bricht der Aufruf ab (Netzfehler/Timeout), bleibt die Seite bedienbar
@@ -217,17 +215,6 @@ generateBtn.addEventListener("click", async () => {
 
 // Preissuche nur auf Knopfdruck (sie dauert länger und ist nur eine Empfehlung).
 on("price-btn", "click", fetchPrice);
-
-// Übernimmt den Mittelwert der Preisspanne ins Preisfeld (manuell, auf Wunsch).
-on("price-apply", "click", () => {
-  const text = $("price-range").textContent.match(/[\d.,]+/g);
-  if (!text || text.length < 2) return;
-  const low = parseFloat(text[0].replace(",", "."));
-  const high = parseFloat(text[1].replace(",", "."));
-  if (isNaN(low) || isNaN(high)) return;
-  $("f-price").value = ((low + high) / 2).toFixed(2);
-  saveFieldsSoon();
-});
 
 // Jede Änderung in den Ergebnis-Feldern wird (verzögert) gespeichert.
 for (const key of RESULT_FIELDS) $("f-" + key).addEventListener("input", saveFieldsSoon);
@@ -318,6 +305,27 @@ $("show-entry-btn").addEventListener("click", async () => {
     }
   } catch (err) {
     alert("Konnte die Sammeldatei nicht öffnen.");
+  }
+});
+
+// „Als hochgeladen markieren": archiviert die aktuelle Sammeldatei und leert sie,
+// damit beim nächsten eBay-Upload nicht dieselben Anzeigen noch einmal hochgeladen werden.
+$("mark-uploaded-btn").addEventListener("click", async () => {
+  if (!confirm("Erst klicken, NACHDEM du die Datei zu eBay hochgeladen hast!\n\n"
+               + "Alle Einträge der aktuellen Sammeldatei werden ins Archiv verschoben "
+               + "und aus der aktiven Datei entfernt. So werden sie bei eBay nicht doppelt "
+               + "angelegt.")) return;
+  try {
+    const r = await fetch("/api/mark-uploaded", { method: "POST" });
+    const d = await r.json();
+    if (!r.ok) { alert(d.error || "Konnte nicht abschließen."); return; }
+    $("save-success").hidden = true;
+    $("show-entry-btn").hidden = true;
+    status(`✓ ${d.moved} Eintrag/Einträge ins Archiv verschoben. `
+           + `Die aktive Sammeldatei ist nun leer für die nächsten Bücher.`);
+    loadRecent();  // Liste ist jetzt leer → Bereich blendet sich aus
+  } catch (e) {
+    alert("Konnte nicht abschließen.");
   }
 });
 

@@ -11,7 +11,7 @@ from ai_client import analyze_book
 from price_analysis import analyze_price
 from image_host import upload_image
 from ebay_csv import (append_listing, title_exists, title_for,
-                      recent_listings, DEFAULT_FILENAME)
+                      recent_listings, archive_listings, DEFAULT_FILENAME)
 from draft import load_draft, update_fields, update_images, clear_draft
 
 def _open_in_os(path: str) -> None:
@@ -119,6 +119,16 @@ def create_app(config_path: str = "config.json",
         settings = load_settings(config_path)
         folder = settings.get("save_folder", "")
         return jsonify({"listings": recent_listings(folder) if folder else []})
+
+    @app.post("/api/mark-uploaded")
+    def mark_uploaded():
+        """Archiviert die aktuelle Sammeldatei (nach dem eBay-Upload), leert sie."""
+        settings = load_settings(config_path)
+        folder = settings.get("save_folder", "")
+        if not folder:
+            return jsonify({"error": "Kein Speicherordner gewählt."}), 400
+        moved = archive_listings(folder)
+        return jsonify({"ok": True, "moved": moved})
 
     @app.post("/api/open-csv")
     def open_csv():
