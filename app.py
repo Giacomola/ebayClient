@@ -113,11 +113,25 @@ def create_app(config_path: str = "config.json",
     # Statische Dateien (app.js/style.css) nicht im Browser zwischenspeichern, damit
     # nach einem Update ein normales Neuladen reicht (sonst läuft veralteter Code).
     app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+    # Seitenvorlage (index.html) bei Änderung automatisch neu einlesen, damit nach
+    # einem Update ein normales Neuladen reicht – ohne das Programm neu zu starten.
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
     ensure_anweisungen(config_path)  # anweisungen.txt anlegen, falls sie fehlt
 
     @app.get("/")
     def index():
-        return render_template("index.html")
+        # Versionskennung aus dem Datenstand von app.js/style.css. Sie wird im
+        # Kopf angezeigt UND an die Datei-Links gehängt (?v=…). So lädt der Browser
+        # nach jeder Änderung automatisch die neue Datei – kein „alter Code" mehr.
+        import time
+        ver = 0
+        for name in ("app.js", "style.css"):
+            try:
+                ver = max(ver, int(os.path.getmtime(os.path.join(app.static_folder, name))))
+            except OSError:
+                pass
+        stand = time.strftime("%d.%m.%Y %H:%M", time.localtime(ver)) if ver else ""
+        return render_template("index.html", asset_ver=ver, asset_stand=stand)
 
     @app.get("/api/draft")
     def get_draft():
