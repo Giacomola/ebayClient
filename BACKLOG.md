@@ -46,6 +46,9 @@ _Bewusst auf später verschoben — nicht ohne Ansage starten._
 ## ✅ Erledigt
 _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 
+- [x] 2026-06-15 Rechenleistung-Schalter robust: Listener über on()-Helfer angehängt, ein fehlendes Element friert die Seite nicht mehr ein (app.js) `b54ebc5`.
+- [x] 2026-06-15 Einstellungs-Schalter „Rechenleistung" (API-Schlüssel/Abo) in der Oberfläche (templates/index.html, app.js) `d921c02`.
+- [x] 2026-06-15 Rechenleistung umschaltbar: KI-Analyse wahlweise über API-Schlüssel oder Claude-Abo (Agent SDK / Claude-Code-CLI) (web_ai.py, ai_client.py, price_analysis.py, app.py, config.py, requirements.txt) `b171a47`.
 - [x] 2026-06-15 Fehlende Informationen nicht anzeigen: KI lässt unbekannte Pflichtangaben weg statt roten Platzhalter einzusetzen (anweisungen.txt).
 - [x] 2026-06-15 DnB/DDB als bevorzugte Quelle im Recherche-Prompt verankert (anweisungen.txt).
 - [x] 2026-06-15 Preis-Suchbegriff: erste 4 Wörter des Buchtitels + Jahr als empfohlene Suchanfrage (price_analysis.py).
