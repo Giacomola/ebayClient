@@ -730,6 +730,19 @@ function chatZeile(role, text) {
   return div;
 }
 
+// Wandelt die einfache Markdown-Auszeichnung der KI-Antwort in echtes Fett/Kursiv
+// um (statt die Sternchen anzuzeigen). Erst HTML entschaerfen, dann nur **fett**,
+// *kursiv* und Zeilenumbrueche zulassen – sicher gegen eingeschleustes HTML.
+function chatFormat(text) {
+  const sicher = (text || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return sicher
+    .replace(/\*\*\*([^*]+?)\*\*\*/g, "<b><i>$1</i></b>")
+    .replace(/\*\*([^*]+?)\*\*/g, "<b>$1</b>")
+    .replace(/\*([^*\s][^*\n]*?)\*/g, "<i>$1</i>")
+    .replace(/\n/g, "<br>");
+}
+
 async function chatSenden() {
   const feld = $("chat-text");
   const frage = feld.value.trim();
@@ -746,7 +759,7 @@ async function chatSenden() {
     });
     const d = await r.json();
     if (!r.ok) { platz.textContent = "⚠ " + (d.error || "Es ist ein Fehler aufgetreten."); return; }
-    platz.textContent = d.answer || "(keine Antwort)";
+    platz.innerHTML = chatFormat(d.answer || "(keine Antwort)");
     chatVerlauf.push({ role: "assistant", content: d.answer || "" });
   } catch (e) {
     platz.textContent = "⚠ Keine Verbindung – bitte erneut versuchen.";

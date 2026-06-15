@@ -261,7 +261,11 @@ CHAT_BASIS = (
     "statt allgemein zu bleiben. Fasse dich kurz und ohne Fachjargon; der Nutzer ist "
     "kein Computerfachmann. Fehlt dir eine Information, frage kurz nach. Stütze dich "
     "auf das folgende Wissen über das Programm und erfinde keine Funktionen, die dort "
-    "nicht stehen."
+    "nicht stehen. "
+    "Halte deine Antworten kurz – in der Regel zwei bis vier Sätze, nur wenn nötig "
+    "mehr. Verzichte auf Überschriften und lange Aufzählungen. Hervorhebungen nur "
+    "sparsam mit **fett** oder *kursiv* (wird im Fenster als echtes Fett/Kursiv "
+    "angezeigt); benutze keine sonstigen Sonderzeichen zur Gestaltung."
 )
 
 def _chat_system(wissen: str = "") -> str:
