@@ -32,14 +32,20 @@ function renderPrice(d) {
   list.innerHTML = "";
   for (const c of d.comparables || []) {
     const li = document.createElement("li");
-    const label = `${c.title || c.source || "Angebot"} – ${c.price}`;
+    // Preis deutlich hervorheben (fett), danach das Angebot als anklickbarer Link.
+    const preis = document.createElement("b");
+    preis.textContent = c.price || "—";
+    li.appendChild(preis);
+    li.appendChild(document.createTextNode(" – "));
+    const titel = c.title || c.source || "Angebot";
+    const beschriftung = (c.title && c.source) ? `${titel} (${c.source})` : titel;
     if (c.url) {
       const a = document.createElement("a");
       a.href = c.url; a.target = "_blank"; a.rel = "noopener";
-      a.textContent = label;
+      a.textContent = beschriftung;
       li.appendChild(a);
     } else {
-      li.textContent = label;
+      li.appendChild(document.createTextNode(beschriftung));
     }
     list.appendChild(li);
   }

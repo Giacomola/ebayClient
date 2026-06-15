@@ -33,7 +33,6 @@ _eBay-File-Exchange-CSV erzeugen, Sammel-CSV, Zielordner, Feld-Grenzen._
 ## 💰 Preisvergleich
 _Preis-Recherche, Vergleichsanzeigen, Suchlogik._
 
-- [ ] Preisvergleich strukturierter Anzeigen (deutlicher Preis + Link)  `→ app.py`
 
 ## ⚙️ Einstellungen
 _API-Schlüssel (Anthropic, imgbb), Konfiguration, Speicherorte._
@@ -52,3 +51,4 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 Fehlende Informationen nicht anzeigen: KI lässt unbekannte Pflichtangaben weg statt roten Platzhalter einzusetzen (anweisungen.txt).
 - [x] 2026-06-15 DnB/DDB als bevorzugte Quelle im Recherche-Prompt verankert (anweisungen.txt).
 - [x] 2026-06-15 Preis-Suchbegriff: erste 4 Wörter des Buchtitels + Jahr als empfohlene Suchanfrage (price_analysis.py).
+- [x] 2026-06-15 Preisvergleich: Beispielpreise zeigen den Preis fett hervorgehoben + anklickbaren Link (app.js).
