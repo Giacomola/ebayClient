@@ -718,8 +718,13 @@ async function openOverview() {
 on("overview-btn", "click", openOverview);
 
 // --- Fragen-Fenster: einfacher Chat mit der KI ------------------------------
-const chatDlg = $("chat-dialog");
+const chatPanel = $("chat-panel");
 let chatVerlauf = [];   // [{role:"user"|"assistant", content:"…"}]
+
+// Schwebendes Chat-Fenster auf/zu (Support-Stil). Der runde Knopf bleibt sichtbar.
+function chatOeffnen()  { chatPanel.hidden = false; $("chat-text").focus(); }
+function chatSchliessen() { chatPanel.hidden = true; }
+function chatUmschalten() { if (chatPanel.hidden) chatOeffnen(); else chatSchliessen(); }
 
 function chatZeile(role, text) {
   const div = document.createElement("div");
@@ -768,7 +773,9 @@ async function chatSenden() {
   }
 }
 
-on("chat-btn", "click", () => { chatDlg.showModal(); $("chat-text").focus(); });
+on("chat-bubble", "click", chatUmschalten);   // runder Knopf unten rechts
+on("chat-close", "click", chatSchliessen);
+on("chat-btn", "click", chatOeffnen);          // „Chat" in der Kopfzeile öffnet ebenfalls
 on("chat-send", "click", chatSenden);
 // Enter sendet, Umschalt+Enter macht einen Zeilenumbruch.
 on("chat-text", "keydown", (e) => {

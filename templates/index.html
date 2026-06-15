@@ -133,21 +133,22 @@
     <button id="quit-btn" type="button" class="quit">Programm beenden</button>
   </main>
 
-  <dialog id="chat-dialog" class="chat-dialog">
-    <form method="dialog">
-      <h2>Fragen an die KI</h2>
-      <p class="hint">Stell hier einfach eine Frage – zu deinen Büchern, zum Programm
-        oder zu irgendetwas anderem. Du kannst auch nachfragen.</p>
-      <div id="chat-verlauf" class="chat-verlauf"></div>
-      <div class="chat-eingabe">
-        <textarea id="chat-text" rows="2" placeholder="Deine Frage …"></textarea>
-        <button id="chat-send" type="button" class="primary">Senden</button>
-      </div>
-      <menu>
-        <button value="cancel">Schließen</button>
-      </menu>
-    </form>
-  </dialog>
+  <!-- Schwebender Chat wie ein Support-Fenster: runder Knopf unten rechts (läuft beim
+       Scrollen mit), Klick klappt das Chat-Fenster auf/zu. Blockiert die Seite nicht. -->
+  <button id="chat-bubble" type="button" class="chat-bubble"
+          title="Chat öffnen" aria-label="Chat öffnen">💬</button>
+  <section id="chat-panel" class="chat-panel" hidden aria-label="Chat">
+    <div class="chat-kopf">
+      <span class="chat-titel">Chat</span>
+      <button id="chat-close" type="button" class="chat-close"
+              title="Chat einklappen" aria-label="Chat einklappen">×</button>
+    </div>
+    <div id="chat-verlauf" class="chat-verlauf"></div>
+    <div class="chat-eingabe">
+      <textarea id="chat-text" rows="2" placeholder="Deine Frage …"></textarea>
+      <button id="chat-send" type="button" class="primary">Senden</button>
+    </div>
+  </section>
 
   <dialog id="overview-dialog" class="overview-dialog">
     <form method="dialog">

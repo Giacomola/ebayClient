@@ -380,6 +380,7 @@ def test_chat_ruft_modell_und_gibt_antwort(tmp_path):
     assert r.get_json()["answer"].startswith("Hallo")
     assert m.called
     assert m.call_args.kwargs["model"] == "claude-haiku-4-5"   # eingestelltes Chat-Modell
+    assert m.call_args.kwargs["modellname"] == "Haiku"         # stellt sich mit Namen vor
 
 def test_chat_leer_gibt_fehler(tmp_path):
     c = _client(tmp_path)

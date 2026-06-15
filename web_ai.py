@@ -268,19 +268,26 @@ CHAT_BASIS = (
     "angezeigt); benutze keine sonstigen Sonderzeichen zur Gestaltung."
 )
 
-def _chat_system(wissen: str = "") -> str:
-    """Baut den System-Prompt fürs Fragen-Fenster: Grundhaltung + App-Wissen."""
+def _chat_system(wissen: str = "", modellname: str = "") -> str:
+    """Baut den System-Prompt fürs Fragen-Fenster: Modellname + Grundhaltung + Wissen."""
+    teile = []
+    if modellname.strip():
+        teile.append(f"Dein Name ist {modellname.strip()}. Stelle dich gleich in deiner "
+                     "ersten Antwort kurz mit diesem Namen vor und nenne ihn, wenn jemand "
+                     "fragt, welches KI-Modell du bist.")
+    teile.append(CHAT_BASIS)
     if wissen.strip():
-        return CHAT_BASIS + "\n\n=== WISSEN ÜBER DAS PROGRAMM ===\n" + wissen.strip()
-    return CHAT_BASIS
+        teile.append("=== WISSEN ÜBER DAS PROGRAMM ===\n" + wissen.strip())
+    return "\n\n".join(teile)
 
 def chat(*, api_key: str | None = None, model: str, messages: list, wissen: str = "",
-         use_search: bool = True, backend: str = "api_key",
+         modellname: str = "", use_search: bool = True, backend: str = "api_key",
          max_tokens: int = 1000, max_searches: int = 2) -> str:
     """Beantwortet eine Chat-Frage als freien Text. messages = Liste aus
     {"role": "user"|"assistant", "content": "..."}. wissen = App-Wissen für den
-    System-Prompt. Gibt den Antworttext zurück."""
-    system = _chat_system(wissen)
+    System-Prompt, modellname = Anzeigename des Modells (z. B. „Haiku"). Gibt den
+    Antworttext zurück."""
+    system = _chat_system(wissen, modellname)
     if backend == "abo":
         # Die Agent-CLI bekommt einen Prompt – den Verlauf in einen Text gießen.
         teile = [("Frage" if m["role"] == "user" else "Antwort") + ": " + str(m.get("content", ""))

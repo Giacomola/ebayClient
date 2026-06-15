@@ -26,6 +26,13 @@ PORT = 5050
 # Anzeige-Version oben im Kopf (z. B. „v1.0"). Bei einer Veröffentlichung hochzählen.
 APP_VERSION = "1.0"
 
+# Anzeigenamen der Chat-Modelle, damit sich die KI mit ihrem Namen vorstellen kann.
+CHAT_MODELLNAMEN = {
+    "claude-haiku-4-5": "Haiku",
+    "claude-sonnet-4-6": "Sonnet",
+    "claude-opus-4-8": "Opus",
+}
+
 def _has_content(draft: dict) -> bool:
     """True, wenn der Fall etwas enthält (mindestens ein Foto oder ein gefülltes Feld)."""
     if draft.get("images"):
@@ -451,10 +458,11 @@ def create_app(config_path: str = "config.json",
         # Wissen = feste App-Beschreibung + aktueller Stand der gespeicherten Einträge.
         folder = settings.get("save_folder", "")
         wissen = _chat_wissen() + "\n\n" + _chat_kontext(folder, cases_dir)
+        modell = settings.get("model_chat", "claude-haiku-4-5")
         try:
-            antwort = chat(api_key=settings["anthropic_api_key"],
-                           model=settings.get("model_chat", "claude-haiku-4-5"),
+            antwort = chat(api_key=settings["anthropic_api_key"], model=modell,
                            messages=messages, wissen=wissen,
+                           modellname=CHAT_MODELLNAMEN.get(modell, ""),
                            backend=settings["ki_backend"])
         except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
             return _ki_fehlerantwort(e, kontext="Chat fehlgeschlagen")

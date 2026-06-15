@@ -95,16 +95,33 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
   margin: 1rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.3); }
 .si-box h2 { margin-top: 0; }
 .si-buttons { display: flex; flex-direction: column; gap: .5rem; margin-top: .8rem; }
-.chat-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
-.chat-verlauf { display: flex; flex-direction: column; gap: .5rem; min-height: 8rem;
-  max-height: 50vh; overflow-y: auto; padding: .5rem; background: #faf9f6;
-  border: 1px solid #e3e0d8; border-radius: 8px; margin-bottom: .6rem; }
+/* Runder Chat-Knopf unten rechts, läuft beim Scrollen mit (position: fixed). */
+.chat-bubble { position: fixed; right: 1.2rem; bottom: 1.2rem; z-index: 60;
+  width: 3.6rem; height: 3.6rem; padding: 0; border: none; border-radius: 50%;
+  background: #c4623a; color: #fff; font-size: 1.7rem; line-height: 1; cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0,0,0,.3); }
+.chat-bubble:hover { background: #d6764f; }
+/* Aufgeklapptes Chat-Fenster, schwebt über der Seite (blockiert sie nicht). */
+.chat-panel { position: fixed; right: 1.2rem; bottom: 5.4rem; z-index: 61;
+  width: min(380px, calc(100vw - 2.4rem)); max-height: min(70vh, 560px);
+  display: flex; flex-direction: column; background: #fff; border-radius: 12px;
+  border: 1px solid #e3e0d8; box-shadow: 0 6px 24px rgba(0,0,0,.28); overflow: hidden; }
+.chat-panel[hidden] { display: none; }
+.chat-kopf { display: flex; align-items: center; justify-content: space-between;
+  background: #c4623a; color: #fff; padding: .5rem .4rem .5rem .8rem; }
+.chat-titel { font-weight: 600; }
+.chat-close { background: transparent; border: none; color: #fff; font-size: 1.5rem;
+  line-height: 1; padding: 0 .5rem; cursor: pointer; }
+.chat-verlauf { flex: 1; display: flex; flex-direction: column; gap: .5rem;
+  min-height: 8rem; overflow-y: auto; padding: .6rem; background: #faf9f6; }
 .chat-zeile { padding: .5rem .7rem; border-radius: 10px; max-width: 85%;
   white-space: pre-wrap; line-height: 1.4; }
 .chat-ich { align-self: flex-end; background: #e7f3ec; }
 .chat-ki  { align-self: flex-start; background: #fff; border: 1px solid #e3e0d8; }
-.chat-eingabe { display: flex; gap: .5rem; align-items: flex-end; }
-.chat-eingabe textarea { flex: 1; resize: vertical; }
+.chat-eingabe { display: flex; gap: .5rem; align-items: flex-end; padding: .6rem;
+  border-top: 1px solid #ece9e1; }
+.chat-eingabe textarea { flex: 1; resize: none; font-family: inherit; font-size: 1rem;
+  padding: .5rem; border: 1px solid #c9c3b5; border-radius: 6px; }
 .chat-eingabe button { white-space: nowrap; }
 .overview-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
 .overview-dialog h3 { margin: 1rem 0 .3rem; font-size: 1rem; }
