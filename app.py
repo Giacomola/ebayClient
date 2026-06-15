@@ -5,6 +5,7 @@ import anthropic
 from flask import Flask, request, jsonify, render_template
 from config import load_settings, save_settings, build_system_prompt
 from ai_client import analyze_book
+from price_analysis import analyze_price
 from image_host import upload_image
 from ebay_csv import append_listing, DEFAULT_FILENAME
 from draft import load_draft, update_fields, update_images, clear_draft
@@ -115,6 +116,35 @@ def create_app(config_path: str = "config.json",
         except Exception as e:  # noqa: BLE001
             return jsonify({"error": f"KI-Fehler: {e}"}), 502
         return jsonify(book.model_dump())
+
+    @app.post("/api/price")
+    def price():
+        settings = load_settings(config_path)
+        if not settings["anthropic_api_key"]:
+            return jsonify({"error": "Kein Anthropic-API-Schlüssel hinterlegt. "
+                                     "Bitte in den Einstellungen eintragen."}), 400
+        data = request.get_json(force=True) or {}
+        try:
+            result = analyze_price(
+                api_key=settings["anthropic_api_key"], model=settings["model"],
+                author=data.get("author", ""), book_title=data.get("book_title", ""),
+                title=data.get("title", ""), language=data.get("language", ""),
+                publication_year=data.get("publication_year", ""),
+                publisher=data.get("publisher", ""), book_format=data.get("book_format", ""))
+        except anthropic.AuthenticationError:
+            return jsonify({"error": "Der Anthropic-API-Schlüssel fehlt oder ist "
+                                     "ungültig."}), 401
+        except anthropic.APIConnectionError:
+            return jsonify({"error": "Keine Verbindung zu den KI-Servern. Bitte die "
+                                     "Internetverbindung prüfen."}), 503
+        except anthropic.APIStatusError as e:
+            if e.status_code >= 500:
+                return jsonify({"error": "Die KI-Server sind gerade überlastet. Bitte "
+                                         "kurz warten und erneut versuchen."}), 503
+            return jsonify({"error": f"KI-Fehler ({e.status_code}): {e.message}"}), 502
+        except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
+            return jsonify({"error": f"Preis-Recherche fehlgeschlagen: {e}"}), 502
+        return jsonify(result.model_dump())
 
     @app.post("/api/choose-folder")
     def choose_folder():
