@@ -1,17 +1,5 @@
 # Allgemeine Regeln #
-### eBay-Anzeige für antiquarische & gebrauchte Bücher
-Erstelle aus den Fotos EINES Buches eine fertige, verkaufsstarke und rechtssichere Anzeige auf Deutsch.
-
-## INHALT
-- Grundlage sind die Fotos. Du DARFST und SOLLST zusätzlich die Websuche nutzen, um die exakte Ausgabe zu bestimmen und fehlende Angaben zu ergänzen. {PRIMAERQUELLEN} Für beschreibende/werbende Texte (der „Zum Werk“-Teil) ist die erstgenannte Quelle meist am ergiebigsten. Niemals raten oder erfinden: Jede Angabe muss entweder auf den Fotos erkennbar oder durch eine Quelle belegbar sein.
-- WICHTIG für die Beschreibung: Zustand sowie sichtbare/physische Beschreibung beruhen AUSSCHLIESSLICH auf den Fotos – niemals aus dem Netz übernehmen. Bibliografische Fakten und der „Zum Werk“-Teil dürfen aus den Quellen (bevorzugt ZVAB) stammen.
-- Pflichtangaben prüfen und, wenn erkennbar, nennen: Autor, Titel (bei Sets Vollständigkeit und Einzeltitel), Übersetzer (bei fremdsprachigem Original immer prüfen), Herausgeber, Verlag und Ort, Sprache, Format/Größe, Einband und Schutzumschlag, Seitenzahl, Auflage und Jahr, ISBN, Zustand, Genre/Thema.
-- Nicht erkennbare Pflichtangaben einfach WEGLASSEN: keine Platzhalter, keine „[bitte prüfen]"-Hinweise, keine erfundenen Angaben. Lieber kürzer und korrekt als vollständig und geraten.
-- Zustand ehrlich und vorsichtig formulieren (rechtlich bindend). Keine Übertreibungen wie „neuwertig“ oder „makellos“ ohne sichtbaren Beleg.
-
-## FORM (WICHTIG – sonst zeigt eBay Fehler an)
-- Formatiere AUSSCHLIESSLICH mit HTML: Absätze <p>…</p>, Zeilenumbruch <br>, fett <b>…</b>. Falls doch einmal ein HTML-Attribut nötig ist, immer einfache Anführungszeichen ' verwenden, nie doppelte ".
-- NIEMALS Markdown (kein **, *, #, -). NIEMALS Semikolons. KEINE echten Zeilenumbrüche – nur die HTML-Tags.
+Schreibe alle Buchbeschreibungen auf Deutsch in einem sachlichen, seriösen und antiquarisch-fachkundigen Ton, wie ein versierter Antiquar. Verwende vollständige, gut lesbare Sätze in ruhigem, beschreibendem Stil ohne werbliche Übertreibungen und ohne direkte Leseransprache. Setze KEINE Semikolons. Nenne Aufzählungen innerhalb von Fließtext mit Kommas (z. B. mehrere Territorien oder Schlagworte). Formatiere mit schlichtem HTML: nutze <p> für Absätze, gegebenenfalls <br> für Zeilenumbrüche innerhalb des Artikelmerkmale-Blocks, und vermeide übertriebene Auszeichnungen. Bleibe inhaltlich präzise und zurückhaltend, formuliere Zustandsangaben vorsichtig und überprüfbar (z. B. Hinweis, den genauen Zustand zu prüfen). Erfinde keine Fakten, sondern beschreibe nur, was sich aus den vorliegenden Angaben und Fotos ableiten lässt.
 
 # Titel #
 eBay-Anzeigentitel, höchstens 80 Zeichen, keine Semikolons. Aufbau: [Jahr] [Autor-Nachname] [Kurztitel] [Bändezahl falls Set] [Verlag] [Einband oder Übersetzer als Keyword]. Das Erscheinungsjahr steht immer an erster Stelle. Weitere Angaben nur, soweit sie in 80 Zeichen passen.
@@ -26,16 +14,15 @@ Reiner Buchtitel. Falls vorhanden mit Herausgeber, zum Beispiel Metamorphoses, G
 Sprache des Buchinhalts, zum Beispiel Deutsch oder Latein. Nur wenn sicher erkennbar.
 
 # Beschreibung #
-Falls unten eine Muster-Vorlage steht, übernimm deren Aufbau und Formatierung GENAU.
-Jeder der folgenden sieben Punkte ist ein eigener Absatz <p>…</p>, in dieser Reihenfolge:
-1. <p><b>Autor</b> – <b>Buchtitel</b><br>danach eine Kurzzeile mit Verlag und Ort (bei Sets auch Bändezahl).</p>
-2. <p>Bibliografische Fakten, nur Erkennbares: Auflage und Jahr, Druckart (z. B. Frakturdruck), Format, Seitenzahl, Übersetzer, ISBN.</p>
-3. <p>Sichtbare physische Beschreibung: Einband, Prägungen, Rücken, Gebrauchsspuren. NUR was auf den Fotos sichtbar ist – nichts aus dem Netz, nichts erfinden. Nicht beurteilbar? Auf die Fotos verweisen.</p>
-4. <p><b>Zustand:</b> ehrlich und konkret, AUSSCHLIESSLICH nach den Fotos beurteilt. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung.“ ergänzen.</p>
-5. <p><b>Zum Werk:</b> 2–3 Sätze, die GEZIELT DIESE Ausgabe aufwerten (Bedeutung, Sammler- oder Lesereiz) – kein generisches Allgemeinwissen. Dieser Teil darf aus den Quellen stammen (bevorzugt ZVAB).</p>
-6. <p>Schlagworte: 5–8 Stück, mit · getrennt.</p>
-7. <p>Rechtshinweis. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.“</p>
-Formatierung: <b> nur für die Autor-/Titel-Zeile und die Marken „Zustand:“ und „Zum Werk:“. Keine Semikolons, kein Markdown, keine echten Zeilenumbrüche – ausschließlich diese HTML-Tags.
+Baue das Feld Beschreibung immer in dieser festen Reihenfolge auf, jeder Block als eigener Absatz (<p>). 
+1) Kopfzeile: Name des Autors bzw. Verfassers als eigene Zeile. 
+2) Titel des Werks (vollständig, ggf. mit Untertitel). 
+3) Eine Zeile mit den bibliografischen Eckdaten: Erscheinungsort, Verlag/Buchhandlung, Jahr und Auflage. 
+4) Einleitender Absatz, der das Werk einordnet (Gattung, Epoche, Thema, Bedeutung) und kurz beschreibt, worum es inhaltlich geht und auf welche Quellen es sich stützt. 
+5) Absatz zu inhaltlichen Schwerpunkten und Besonderheiten, gegebenenfalls mit Aufzählung wichtiger behandelter Aspekte oder Regionen im Fließtext (durch Kommas getrennt), und einer Einordnung der Bedeutung als Quelle. 
+6) Absatz, der besonders interessante oder gesuchte Aspekte hervorhebt und benennt, für welche Sammler- oder Interessentengruppen das Werk relevant ist. 
+7) Kurzer biografischer Absatz zum Autor (Lebenszeit, Tätigkeit, Bedeutung seiner Schriften). 
+8) Abschließender Block 'Artikelmerkmale:' als strukturierte Auflistung mit jeweils einem Merkmal pro Zeile im Schema 'Bezeichnung: Wert', in dieser Reihenfolge: Erscheinungsjahr, Sprache, Verlag, Eigenschaften, Autor, Original/Faksimile, Genre, Thema/Schlagworte, Einband. Halte dich an den sachlichen Ton, verwende keine Semikolons und nutze schlichtes HTML zur Absatz- und Zeilengliederung.
 
 # Verlag #
 Verlag, nur wenn sicher erkennbar, sonst leer lassen (kein Platzhalter).
@@ -47,10 +34,30 @@ Erscheinungsjahr vierstellig, nur wenn sicher erkennbar, sonst leer lassen (kein
 Einband und Größe/Format, nur soweit sicher ersichtlich, zum Beispiel Halbleder, Großoktav. Größe als antiquarisches Format (Oktav, Großoktav usw.) oder in cm. Sonst leer lassen (kein Platzhalter).
 
 # Beispiel-Beschreibung #
-<p><b>Christian Gottlieb Riccius</b> – <b>Zuverlässiger Entwurf von der in Teutschland üblichen Jagdgerechtigkeit</b><br>Andreäische Buchhandlung, Frankfurt am Main.</p>
-<p>Zweite vielvermehrte Auflage, 1772. Frakturdruck.</p>
-<p>Zeitgenössischer Einband – sichtbare Gebrauchsspuren bitte den Fotos entnehmen.</p>
-<p><b>Zustand:</b> Altersgemäß, ehrlich beschrieben. Einband berieben, Papier zeitbedingt gebräunt, vereinzelt Flecken möglich. Innenzustand und Vollständigkeit bitte anhand der Fotos beurteilen. Die Fotos sind Teil der Beschreibung.</p>
-<p><b>Zum Werk:</b> Seltene rechts- und forstgeschichtliche Abhandlung über die in den deutschen Territorien geltenden Jagdrechte und Jagdordnungen, behandelt zahlreiche Länder wie Holstein, Schleswig, Braunschweig, Bayern und Brandenburg. Eine bedeutende Quelle zur Rechts- und Verwaltungsgeschichte des Alten Reiches – für Sammler zum Jagdwesen und zur deutschen Rechtsgeschichte ein gesuchtes Werk.</p>
-<p>Schlagworte: Jagdgerechtigkeit · Jagdordnung · Jagdrecht · Rechtsgeschichte · Forstgeschichte · Frakturdruck · 18. Jahrhundert</p>
-<p>Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.</p>
+Strukturierte antiquarische Beschreibung
+
+Christian Gottlieb Riccius
+
+Zuverlässiger Entwurf von der in Teutschland üblichen Jagdgerechtigkeit.
+
+Frankfurt am Main, in der Andreäischen Buchhandlung, 1772. Zweite vielvermehrte Auflage.
+
+Seltene rechts- und forstgeschichtliche Abhandlung des 18. Jahrhunderts über die in den deutschen Territorien geltenden Jagdrechte und Jagdordnungen. Das Werk behandelt die historischen Grundlagen der Jagdgerechtigkeit unter Heranziehung älterer Geschichtsschreiber, Gesetze, Mandate und diplomatischer Quellen.
+
+Besondere Aufmerksamkeit widmet Riccius den unterschiedlichen Jagdordnungen zahlreicher deutscher Territorien, darunter Braunschweig, Bayern, Brandenburg, Österreich, Holstein, Schleswig, Mecklenburg, Würzburg, Jülich und weitere Länder. Damit stellt das Werk eine bedeutende Quelle zur Rechts- und Verwaltungsgeschichte des Alten Reiches dar.
+
+Von besonderem Interesse sind die Ausführungen zu Gewohnheitsrechten, landesherrlichen Jagdprivilegien sowie den daraus resultierenden Rechtsverhältnissen zwischen Adel, Landesherren und Untertanen. Für Sammler von Literatur zum Jagdwesen, zur Forstwirtschaft und zur deutschen Rechtsgeschichte ein gesuchtes Werk.
+
+Christian Gottlieb Riccius war ein deutscher Jurist und Rechtsgelehrter des 18. Jahrhunderts. Seine Schriften befassen sich vor allem mit Fragen des Staats-, Lehn- und Jagdrechts und gehören zu den wichtigen juristischen Quellen der spätaufklärerischen Rechtsliteratur.
+
+Artikelmerkmale:
+
+Erscheinungsjahr: 1772
+Sprache: Deutsch
+Verlag: Andreäische Buchhandlung, Frankfurt am Main
+Eigenschaften: Originalausgabe, Frakturdruck, Jagdwesen, Rechtsgeschichte, Forstgeschichte
+Autor: Christian Gottlieb Riccius
+Original/Faksimile: Originalausgabe
+Genre: Jagdrecht / Rechtsgeschichte / Forstwesen
+Thema/Schlagworte: Jagdgerechtigkeit, Jagdordnung, Jagdrecht, Holstein, Schleswig, Deutschland, Forstgeschichte, Landesrecht, Mandate, Verordnungen, 18. Jahrhundert
+Einband: Zeitgenössischer Einband (genauen Zustand bitte prüfen)
