@@ -1,0 +1,60 @@
+Buch-Anzeigen-Helfer – Anleitung für Windows
+=============================================
+
+So bekommst du das Programm zum Laufen. Es sind nur ein paar Schritte,
+und nach dem ersten Mal geht es per Doppelklick.
+
+
+SCHRITT 1 – Ordner entpacken
+----------------------------
+Du hast eine ZIP-Datei bekommen (z. B. "Buch-Anzeigen-Helfer.zip").
+- Rechtsklick auf die ZIP  ->  "Alle extrahieren..."  ->  einen Ort wählen
+  (z. B. den Desktop) und entpacken.
+- Es entsteht ein Ordner mit vielen Dateien, darunter "Start.bat".
+
+
+SCHRITT 2 – Einmalig Python installieren
+-----------------------------------------
+Das Programm braucht "Python" (kostenlos). Falls es noch nicht installiert ist,
+öffnet die Start.bat beim ersten Versuch automatisch die Download-Seite.
+- Auf https://www.python.org/downloads/  den großen gelben Knopf
+  "Download Python" klicken und die Datei ausführen.
+- GANZ WICHTIG: Im Installationsfenster unten das Häkchen
+  "Add python.exe to PATH" setzen, dann auf "Install Now".
+- Wenn es durch ist: Fenster schließen.
+
+(Wenn Python schon installiert ist, kannst du diesen Schritt überspringen.)
+
+
+SCHRITT 3 – Programm starten
+----------------------------
+- Im entpackten Ordner auf "Start.bat" doppelklicken.
+- Beim allerersten Mal richtet es sich ein paar Minuten lang selbst ein
+  (ein schwarzes Fenster zeigt den Fortschritt). Das ist normal.
+- Danach öffnet sich der Browser automatisch mit dem Programm.
+- Das schwarze Fenster bitte geöffnet lassen, solange du arbeitest.
+  Zum Beenden einfach das schwarze Fenster schließen
+  (oder im Programm unten auf "Programm beenden").
+
+Hinweis von Windows: Beim ersten Start kann eine blaue Meldung
+"Der Computer wurde durch Windows geschützt" erscheinen.
+Dann auf "Weitere Informationen" -> "Trotzdem ausführen" klicken.
+Ebenso kann die Windows-Firewall einmalig nachfragen – "Zugriff zulassen".
+
+
+SCHRITT 4 – Einmalig den Schlüssel eintragen
+---------------------------------------------
+Damit die KI arbeiten kann, brauchst du einmal einen Zugangs-Schlüssel.
+- Im Programm oben rechts auf "Einstellungen".
+- Den Anthropic-API-Schlüssel eintragen (bekommst du von Giacomo).
+- Optional den imgbb-Schlüssel für die Fotos in der eBay-Datei.
+- Auf "Speichern".
+
+Fertig! Ab jetzt genügt ein Doppelklick auf "Start.bat".
+
+
+Wenn etwas klemmt
+-----------------
+- Steht im schwarzen Fenster eine Fehlermeldung? Mach ein Foto davon
+  und schick es an Giacomo.
+- Hilft meist: schwarzes Fenster schließen und Start.bat erneut doppelklicken.
