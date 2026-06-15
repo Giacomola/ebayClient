@@ -38,3 +38,23 @@ def test_complete_json_bricht_nach_zu_vielen_runden_ab():
         with pytest.raises(RuntimeError):
             complete_json(api_key="sk", model="claude-opus-4-8",
                           content=[{"type": "text", "text": "P"}])
+
+def test_extract_json_toleriert_trailing_comma_objekt():
+    from web_ai import _extract_json
+    assert _extract_json('Antwort: {"a": 1, "b": "x", } – fertig') == {"a": 1, "b": "x"}
+
+def test_extract_json_toleriert_trailing_comma_liste():
+    from web_ai import _extract_json
+    assert _extract_json('{"xs": [1, 2, 3, ], "y": 4}') == {"xs": [1, 2, 3], "y": 4}
+
+def test_extract_json_repariert_aber_laesst_string_kommas_in_ruhe():
+    # Komma+Klammer INNERHALB einer Zeichenkette darf NICHT entfernt werden,
+    # nur das echte überzählige Komma vor der schließenden Klammer.
+    from web_ai import _extract_json
+    assert _extract_json('{"t": "Preis, } ok", "n": 2, }') == {"t": "Preis, } ok", "n": 2}
+
+def test_extract_json_unreparierbar_meldet_klaren_fehler():
+    import pytest
+    from web_ai import _extract_json
+    with pytest.raises(ValueError):
+        _extract_json('{"a": 1 "b": 2}')  # fehlendes Komma – nicht reparierbar
