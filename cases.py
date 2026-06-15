@@ -54,6 +54,7 @@ def save_case(draft: dict, cases_dir: str = "cases", name: str | None = None,
             "fields": draft.get("fields", {}),
             "images": draft.get("images", []),
             "result_visible": draft.get("result_visible", False),
+            "price_result": draft.get("price_result"),   # Preis-Ergebnis mit aufheben
         },
     }
     with open(_case_path(cases_dir, case_id), "w", encoding="utf-8") as f:

@@ -15,7 +15,7 @@ from ebay_csv import (append_listing, title_exists, title_for,
                       recent_listings, listing_stats, list_archives,
                       archive_as_file, DEFAULT_FILENAME)
 from draft import (load_draft, update_fields, update_images, clear_draft,
-                   save_draft, mark_completed, EMPTY)
+                   save_draft, mark_completed, update_price_result, EMPTY)
 from cases import (list_cases, save_case, load_case, delete_case,
                    find_csv_case_id, case_status, delete_in_csv_cases)
 
@@ -144,6 +144,13 @@ def create_app(config_path: str = "config.json",
                       bool(data.get("result_visible", False)), draft_path)
         return jsonify({"ok": True})
 
+    @app.post("/api/draft/price")
+    def post_draft_price():
+        """Speichert das Preis-Recherche-Ergebnis, damit der Preis-Kasten erhalten bleibt."""
+        data = request.get_json(force=True) or {}
+        update_price_result(data.get("price_result"), draft_path)
+        return jsonify({"ok": True})
+
     @app.post("/api/draft/images")
     def post_draft_images():
         images = []
@@ -194,6 +201,7 @@ def create_app(config_path: str = "config.json",
         new_draft["fields"] = target.get("fields", {})
         new_draft["images"] = target.get("images", [])
         new_draft["result_visible"] = target.get("result_visible", False)
+        new_draft["price_result"] = target.get("price_result")   # Preis-Ergebnis mitnehmen
         new_draft["images_rev"] = int(cur.get("images_rev", 0))  # Zähler nicht zurückwerfen
         save_draft(new_draft, draft_path)
         # Einen offenen (geparkten) Fall „verbraucht" das Öffnen → löschen. Einen

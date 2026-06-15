@@ -11,8 +11,10 @@ import os
 # wenn vom Handy ein Foto dazukam, ohne bei jeder Textänderung neu zu laden.
 # completed = True, sobald der Fall in die eBay-Sammeldatei übernommen wurde
 # („abgeschlossen"); ein offener Fall wird beim Neubeginn automatisch geparkt.
+# price_result = das zuletzt gefundene Preis-Recherche-Ergebnis (Vergleichsangebote,
+# Empfehlung, Begründung, Hinweis), damit der Preis-Kasten erhalten bleibt.
 EMPTY = {"fields": {}, "images": [], "result_visible": False,
-         "images_rev": 0, "completed": False}
+         "images_rev": 0, "completed": False, "price_result": None}
 
 def load_draft(path: str = "draft.json") -> dict:
     if os.path.exists(path):
@@ -44,6 +46,13 @@ def update_images(images: list, path: str = "draft.json") -> dict:
     draft = load_draft(path)
     draft["images"] = images
     draft["images_rev"] = int(draft.get("images_rev", 0)) + 1
+    save_draft(draft, path)
+    return draft
+
+def update_price_result(price_result, path: str = "draft.json") -> dict:
+    """Speichert das Preis-Recherche-Ergebnis; Felder/Fotos bleiben erhalten."""
+    draft = load_draft(path)
+    draft["price_result"] = price_result
     save_draft(draft, path)
     return draft
 

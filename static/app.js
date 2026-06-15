@@ -91,14 +91,12 @@ function renderPrice(d) {
   $("price-status").textContent =
     items.length === 0 ? "Keine Beispielpreise gefunden."
                        : `${items.length} Beispielpreise gefunden:`;
-  // Von der KI empfohlenen Preis ins Preisfeld übernehmen (überschreibt einen evtl.
-  // getippten Wert – gewollt, der Preis soll sich an die Recherche anpassen) und
-  // die kurze Begründung anzeigen.
+  // Empfehlung + Begründung anzeigen. Das Eintragen in das Preisfeld macht NUR die
+  // frische Suche (fetchPrice) – beim Wiederherstellen soll ein evtl. von Hand
+  // geänderter Preis nicht überschrieben werden.
   const rec = (d.recommended_price || "").trim();
   const recEl = $("price-recommend");
   if (rec) {
-    $("f-price").value = rec;
-    saveFieldsSoon();   // Vorschlag in den Entwurf übernehmen
     recEl.textContent = `Empfohlener Preis: ${rec} €`
       + (d.price_reason ? ` – ${d.price_reason}` : "");
     recEl.hidden = false;
@@ -139,7 +137,22 @@ async function fetchPrice() {
   }
   if (!r.ok) { $("price-status").textContent = d.error || "Preise nicht ermittelbar."; return; }
   renderPrice(d);
+  // Empfohlenen Preis ins Feld eintragen (überschreibt einen evtl. getippten Wert –
+  // gewollt: der Preis soll sich an die frische Recherche anpassen).
+  const rec = (d.recommended_price || "").trim();
+  if (rec) { $("f-price").value = rec; saveFieldsSoon(); }
+  savePriceResult(d);   // Ergebnis im Entwurf merken (bleibt nach Neuladen erhalten)
   status("");  // Hauptzeile leeren – die Preisbox zeigt das Ergebnis selbst
+}
+
+// Speichert das Preis-Ergebnis im Entwurf, damit es ein Neuladen / Wiederaufnehmen übersteht.
+async function savePriceResult(d) {
+  try {
+    await fetch("/api/draft/price", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ price_result: d }),
+    });
+  } catch (e) { /* nicht schlimm – beim nächsten Mal erneut */ }
 }
 
 // Hängt einen Listener nur an, wenn das Element existiert. So legt ein einzelnes
@@ -794,6 +807,8 @@ $("choose-folder-btn").addEventListener("click", async () => {
     $("result").hidden = false;
     status("Letzter Stand wiederhergestellt.");
   }
+  // Gespeichertes Preis-Ergebnis wiederherstellen (Vergleichsangebote + Empfehlung).
+  if (draft.price_result) renderPrice(draft.price_result);
 })();
 
 // Beschriftungen der KI-Felder (gleiche Reihenfolge wie in config.py).

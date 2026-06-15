@@ -1,9 +1,27 @@
 from draft import (load_draft, update_fields, update_images, clear_draft,
-                   mark_completed, EMPTY)
+                   mark_completed, update_price_result, EMPTY)
 
 def test_load_missing_returns_empty(tmp_path):
     d = load_draft(str(tmp_path / "draft.json"))
     assert d == EMPTY
+
+def test_price_result_bleibt_erhalten(tmp_path):
+    p = str(tmp_path / "draft.json")
+    assert load_draft(p)["price_result"] is None
+    update_fields({"title": "X"}, True, p)
+    update_price_result({"comparables": [], "recommended_price": "9.50"}, p)
+    d = load_draft(p)
+    assert d["price_result"]["recommended_price"] == "9.50"
+    assert d["fields"]["title"] == "X"          # Felder bleiben erhalten
+    # Feld-Speichern darf das Preis-Ergebnis nicht löschen.
+    update_fields({"title": "Y"}, True, p)
+    assert load_draft(p)["price_result"]["recommended_price"] == "9.50"
+
+def test_clear_loescht_price_result(tmp_path):
+    p = str(tmp_path / "draft.json")
+    update_price_result({"recommended_price": "9.50"}, p)
+    clear_draft(p)
+    assert load_draft(p)["price_result"] is None
 
 def test_mark_completed_setzt_flag(tmp_path):
     p = str(tmp_path / "draft.json")

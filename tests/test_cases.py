@@ -90,3 +90,10 @@ def test_load_und_delete_bei_unbekannt(tmp_path):
     assert load_case("case_123", d) is None
     assert delete_case("case_123", d) is False
     assert list_cases(d) == []             # nicht vorhandener Ordner -> leere Liste
+
+def test_save_case_behaelt_price_result(tmp_path):
+    d = str(tmp_path / "cases")
+    draft = _draft()
+    draft["price_result"] = {"recommended_price": "9.50", "comparables": []}
+    cid = save_case(draft, d)
+    assert load_case(cid, d)["price_result"]["recommended_price"] == "9.50"

@@ -435,3 +435,19 @@ def test_fall_loeschen(tmp_path):
     r = c.post(f"/api/cases/{cid}/delete")
     assert r.get_json()["ok"] is True
     assert c.get("/api/cases").get_json()["cases"] == []
+
+def test_preis_ergebnis_wird_gespeichert_und_geladen(tmp_path):
+    c = _client(tmp_path)
+    pr = {"comparables": [{"title": "X", "price": "10"}], "recommended_price": "9.50"}
+    r = c.post("/api/draft/price", json={"price_result": pr})
+    assert r.status_code == 200
+    assert c.get("/api/draft").get_json()["price_result"]["recommended_price"] == "9.50"
+
+def test_fall_oeffnen_nimmt_preis_ergebnis_mit(tmp_path):
+    c = _client(tmp_path)
+    _save_offenen_fall(c, "Faust")
+    c.post("/api/draft/price", json={"price_result": {"recommended_price": "12.00"}})
+    c.post("/api/draft/clear")                                  # Fall parken
+    cid = c.get("/api/cases").get_json()["cases"][0]["id"]
+    c.post(f"/api/cases/{cid}/open")                            # wieder aufnehmen
+    assert c.get("/api/draft").get_json()["price_result"]["recommended_price"] == "12.00"
