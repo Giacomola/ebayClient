@@ -54,6 +54,14 @@ def analyze_price(*, api_key: str | None = None, model: str, author: str, book_t
         f"Verlag: {publisher}. Erscheinungsjahr: {publication_year}. "
         f"Format: {book_format}. eBay-Titel der Anzeige: {title}."
     )
+    # Empfohlener Suchbegriff: die ersten vier Wörter des Buchtitels plus das Jahr.
+    # Das hält die Suche treffsicher und kurz (lange Volltitel liefern oft nichts).
+    suchbegriff = " ".join(book_title.split()[:4])
+    if publication_year.strip():
+        suchbegriff = f"{suchbegriff} {publication_year.strip()}".strip()
+    if suchbegriff:
+        summary += (f"\n\nSuche bevorzugt mit genau diesem Suchbegriff: \"{suchbegriff}\". "
+                    "Erst wenn das zu wenige Treffer liefert, leicht abwandeln.")
     content = [{"type": "text", "text": PRICE_PROMPT + "\n\n" + summary}]
     # Die Preissuche darf etwas mehr suchen als die Textgenerierung (Standard 2),
     # damit sie Angebote von mehreren Seiten (ZVAB, Booklooker, AbeBooks, eBay)

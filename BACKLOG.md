@@ -24,10 +24,8 @@ _Fotos reinziehen, Ordnerwahl, Upload zu imgbb, Vorschau._
 ## ✍️ KI-Anzeigentext
 _Claude-Generierung, Felder (Titel, Beschreibung, Merkmale), Preis, Zustand, Stilvorlage._
 
-- [ ] Fehlende Informationen nicht anzeigen  `→ app.py`
-- [ ] Zwei Titelvorschläge ausgeben (Auswahl über anklicken)  `→ app.py`
-- [ ] Deutsche Nationalbibliothek/Deutsche Digitalbibliothek (DnB/DDB) als Quelle für Aufnahmetext  `→ draft.py`
-- [ ] Strukturierte antiquarische Beschreibung als Vorlage für KI-Generierung  `→ draft.py`
+- [ ] Zwei Titelvorschläge ausgeben (Auswahl über anklicken)  `→ ai_client.py, app.py, index.html, app.js`
+- [ ] Strukturierte antiquarische Beschreibung als Vorlage für KI-Generierung (über das „Beispiel-Beschreibung"-Feld)  `→ anweisungen.txt, config.py`
 
 ## 📄 CSV-Export
 _eBay-File-Exchange-CSV erzeugen, Sammel-CSV, Zielordner, Feld-Grenzen._
@@ -36,7 +34,6 @@ _eBay-File-Exchange-CSV erzeugen, Sammel-CSV, Zielordner, Feld-Grenzen._
 _Preis-Recherche, Vergleichsanzeigen, Suchlogik._
 
 - [ ] Preisvergleich strukturierter Anzeigen (deutlicher Preis + Link)  `→ app.py`
-- [ ] Suchbegriff für Preissuche: erste 4 Wörter des Titels + Jahr  `→ draft.py`
 
 ## ⚙️ Einstellungen
 _API-Schlüssel (Anthropic, imgbb), Konfiguration, Speicherorte._
@@ -51,3 +48,7 @@ _Bewusst auf später verschoben — nicht ohne Ansage starten._
 
 ## ✅ Erledigt
 _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
+
+- [x] 2026-06-15 Fehlende Informationen nicht anzeigen: KI lässt unbekannte Pflichtangaben weg statt roten Platzhalter einzusetzen (anweisungen.txt).
+- [x] 2026-06-15 DnB/DDB als bevorzugte Quelle im Recherche-Prompt verankert (anweisungen.txt).
+- [x] 2026-06-15 Preis-Suchbegriff: erste 4 Wörter des Buchtitels + Jahr als empfohlene Suchanfrage (price_analysis.py).
