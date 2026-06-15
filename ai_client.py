@@ -1,7 +1,26 @@
-"""Schickt Buchfotos an Claude (Vision) und erhält strukturierte Anzeigenfelder."""
+# ai_client.py
+"""Schickt Buchfotos an Claude (mit Websuche) und erhält strukturierte Anzeigenfelder."""
 import base64
-import anthropic
 from pydantic import BaseModel
+from web_ai import complete_json
+
+# Maschinen-Vertrag: was die KI als JSON zurückgeben muss. Wird an den (vom Nutzer
+# bearbeitbaren) Prompt angehängt, damit die Felder verlässlich ankommen.
+JSON_INSTRUCTIONS = (
+    "\n\nNutze die Websuche, um die EXAKTE Ausgabe des Buches zu bestimmen (Auflage, "
+    "Druck, Erscheinungsjahr) und fehlende Angaben zu ergänzen. Ergänze großzügig, aber "
+    "nur Belegbares. Antworte AUSSCHLIESSLICH mit einem JSON-Objekt (sonst kein Text) mit "
+    "genau diesen Schlüsseln: title, author, book_title, language, description, publisher, "
+    "publication_year, book_format, web_sourced_fields, sources. "
+    "web_sourced_fields ist eine Liste der Feldnamen, deren Inhalt aus der Websuche stammt "
+    "(z. B. [\"publication_year\", \"publisher\"]). sources ist eine Liste von Objekten "
+    "{\"title\": ..., \"url\": ...} mit den verwendeten Quellen (leer lassen, wenn keine "
+    "Websuche nötig war)."
+)
+
+class Source(BaseModel):
+    title: str = ""
+    url: str = ""
 
 class BookFields(BaseModel):
     title: str
@@ -12,6 +31,8 @@ class BookFields(BaseModel):
     publisher: str = ""
     publication_year: str = ""
     book_format: str = ""
+    web_sourced_fields: list[str] = []
+    sources: list[Source] = []
 
 def _media_type(image_bytes: bytes) -> str:
     if image_bytes[:8].startswith(b"\x89PNG"):
@@ -19,9 +40,6 @@ def _media_type(image_bytes: bytes) -> str:
     return "image/jpeg"
 
 def analyze_book(images: list[bytes], *, api_key: str, model: str, prompt: str) -> BookFields:
-    # max_retries: wiederholt bei kurzen Server-Fehlern (z. B. 502) automatisch.
-    # timeout: großzügig, weil Fotos groß sein können.
-    client = anthropic.Anthropic(api_key=api_key, max_retries=4, timeout=120.0)
     content = []
     for img in images:
         content.append({
@@ -32,11 +50,6 @@ def analyze_book(images: list[bytes], *, api_key: str, model: str, prompt: str) 
                 "data": base64.standard_b64encode(img).decode("ascii"),
             },
         })
-    content.append({"type": "text", "text": prompt})
-    resp = client.messages.parse(
-        model=model,
-        max_tokens=2000,
-        messages=[{"role": "user", "content": content}],
-        output_format=BookFields,
-    )
-    return resp.parsed_output
+    content.append({"type": "text", "text": prompt + JSON_INSTRUCTIONS})
+    data = complete_json(api_key=api_key, model=model, content=content)
+    return BookFields(**data)
