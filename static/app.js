@@ -529,6 +529,81 @@ function formatDatum(ts) {
        + d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
 }
 
+// --- Übersicht-Fenster: alles gebündelt (in Arbeit · Sammeldatei · Archiv) ----
+const overviewDlg = $("overview-dialog");
+function euro(n) {
+  return (n || 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+}
+// Baut eine Zeile mit Text + optionalem Knopf; leerer Zustand als grauer Hinweis.
+function ovRow(text, knopfText, onClick) {
+  const li = document.createElement("li");
+  li.className = "ov-row";
+  const info = document.createElement("span");
+  info.className = "ov-info";
+  info.textContent = text;
+  li.appendChild(info);
+  if (knopfText) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = knopfText;
+    b.addEventListener("click", onClick);
+    li.appendChild(b);
+  }
+  return li;
+}
+function ovHinweis(text) {
+  const li = document.createElement("li");
+  li.className = "sub";
+  li.textContent = text;
+  return li;
+}
+async function openOverview() {
+  let d;
+  try { d = await (await fetch("/api/overview")).json(); }
+  catch (e) { status("Übersicht konnte nicht geladen werden."); return; }
+
+  // In Arbeit (offene Fälle)
+  const cases = d.active_cases || [];
+  $("ov-cases-count").textContent =
+    cases.length ? `– ${cases.length} ${cases.length === 1 ? "Fall" : "Fälle"}` : "– keine";
+  const ulC = $("ov-cases"); ulC.innerHTML = "";
+  for (const c of cases) {
+    const fotos = c.photo_count === 1 ? "1 Foto" : `${c.photo_count} Fotos`;
+    ulC.appendChild(ovRow(`${c.name} · ${fotos}`, "Öffnen", () => openCase(c.id)));
+  }
+  if (!cases.length) ulC.appendChild(ovHinweis("Keine begonnenen Fälle."));
+
+  // In der Sammeldatei (fertige Anzeigen)
+  const stats = d.stats || { count: 0, total: 0 };
+  $("ov-listings-count").textContent = stats.count
+    ? `– ${stats.count} ${stats.count === 1 ? "Anzeige" : "Anzeigen"} · ${euro(stats.total)}`
+    : "– keine";
+  const ulL = $("ov-listings"); ulL.innerHTML = "";
+  for (const item of d.listings || []) {
+    const preis = item.price ? ` – ${item.price} EUR` : "";
+    const text = (item.title || "(ohne Titel)") + preis;
+    ulL.appendChild(item.case_id
+      ? ovRow(text, "Bearbeiten", () => openCase(item.case_id))
+      : ovRow(text));
+  }
+  if (!(d.listings || []).length)
+    ulL.appendChild(ovHinweis("Noch nichts in der Sammeldatei."));
+
+  // Archiviert (frühere Sammeldateien)
+  const arch = d.archives || [];
+  $("ov-archives-count").textContent =
+    arch.length ? `– ${arch.length} ${arch.length === 1 ? "Datei" : "Dateien"}` : "– keine";
+  const ulA = $("ov-archives"); ulA.innerHTML = "";
+  for (const a of arch) {
+    const anz = a.count === 1 ? "1 Anzeige" : `${a.count} Anzeigen`;
+    ulA.appendChild(ovHinweis(`${a.filename} · ${anz} · ${euro(a.total)}`));
+  }
+  if (!arch.length) ulA.appendChild(ovHinweis("Noch nichts archiviert."));
+
+  overviewDlg.showModal();
+}
+on("overview-btn", "click", openOverview);
+
 // Öffnen: Backend macht den Fall zum aktuellen (und parkt den bisherigen offenen).
 // Danach die Seite neu laden – die Start-Logik stellt den Fall sauber wieder her.
 async function openCase(id) {

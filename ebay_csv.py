@@ -204,6 +204,21 @@ def listing_stats(folder: str, filename: str = DEFAULT_FILENAME) -> dict:
                 total += float(m.group(0).replace(",", "."))
     return {"count": count, "total": round(total, 2)}
 
+def list_archives(folder: str) -> list:
+    """Listet die archivierten Sammeldateien (eBayClient_<Datum>…csv), neueste zuerst.
+
+    Pro Datei {filename, count, total}. Da der Dateiname mit ISO-Datum beginnt,
+    sortiert eine absteigende Namenssortierung zugleich chronologisch."""
+    if not os.path.isdir(folder):
+        return []
+    out = []
+    for fn in os.listdir(folder):
+        if fn.startswith("eBayClient_") and fn.endswith(".csv"):
+            s = listing_stats(folder, fn)
+            out.append({"filename": fn, "count": s["count"], "total": s["total"]})
+    out.sort(key=lambda a: a["filename"], reverse=True)
+    return out
+
 def append_listing(folder: str, filename: str = DEFAULT_FILENAME, **kwargs):
     """Fügt eine Anzeige zur gemeinsamen CSV im Ordner hinzu.
 

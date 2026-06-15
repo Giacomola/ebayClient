@@ -209,6 +209,22 @@ def test_create_csv_legt_bearbeitbaren_fall_an(tmp_path):
     listings2 = c.get("/api/listings").get_json()["listings"]
     assert listings2[0]["case_id"] == cid        # Fall besteht weiter
 
+def test_overview_buendelt_alles(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    _add_listing(c, folder, title="Mein Buch")
+    ov = c.get("/api/overview").get_json()
+    assert ov["stats"]["count"] == 1
+    assert ov["listings"][0]["title"] == "Mein Buch"
+    assert ov["listings"][0]["case_id"]            # bearbeitbar
+    assert ov["active_cases"] == []                # nichts in Arbeit
+    assert ov["archives"] == []                    # noch nichts archiviert
+    c.post("/api/archive-file", json={"name": "Romane"})
+    ov2 = c.get("/api/overview").get_json()
+    assert ov2["stats"]["count"] == 0              # Sammeldatei leer
+    assert len(ov2["archives"]) == 1               # eine archivierte Datei
+    assert ov2["archives"][0]["filename"].startswith("eBayClient_")
+
 def test_archive_entfernt_bearbeitbare_faelle(tmp_path):
     c = _client(tmp_path)
     folder = tmp_path / "out"; folder.mkdir()

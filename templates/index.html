@@ -16,6 +16,7 @@
       <button id="font-inc" type="button" title="Schrift größer">A+</button>
       <button id="width-dec" type="button" title="Inhalt schmaler">↔−</button>
       <button id="width-inc" type="button" title="Inhalt breiter">↔+</button>
+      <button id="overview-btn" type="button">Übersicht</button>
       <button id="prompt-btn" type="button">Anweisungen</button>
       <button id="settings-btn" type="button">Einstellungen</button>
     </div>
@@ -116,6 +117,21 @@
 
     <button id="quit-btn" type="button" class="quit">Programm beenden</button>
   </main>
+
+  <dialog id="overview-dialog" class="overview-dialog">
+    <form method="dialog">
+      <h2>Übersicht</h2>
+      <h3>In Arbeit <span id="ov-cases-count" class="sub"></span></h3>
+      <ul id="ov-cases" class="ov-list"></ul>
+      <h3>In der Sammeldatei <span id="ov-listings-count" class="sub"></span></h3>
+      <ul id="ov-listings" class="ov-list"></ul>
+      <h3>Archiviert <span id="ov-archives-count" class="sub"></span></h3>
+      <ul id="ov-archives" class="ov-list"></ul>
+      <menu>
+        <button value="cancel">Schließen</button>
+      </menu>
+    </form>
+  </dialog>
 
   <dialog id="settings-dialog">
     <form method="dialog">

@@ -12,7 +12,8 @@ from price_analysis import analyze_price
 from derive_instructions import derive_from_example
 from image_host import upload_image
 from ebay_csv import (append_listing, title_exists, title_for,
-                      recent_listings, listing_stats, archive_as_file, DEFAULT_FILENAME)
+                      recent_listings, listing_stats, list_archives,
+                      archive_as_file, DEFAULT_FILENAME)
 from draft import (load_draft, update_fields, update_images, clear_draft,
                    save_draft, mark_completed, EMPTY)
 from cases import (list_cases, save_case, load_case, delete_case,
@@ -248,6 +249,22 @@ def create_app(config_path: str = "config.json",
         return jsonify({
             "listings": rows,
             "stats": listing_stats(folder) if folder else {"count": 0, "total": 0.0},
+        })
+
+    @app.get("/api/overview")
+    def overview():
+        """Alles gebündelt für das Übersicht-Fenster: Fälle in Arbeit, Anzeigen in
+        der Sammeldatei (inkl. Anzahl/Summe) und archivierte Sammeldateien."""
+        settings = load_settings(config_path)
+        folder = settings.get("save_folder", "")
+        rows = recent_listings(folder, limit=200) if folder else []
+        for r in rows:
+            r["case_id"] = find_csv_case_id(r.get("title", ""), cases_dir)
+        return jsonify({
+            "active_cases": list_cases(cases_dir, status="offen"),
+            "listings": rows,
+            "stats": listing_stats(folder) if folder else {"count": 0, "total": 0.0},
+            "archives": list_archives(folder) if folder else [],
         })
 
     @app.post("/api/archive-file")
