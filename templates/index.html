@@ -44,7 +44,12 @@
         <h3>Quellen</h3>
         <ul id="sources-list"></ul>
       </section>
-      <label>Preis (EUR, z. B. 9.99) <input id="f-price" value="9.99"></label>
+      <label>Preis (EUR, z. B. 9.99)
+        <span class="price-line">
+          <input id="f-price" value="9.99">
+          <button id="price-btn" type="button">Preis recherchieren</button>
+        </span>
+      </label>
       <label>Zustand
         <select id="f-condition">
           <option value="1000">Neu</option>
@@ -68,7 +73,14 @@
           <button id="choose-folder-btn" type="button">Ordner wählen</button>
         </div>
         <button id="save-csv-btn" type="button" class="primary">Zur eBay-Sammeldatei hinzufügen</button>
+        <p id="save-success" class="save-success" hidden></p>
+        <button id="show-entry-btn" type="button" hidden>Eintrag anzeigen</button>
       </div>
+    </section>
+
+    <section id="recent" class="info-box recent" hidden>
+      <h3>Zuletzt gespeichert</h3>
+      <ul id="recent-list"></ul>
     </section>
 
     <button id="quit-btn" type="button" class="quit">Programm beenden</button>
@@ -79,10 +91,17 @@
       <h2>Einstellungen</h2>
       <label>Anthropic-API-Schlüssel <input id="s-anthropic" type="password"></label>
       <label>imgbb-API-Schlüssel <input id="s-imgbb" type="password"></label>
-      <label>KI-Modell
-        <select id="s-model">
+      <label>KI-Modell für die Texte
+        <select id="s-model-text">
           <option value="claude-haiku-4-5">Haiku (am günstigsten)</option>
           <option value="claude-sonnet-4-6">Sonnet (ausgewogen)</option>
+          <option value="claude-opus-4-8">Opus (beste Texte)</option>
+        </select>
+      </label>
+      <label>KI-Modell für die Preissuche
+        <select id="s-model-price">
+          <option value="claude-haiku-4-5">Haiku (am günstigsten)</option>
+          <option value="claude-sonnet-4-6">Sonnet (schnell)</option>
           <option value="claude-opus-4-8">Opus (stärker)</option>
         </select>
       </label>

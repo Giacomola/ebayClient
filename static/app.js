@@ -51,6 +51,8 @@ function renderPrice(d) {
 }
 // Holt die Preisempfehlung anhand der aktuellen Feldwerte.
 async function fetchPrice() {
+  const btn = $("price-btn");
+  if (btn) btn.disabled = true;  // Doppelklick während der Suche verhindern
   $("price-box").hidden = false;
   $("price-range").textContent = "💶 prüfe Preise …";
   $("price-comparables").innerHTML = "";
@@ -70,6 +72,8 @@ async function fetchPrice() {
   } catch (e) {
     $("price-range").textContent = "Preisprüfung nicht möglich.";
     return;
+  } finally {
+    if (btn) btn.disabled = false;
   }
   if (!r.ok) { $("price-range").textContent = d.error || "Preise nicht ermittelbar."; return; }
   renderPrice(d);
@@ -159,6 +163,16 @@ function addFiles(fileList) {
 }
 
 const dz = $("drop-zone");
+// Verhindert, dass der Browser ein Foto, das NEBEN die Ablagefläche gezogen wird,
+// einfach als ganze Seite öffnet. Fällt das Foto irgendwo ins Fenster, nehmen wir
+// es trotzdem auf – so kann der Vater nicht „danebenziehen".
+window.addEventListener("dragover", (e) => e.preventDefault());
+window.addEventListener("drop", (e) => {
+  e.preventDefault();
+  // Treffer in die Ablagefläche wird dort eigens behandelt (sonst doppelt).
+  if (dz.contains(e.target)) return;
+  if (e.dataTransfer && e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+});
 dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.classList.add("drag"); });
 dz.addEventListener("dragleave", () => dz.classList.remove("drag"));
 dz.addEventListener("drop", (e) => {
@@ -167,28 +181,42 @@ dz.addEventListener("drop", (e) => {
 $("choose-btn").addEventListener("click", () => $("file-input").click());
 $("file-input").addEventListener("change", (e) => addFiles(e.target.files));
 
-$("generate-btn").addEventListener("click", async () => {
+const generateBtn = $("generate-btn");
+generateBtn.addEventListener("click", async () => {
+  // Knopf sperren, solange die Erstellung läuft – sonst stapeln sich bei einem
+  // zweiten Klick mehrere minutenlange Aufrufe und die Seite scheint zu hängen.
+  generateBtn.disabled = true;
   status("🔎 recherchiere im Netz … (das kann ~30–60 Sekunden dauern)");
   applyBadges([]);
   renderSources([]);
   $("price-box").hidden = true;
-  const fd = new FormData();
-  selectedFiles.forEach((f) => fd.append("images", f));
-  const r = await fetch("/api/generate", { method: "POST", body: fd });
-  const data = await r.json();
-  if (!r.ok) { status(data.error || "Fehler bei der Analyse."); return; }
-  for (const key of ["title", "author", "book_title", "language", "publisher",
-                     "publication_year", "book_format"]) {
-    $("f-" + key).value = data[key] || "";
+  try {
+    const fd = new FormData();
+    selectedFiles.forEach((f) => fd.append("images", f));
+    const r = await fetch("/api/generate", { method: "POST", body: fd });
+    const data = await r.json();
+    if (!r.ok) { status(data.error || "Fehler bei der Analyse."); return; }
+    for (const key of ["title", "author", "book_title", "language", "publisher",
+                       "publication_year", "book_format"]) {
+      $("f-" + key).value = data[key] || "";
+    }
+    $("f-description").innerHTML = data.description || "";  // HTML gerendert anzeigen
+    applyBadges(data.web_sourced_fields || []);
+    renderSources(data.sources || []);
+    $("result").hidden = false;
+    status("Text fertig. Preis bei Bedarf mit „Preis recherchieren" prüfen.");
+    saveFieldsNow();  // Ergebnis sofort in den Entwurf übernehmen
+  } catch (e) {
+    // Bricht der Aufruf ab (Netzfehler/Timeout), bleibt die Seite bedienbar
+    // und zeigt eine klare Meldung statt für immer „recherchiere …".
+    status("Die Erstellung ist fehlgeschlagen. Bitte erneut versuchen.");
+  } finally {
+    generateBtn.disabled = false;
   }
-  $("f-description").innerHTML = data.description || "";  // HTML gerendert anzeigen
-  applyBadges(data.web_sourced_fields || []);
-  renderSources(data.sources || []);
-  $("result").hidden = false;
-  status("Text fertig – prüfe jetzt die Preise …");
-  saveFieldsNow();  // Ergebnis sofort in den Entwurf übernehmen
-  fetchPrice();
 });
+
+// Preissuche nur auf Knopfdruck (sie dauert länger und ist nur eine Empfehlung).
+on("price-btn", "click", fetchPrice);
 
 // Übernimmt den Mittelwert der Preisspanne ins Preisfeld (manuell, auf Wunsch).
 on("price-apply", "click", () => {
@@ -219,11 +247,34 @@ on("new-case-btn", "click", async () => {
   applyBadges([]);
   renderSources([]);
   $("price-box").hidden = true;
+  $("save-success").hidden = true;
+  $("show-entry-btn").hidden = true;
   await fetch("/api/draft/clear", { method: "POST" });
   status("Neuer Fall – bereit für die nächsten Fotos.");
 });
 
-$("save-csv-btn").addEventListener("click", async () => {
+// Zeigt unten die zuletzt gespeicherten Anzeigen aus der Sammeldatei.
+async function loadRecent() {
+  let data;
+  try {
+    data = await (await fetch("/api/listings")).json();
+  } catch (e) {
+    return;  // ohne Liste ist die App weiter benutzbar
+  }
+  const list = $("recent-list");
+  list.innerHTML = "";
+  for (const item of data.listings || []) {
+    const li = document.createElement("li");
+    const preis = item.price ? ` – ${item.price} EUR` : "";
+    li.textContent = (item.title || "(ohne Titel)") + preis;
+    list.appendChild(li);
+  }
+  $("recent").hidden = list.children.length === 0;
+}
+
+// Speichert die aktuelle Anzeige in die Sammeldatei. overwrite=true erst senden,
+// wenn der Nutzer das Überschreiben einer gleichnamigen Anzeige bestätigt hat.
+async function submitListing(overwrite) {
   status("Fotos werden hochgeladen und Datei erstellt …");
   const fd = new FormData();
   selectedFiles.forEach((f) => fd.append("images", f));
@@ -234,12 +285,40 @@ $("save-csv-btn").addEventListener("click", async () => {
   fd.append("description", $("f-description").innerHTML);  // bearbeitetes HTML übernehmen
   fd.append("price", $("f-price").value);
   fd.append("condition_id", $("f-condition").value);
+  if (overwrite) fd.append("overwrite", "true");
   const r = await fetch("/api/create-csv", { method: "POST", body: fd });
   const data = await r.json();
+  // Schon eine Anzeige mit gleichem Titel da? Einmal nachfragen.
+  if (data.duplicate) {
+    if (confirm(`Es gibt bereits einen Eintrag mit dem Titel „${data.title}".\n`
+                + `Soll der alte Eintrag überschrieben werden?`)) {
+      return submitListing(true);
+    }
+    status("Speichern abgebrochen – nichts geändert.");
+    return;
+  }
   if (!r.ok) { status(data.error || "Fehler."); return; }
   $("folder-path").textContent = data.folder;
-  status(`Hinzugefügt – jetzt ${data.count} Anzeige(n) in „${data.filename}". `
-         + `Ordner: ${data.folder}`);
+  status("");
+  $("save-success").textContent =
+    `✓ Gespeichert – jetzt ${data.count} Anzeige(n) in „${data.filename}".`;
+  $("save-success").hidden = false;
+  $("show-entry-btn").hidden = false;  // „Eintrag anzeigen" jetzt verfügbar
+  loadRecent();                        // Liste unten aktualisieren
+}
+$("save-csv-btn").addEventListener("click", () => submitListing(false));
+
+// „Eintrag anzeigen": öffnet die eBay-Sammeldatei im Standardprogramm.
+$("show-entry-btn").addEventListener("click", async () => {
+  try {
+    const r = await fetch("/api/open-csv", { method: "POST" });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      alert(d.error || "Konnte die Sammeldatei nicht öffnen.");
+    }
+  } catch (err) {
+    alert("Konnte die Sammeldatei nicht öffnen.");
+  }
 });
 
 // Speicherordner wählen (öffnet ein natives Ordner-Auswahlfenster).
@@ -249,6 +328,7 @@ $("choose-folder-btn").addEventListener("click", async () => {
   if (d.folder) {
     $("folder-path").textContent = d.folder;
     status("Speicherordner gesetzt.");
+    loadRecent();  // anderer Ordner → andere Sammeldatei
   } else {
     status("Kein Ordner gewählt.");
   }
@@ -258,6 +338,7 @@ $("choose-folder-btn").addEventListener("click", async () => {
 (async () => {
   const s = await (await fetch("/api/settings")).json();
   if (s.save_folder) $("folder-path").textContent = s.save_folder;
+  loadRecent();  // zuletzt gespeicherte Anzeigen unten zeigen
 
   const draft = await (await fetch("/api/draft")).json();
   // Fotos aus dem Entwurf zurückholen.
@@ -355,7 +436,8 @@ $("settings-btn").addEventListener("click", async () => {
   const s = await (await fetch("/api/settings")).json();
   $("s-anthropic").value = s.anthropic_api_key || "";
   $("s-imgbb").value = s.imgbb_api_key || "";
-  $("s-model").value = s.model;
+  $("s-model-text").value = s.model_text || "claude-opus-4-8";
+  $("s-model-price").value = s.model_price || "claude-sonnet-4-6";
   $("s-location").value = s.location;
   $("s-shipping_cost").value = s.shipping_cost;
   dlg.showModal();
@@ -367,7 +449,8 @@ $("s-save").addEventListener("click", async (e) => {
     body: JSON.stringify({
       anthropic_api_key: $("s-anthropic").value,
       imgbb_api_key: $("s-imgbb").value,
-      model: $("s-model").value,
+      model_text: $("s-model-text").value,
+      model_price: $("s-model-price").value,
       location: $("s-location").value,
       shipping_cost: $("s-shipping_cost").value,
     }),

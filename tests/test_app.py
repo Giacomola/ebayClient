@@ -30,6 +30,88 @@ def test_open_anweisungen_fehlt_gibt_404(tmp_path):
     r = c.post("/api/open-anweisungen")
     assert r.status_code == 404
 
+def test_open_csv_oeffnet_datei(tmp_path):
+    from ebay_csv import DEFAULT_FILENAME
+    c = _client(tmp_path)
+    folder = tmp_path / "ebay"
+    folder.mkdir()
+    (folder / DEFAULT_FILENAME).write_text("x", encoding="utf-8")
+    c.post("/api/settings", json={"save_folder": str(folder)})
+    with patch("app.subprocess.run") as m:
+        r = c.post("/api/open-csv")
+    assert r.status_code == 200
+    assert m.called
+    assert m.call_args.args[0][-1].endswith(DEFAULT_FILENAME)
+
+def test_open_csv_ohne_ordner_gibt_fehler(tmp_path):
+    c = _client(tmp_path)
+    r = c.post("/api/open-csv")
+    assert r.status_code == 400
+
+def test_open_csv_ohne_datei_gibt_404(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "leer"
+    folder.mkdir()
+    c.post("/api/settings", json={"save_folder": str(folder)})
+    r = c.post("/api/open-csv")
+    assert r.status_code == 404
+
+def test_listings_liefert_eintraege(tmp_path):
+    from ebay_csv import append_listing
+    c = _client(tmp_path)
+    folder = tmp_path / "out"
+    folder.mkdir()
+    append_listing(str(folder), title="Mein Buch", author="A", book_title="B",
+                   language="Deutsch", description="D", price="9.99",
+                   condition_id="5000", picture_urls=["https://x/1.jpg"])
+    c.post("/api/settings", json={"save_folder": str(folder)})
+    r = c.get("/api/listings")
+    assert r.status_code == 200
+    listings = r.get_json()["listings"]
+    assert listings[0]["title"] == "Mein Buch"
+
+def test_listings_ohne_ordner_leer(tmp_path):
+    c = _client(tmp_path)
+    r = c.get("/api/listings")
+    assert r.status_code == 200
+    assert r.get_json()["listings"] == []
+
+def test_create_csv_fragt_bei_dublette(tmp_path):
+    from ebay_csv import append_listing
+    c = _client(tmp_path)
+    folder = tmp_path / "out"
+    folder.mkdir()
+    append_listing(str(folder), title="Mein Buch", author="A", book_title="B",
+                   language="Deutsch", description="D", price="9.99",
+                   condition_id="5000", picture_urls=["https://x/1.jpg"])
+    c.post("/api/settings", json={"imgbb_api_key": "k", "save_folder": str(folder)})
+    data = {"title": "Mein Buch", "images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
+    with patch("app.upload_image") as up:
+        r = c.post("/api/create-csv", data=data, content_type="multipart/form-data")
+    body = r.get_json()
+    assert r.status_code == 200
+    assert body.get("duplicate") is True
+    assert body["title"] == "Mein Buch"
+    assert not up.called                       # kein Foto-Upload auf dem Abbruch-Pfad
+
+def test_create_csv_overwrite_ersetzt(tmp_path):
+    from ebay_csv import append_listing
+    c = _client(tmp_path)
+    folder = tmp_path / "out"
+    folder.mkdir()
+    append_listing(str(folder), title="Mein Buch", author="A", book_title="B",
+                   language="Deutsch", description="D", price="9.99",
+                   condition_id="5000", picture_urls=["https://x/1.jpg"])
+    c.post("/api/settings", json={"imgbb_api_key": "k", "save_folder": str(folder)})
+    data = {"title": "Mein Buch", "overwrite": "true", "price": "5.00",
+            "images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
+    with patch("app.upload_image", return_value="https://img/1.jpg"):
+        r = c.post("/api/create-csv", data=data, content_type="multipart/form-data")
+    body = r.get_json()
+    assert r.status_code == 200
+    assert body["ok"] is True
+    assert body["count"] == 1                   # ersetzt, nicht zusätzlich angehängt
+
 def test_generate_ohne_schluessel_gibt_fehler(tmp_path):
     c = _client(tmp_path)
     data = {"images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
@@ -48,6 +130,8 @@ def test_generate_ruft_ai_client(tmp_path):
     assert r.status_code == 200
     assert r.get_json()["author"] == "A"
     assert m.called
+    # Text-Aufruf nutzt das Text-Modell (Standard Opus).
+    assert m.call_args.kwargs["model"] == "claude-opus-4-8"
 
 def test_generate_liefert_web_felder(tmp_path):
     c = _client(tmp_path)
@@ -83,3 +167,5 @@ def test_price_ruft_analyze_price(tmp_path):
     assert r.status_code == 200
     assert r.get_json()["price_low"] == "8.00"
     assert m.called
+    # Preis-Aufruf nutzt das (schnellere) Preis-Modell (Standard Sonnet).
+    assert m.call_args.kwargs["model"] == "claude-sonnet-4-6"

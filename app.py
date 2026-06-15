@@ -10,8 +10,20 @@ from config import (load_settings, save_settings, build_system_prompt,
 from ai_client import analyze_book
 from price_analysis import analyze_price
 from image_host import upload_image
-from ebay_csv import append_listing, DEFAULT_FILENAME
+from ebay_csv import (append_listing, title_exists, title_for,
+                      recent_listings, DEFAULT_FILENAME)
 from draft import load_draft, update_fields, update_images, clear_draft
+
+def _open_in_os(path: str) -> None:
+    """Öffnet eine Datei im Standardprogramm des Betriebssystems.
+
+    Wirft eine Ausnahme, wenn das Öffnen fehlschlägt (die Aufrufer fangen sie ab)."""
+    if sys.platform == "darwin":
+        subprocess.run(["open", path], check=False)
+    elif sys.platform == "win32":
+        os.startfile(path)  # type: ignore[attr-defined]
+    else:
+        subprocess.run(["xdg-open", path], check=False)
 
 def _pick_folder_dialog() -> str:
     """Öffnet ein natives Ordner-Auswahlfenster und gibt den gewählten Pfad zurück.
@@ -96,12 +108,30 @@ def create_app(config_path: str = "config.json",
         if not os.path.exists(path):
             return jsonify({"error": "anweisungen.txt wurde nicht gefunden."}), 404
         try:
-            if sys.platform == "darwin":
-                subprocess.run(["open", path], check=False)
-            elif sys.platform == "win32":
-                os.startfile(path)  # type: ignore[attr-defined]
-            else:
-                subprocess.run(["xdg-open", path], check=False)
+            _open_in_os(path)
+        except Exception as e:  # noqa: BLE001
+            return jsonify({"error": f"Konnte die Datei nicht öffnen: {e}"}), 500
+        return jsonify({"ok": True, "path": path})
+
+    @app.get("/api/listings")
+    def listings():
+        """Liefert die zuletzt gespeicherten Anzeigen aus der Sammeldatei."""
+        settings = load_settings(config_path)
+        folder = settings.get("save_folder", "")
+        return jsonify({"listings": recent_listings(folder) if folder else []})
+
+    @app.post("/api/open-csv")
+    def open_csv():
+        """Öffnet die eBay-Sammeldatei im Standardprogramm (z. B. Numbers/Excel)."""
+        settings = load_settings(config_path)
+        folder = settings.get("save_folder", "")
+        if not folder:
+            return jsonify({"error": "Kein Speicherordner gewählt."}), 400
+        path = os.path.join(folder, DEFAULT_FILENAME)
+        if not os.path.exists(path):
+            return jsonify({"error": "Die Sammeldatei wurde noch nicht erstellt."}), 404
+        try:
+            _open_in_os(path)
         except Exception as e:  # noqa: BLE001
             return jsonify({"error": f"Konnte die Datei nicht öffnen: {e}"}), 500
         return jsonify({"ok": True, "path": path})
@@ -118,7 +148,7 @@ def create_app(config_path: str = "config.json",
         images = [f.read() for f in files]
         try:
             book = analyze_book(images, api_key=settings["anthropic_api_key"],
-                                model=settings["model"],
+                                model=settings["model_text"],
                                 prompt=build_system_prompt(settings))
         except anthropic.AuthenticationError:
             return jsonify({"error": "Der Anthropic-API-Schlüssel fehlt oder ist "
@@ -147,7 +177,7 @@ def create_app(config_path: str = "config.json",
         data = request.get_json(force=True) or {}
         try:
             result = analyze_price(
-                api_key=settings["anthropic_api_key"], model=settings["model"],
+                api_key=settings["anthropic_api_key"], model=settings["model_price"],
                 author=data.get("author", ""), book_title=data.get("book_title", ""),
                 title=data.get("title", ""), language=data.get("language", ""),
                 publication_year=data.get("publication_year", ""),
@@ -187,6 +217,11 @@ def create_app(config_path: str = "config.json",
             return jsonify({"error": "Kein Speicherordner gewählt. "
                                      "Bitte zuerst auf 'Ordner wählen' klicken."}), 400
         form = request.form
+        # Gibt es schon eine Anzeige mit gleichem Titel? Dann erst nachfragen
+        # (noch VOR dem Foto-Upload, damit der Abbruch nichts kostet).
+        title = form.get("title", "")
+        if form.get("overwrite") != "true" and title_exists(folder, title):
+            return jsonify({"duplicate": True, "title": title_for(title)}), 200
         files = request.files.getlist("images")
         try:
             urls = [upload_image(f.read(), settings["imgbb_api_key"]) for f in files]
@@ -221,4 +256,7 @@ if __name__ == "__main__":
     # Port 5050 statt 5000: 5000 ist unter macOS oft vom AirPlay-Empfänger belegt.
     app = create_app()
     webbrowser.open("http://127.0.0.1:5050")
-    app.run(host="127.0.0.1", port=5050, debug=False)
+    # threaded=True: Der Server beantwortet mehrere Anfragen gleichzeitig. Sonst
+    # blockiert die lange Anzeige-Erstellung (~1 Minute) jeden anderen Aufruf
+    # (Auto-Speichern, Einstellungen …) und die ganze Seite wirkt eingefroren.
+    app.run(host="127.0.0.1", port=5050, debug=False, threaded=True)
