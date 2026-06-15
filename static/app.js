@@ -42,29 +42,38 @@ function chooseTitle(el) {
 // Zeigt nur die gefundenen Beispielpreise mit Quelle – bewusst keine Empfehlung.
 function renderPrice(d) {
   $("price-box").hidden = false;
-  const list = $("price-comparables");
-  list.innerHTML = "";
-  for (const c of d.comparables || []) {
-    const li = document.createElement("li");
-    // Preis deutlich hervorheben (fett), danach das Angebot als anklickbarer Link.
-    const preis = document.createElement("b");
-    preis.textContent = c.price || "—";
-    li.appendChild(preis);
-    li.appendChild(document.createTextNode(" – "));
-    const titel = c.title || c.source || "Angebot";
-    const beschriftung = (c.title && c.source) ? `${titel} (${c.source})` : titel;
+  const body = $("price-comparables");   // <tbody> der Preistabelle
+  body.innerHTML = "";
+  const items = d.comparables || [];
+  for (const c of items) {
+    const tr = document.createElement("tr");
+    // Spalte 1: Preis (fett, in einer Zeile).
+    const tdPreis = document.createElement("td");
+    tdPreis.className = "price-cell";
+    tdPreis.textContent = c.price || "—";
+    // Spalte 2: Angebot als anklickbarer Link (Titel).
+    const tdAngebot = document.createElement("td");
+    const titel = c.title || "Angebot";
     if (c.url) {
       const a = document.createElement("a");
       a.href = c.url; a.target = "_blank"; a.rel = "noopener";
-      a.textContent = beschriftung;
-      li.appendChild(a);
+      a.textContent = titel;
+      tdAngebot.appendChild(a);
     } else {
-      li.appendChild(document.createTextNode(beschriftung));
+      tdAngebot.textContent = titel;
     }
-    list.appendChild(li);
+    // Spalte 3: Quelle (z. B. ZVAB).
+    const tdQuelle = document.createElement("td");
+    tdQuelle.textContent = c.source || "";
+    tr.appendChild(tdPreis);
+    tr.appendChild(tdAngebot);
+    tr.appendChild(tdQuelle);
+    body.appendChild(tr);
   }
+  // Leere Tabelle ausblenden, damit nur der Hinweistext sichtbar bleibt.
+  $("price-table").hidden = items.length === 0;
   $("price-status").textContent =
-    list.children.length === 0 ? "Keine Beispielpreise gefunden." : "";
+    items.length === 0 ? "Keine Beispielpreise gefunden." : "";
   $("price-note").textContent = d.note || "";
 }
 // Holt die Beispielpreise anhand der aktuellen Feldwerte.
