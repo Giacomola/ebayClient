@@ -26,7 +26,7 @@
       <button id="width-dec" type="button" title="Inhalt schmaler">↔−</button>
       <button id="width-inc" type="button" title="Inhalt breiter">↔+</button>
       <button id="overview-btn" type="button">Übersicht</button>
-      <button id="prompt-btn" type="button">Anweisungen</button>
+      <button id="chat-btn" type="button">Fragen</button>
       <button id="settings-btn" type="button">Einstellungen</button>
     </div>
   </header>
@@ -130,6 +130,22 @@
     <button id="quit-btn" type="button" class="quit">Programm beenden</button>
   </main>
 
+  <dialog id="chat-dialog" class="chat-dialog">
+    <form method="dialog">
+      <h2>Fragen an die KI</h2>
+      <p class="hint">Stell hier einfach eine Frage – zu deinen Büchern, zum Programm
+        oder zu irgendetwas anderem. Du kannst auch nachfragen.</p>
+      <div id="chat-verlauf" class="chat-verlauf"></div>
+      <div class="chat-eingabe">
+        <textarea id="chat-text" rows="2" placeholder="Deine Frage …"></textarea>
+        <button id="chat-send" type="button" class="primary">Senden</button>
+      </div>
+      <menu>
+        <button value="cancel">Schließen</button>
+      </menu>
+    </form>
+  </dialog>
+
   <dialog id="overview-dialog" class="overview-dialog">
     <form method="dialog">
       <h2>Übersicht</h2>
@@ -148,6 +164,8 @@
   <dialog id="settings-dialog">
     <form method="dialog">
       <h2>Einstellungen</h2>
+      <button id="open-prompt-btn" type="button" class="menu-link">📝 Anweisungen bearbeiten …</button>
+      <p class="hint">Legt fest, wie die KI Titel und Beschreibung schreibt.</p>
       <label>Rechenleistung
         <select id="s-ki-backend">
           <option value="api_key">API-Schlüssel (pro Nutzung bezahlt)</option>
@@ -169,6 +187,13 @@
           <option value="claude-haiku-4-5">Haiku (am günstigsten)</option>
           <option value="claude-sonnet-4-6">Sonnet (schnell)</option>
           <option value="claude-opus-4-8">Opus (stärker)</option>
+        </select>
+      </label>
+      <label>KI-Modell für das Fragen-Fenster
+        <select id="s-model-chat">
+          <option value="claude-haiku-4-5">Haiku (am günstigsten)</option>
+          <option value="claude-sonnet-4-6">Sonnet (ausgewogen)</option>
+          <option value="claude-opus-4-8">Opus (beste Antworten)</option>
         </select>
       </label>
       <fieldset class="src-fieldset">

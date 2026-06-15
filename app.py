@@ -9,6 +9,7 @@ from config import (load_settings, save_settings, build_system_prompt,
                     ensure_anweisungen)
 from ai_client import analyze_book
 from price_analysis import analyze_price
+from web_ai import chat
 from derive_instructions import derive_from_example
 from image_host import upload_image
 from ebay_csv import (append_listing, title_exists, title_for,
@@ -378,6 +379,26 @@ def create_app(config_path: str = "config.json",
         except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
             return _ki_fehlerantwort(e, kontext="Anweisungen erzeugen fehlgeschlagen")
         return jsonify(result.model_dump())
+
+    @app.post("/api/chat")
+    def chat_route():
+        """Einfacher Frage-Chat (freier Text). Erwartet {messages:[{role,content}…]}
+        und nutzt das eingestellte Chat-Modell (Standard Haiku)."""
+        settings = load_settings(config_path)
+        if settings["ki_backend"] != "abo" and not settings["anthropic_api_key"]:
+            return jsonify({"error": "Kein Anthropic-API-Schlüssel hinterlegt. "
+                                     "Bitte in den Einstellungen eintragen."}), 400
+        data = request.get_json(force=True) or {}
+        messages = data.get("messages") or []
+        if not messages:
+            return jsonify({"error": "Keine Frage gestellt."}), 400
+        try:
+            antwort = chat(api_key=settings["anthropic_api_key"],
+                           model=settings.get("model_chat", "claude-haiku-4-5"),
+                           messages=messages, backend=settings["ki_backend"])
+        except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
+            return _ki_fehlerantwort(e, kontext="Chat fehlgeschlagen")
+        return jsonify({"answer": antwort})
 
     @app.post("/api/choose-folder")
     def choose_folder():

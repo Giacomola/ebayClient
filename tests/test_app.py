@@ -358,6 +358,28 @@ def test_derive_instructions_leeres_beispiel_400(tmp_path):
     assert r.status_code == 400
     assert "Beispiel" in r.get_json()["error"]
 
+def test_chat_ohne_schluessel_gibt_fehler(tmp_path):
+    c = _client(tmp_path)
+    r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "Hallo"}]})
+    assert r.status_code == 400
+    assert "Schlüssel" in r.get_json()["error"]
+
+def test_chat_ruft_modell_und_gibt_antwort(tmp_path):
+    c = _client(tmp_path)
+    c.post("/api/settings", json={"anthropic_api_key": "sk-x", "model_chat": "claude-haiku-4-5"})
+    with patch("app.chat", return_value="Hallo, wie kann ich helfen?") as m:
+        r = c.post("/api/chat", json={"messages": [{"role": "user", "content": "Hi"}]})
+    assert r.status_code == 200
+    assert r.get_json()["answer"].startswith("Hallo")
+    assert m.called
+    assert m.call_args.kwargs["model"] == "claude-haiku-4-5"   # eingestelltes Chat-Modell
+
+def test_chat_leer_gibt_fehler(tmp_path):
+    c = _client(tmp_path)
+    c.post("/api/settings", json={"anthropic_api_key": "sk-x"})
+    r = c.post("/api/chat", json={"messages": []})
+    assert r.status_code == 400
+
 # --- Aktive Fälle (parken / öffnen / löschen) -------------------------------
 
 def _save_offenen_fall(c, title="Faust"):

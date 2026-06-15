@@ -178,8 +178,13 @@ def _find_claude_cli() -> str | None:
             return p
     return None
 
+ABO_SYSTEM_EBAY = ("Du fuellst eBay-Buchanzeigen aus Fotos. Folge den "
+                   "Anweisungen im Auftrag genau und antworte wie verlangt. "
+                   "Halte dich strikt an genannte Such-Obergrenzen.")
+
 def _via_abo(*, model: str, content: list, use_search: bool,
-             max_searches: int | None = None) -> str:
+             max_searches: int | None = None,
+             system_prompt: str = ABO_SYSTEM_EBAY) -> str:
     """Weg über das Claude-Abo (Agent SDK steuert die Claude-Code-CLI). Kein API-Schlüssel –
     der Verbrauch geht aufs Monatsguthaben. Es werden bewusst nur die Websuche und keine
     Datei-/Shell-Werkzeuge erlaubt, damit die KI ausschließlich analysiert und JSON liefert.
@@ -226,9 +231,7 @@ def _via_abo(*, model: str, content: list, use_search: bool,
             disallowed_tools=["Bash", "Edit", "Write", "Read", "Glob", "Grep"],
             max_turns=max_turns,
             cli_path=cli,
-            system_prompt=("Du fuellst eBay-Buchanzeigen aus Fotos. Folge den "
-                           "Anweisungen im Auftrag genau und antworte wie verlangt. "
-                           "Halte dich strikt an genannte Such-Obergrenzen."),
+            system_prompt=system_prompt,
         )
         text = ""
         async for msg in query(prompt=messages(), options=options):
@@ -243,6 +246,52 @@ def _via_abo(*, model: str, content: list, use_search: bool,
     text = anyio.run(_run)
     _log(f"Abo-Weg fertig in {time.time() - t0:.1f}s")
     return text
+
+# --- Einfacher Chat (freie Text-Antwort, mehrere Runden) --------------------
+CHAT_SYSTEM = (
+    "Du bist ein freundlicher, geduldiger Helfer für einen älteren Menschen. "
+    "Antworte in einfachem, klarem Deutsch, kurz und ohne Fachjargon. Du sitzt in "
+    "einem Programm, das aus Buchfotos eBay-Anzeigen erstellt – bei Fragen dazu hilfst "
+    "du gern, du beantwortest aber auch alle anderen Fragen."
+)
+
+def chat(*, api_key: str | None = None, model: str, messages: list,
+         use_search: bool = True, backend: str = "api_key",
+         max_tokens: int = 1000, max_searches: int = 2) -> str:
+    """Beantwortet eine Chat-Frage als freien Text. messages = Liste aus
+    {"role": "user"|"assistant", "content": "..."}. Gibt den Antworttext zurück."""
+    if backend == "abo":
+        # Die Agent-CLI bekommt einen Prompt – den Verlauf in einen Text gießen.
+        teile = [("Frage" if m["role"] == "user" else "Antwort") + ": " + str(m.get("content", ""))
+                 for m in messages]
+        content = [{"type": "text", "text": "\n".join(teile) + "\n\nAntwort:"}]
+        return _via_abo(model=model, content=content, use_search=use_search,
+                        max_searches=max_searches, system_prompt=CHAT_SYSTEM)
+    return _chat_via_api(api_key=api_key, model=model, messages=messages,
+                         use_search=use_search, max_searches=max_searches,
+                         max_tokens=max_tokens)
+
+def _chat_via_api(*, api_key, model, messages, use_search, max_searches, max_tokens) -> str:
+    """Chat über den Anthropic-API-Schlüssel (echte Mehrrunden-Unterhaltung)."""
+    tools = []
+    if use_search:
+        tool = dict(WEB_SEARCH_TOOL)
+        if max_searches is not None:
+            tool["max_uses"] = max_searches
+        tools = [tool]
+    client = anthropic.Anthropic(api_key=api_key, max_retries=2, timeout=150.0)
+    conv = [dict(m) for m in messages]
+    resp = None
+    for _ in range(MAX_ROUNDS):
+        resp = client.messages.create(
+            model=model, max_tokens=max_tokens, system=CHAT_SYSTEM,
+            tools=tools, messages=conv,
+        )
+        if resp.stop_reason == "pause_turn":   # Websuche läuft noch → fortsetzen
+            conv.append({"role": "assistant", "content": resp.content})
+            continue
+        break
+    return "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
 
 def _dump_bad_json(text: str) -> None:
     """Sichert die komplette KI-Rohantwort in logs/last_bad_json.txt, damit man die

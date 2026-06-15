@@ -95,6 +95,17 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
   margin: 1rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.3); }
 .si-box h2 { margin-top: 0; }
 .si-box button { margin-top: .5rem; }
+.chat-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
+.chat-verlauf { display: flex; flex-direction: column; gap: .5rem; min-height: 8rem;
+  max-height: 50vh; overflow-y: auto; padding: .5rem; background: #faf9f6;
+  border: 1px solid #e3e0d8; border-radius: 8px; margin-bottom: .6rem; }
+.chat-zeile { padding: .5rem .7rem; border-radius: 10px; max-width: 85%;
+  white-space: pre-wrap; line-height: 1.4; }
+.chat-ich { align-self: flex-end; background: #e7f3ec; }
+.chat-ki  { align-self: flex-start; background: #fff; border: 1px solid #e3e0d8; }
+.chat-eingabe { display: flex; gap: .5rem; align-items: flex-end; }
+.chat-eingabe textarea { flex: 1; resize: vertical; }
+.chat-eingabe button { white-space: nowrap; }
 .overview-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
 .overview-dialog h3 { margin: 1rem 0 .3rem; font-size: 1rem; }
 .ov-list { list-style: none; padding-left: 0; margin: 0; }
@@ -102,6 +113,7 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 .ov-info { flex: 1; word-break: break-word; }
 .ov-row button { padding: .25rem .6rem; font-size: .85rem; white-space: nowrap; }
 .hint { font-size: .85rem; color: #6b665c; margin: 0 0 1rem; }
+.menu-link { width: 100%; text-align: left; font-weight: 600; margin-bottom: .2rem; }
 .quit { display: block; margin: 2.5rem auto 0; color: #8a3b22; }
 .web-badge { font-weight: normal; color: #2b6a4b; font-size: .75rem;
   background: #e7f3ec; padding: .05rem .35rem; border-radius: 4px; }

@@ -124,6 +124,8 @@ DEFAULTS = {
     "model": "claude-opus-4-8",
     "model_text": "claude-opus-4-8",
     "model_price": "claude-sonnet-4-6",
+    # Modell für das Fragen-/Chat-Fenster (Standard Haiku = am günstigsten).
+    "model_chat": "claude-haiku-4-5",
     "location": "Berlin",
     "shipping_service": "DE_DHLPaket",
     "shipping_cost": "5.49",

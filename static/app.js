@@ -701,6 +701,51 @@ async function openOverview() {
 }
 on("overview-btn", "click", openOverview);
 
+// --- Fragen-Fenster: einfacher Chat mit der KI ------------------------------
+const chatDlg = $("chat-dialog");
+let chatVerlauf = [];   // [{role:"user"|"assistant", content:"…"}]
+
+function chatZeile(role, text) {
+  const div = document.createElement("div");
+  div.className = "chat-zeile " + (role === "user" ? "chat-ich" : "chat-ki");
+  div.textContent = text;
+  $("chat-verlauf").appendChild(div);
+  $("chat-verlauf").scrollTop = $("chat-verlauf").scrollHeight;
+  return div;
+}
+
+async function chatSenden() {
+  const feld = $("chat-text");
+  const frage = feld.value.trim();
+  if (!frage) return;
+  feld.value = "";
+  chatZeile("user", frage);
+  chatVerlauf.push({ role: "user", content: frage });
+  const platz = chatZeile("assistant", "… denkt nach");
+  $("chat-send").disabled = true;
+  try {
+    const r = await fetch("/api/chat", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: chatVerlauf }),
+    });
+    const d = await r.json();
+    if (!r.ok) { platz.textContent = "⚠ " + (d.error || "Es ist ein Fehler aufgetreten."); return; }
+    platz.textContent = d.answer || "(keine Antwort)";
+    chatVerlauf.push({ role: "assistant", content: d.answer || "" });
+  } catch (e) {
+    platz.textContent = "⚠ Keine Verbindung – bitte erneut versuchen.";
+  } finally {
+    $("chat-send").disabled = false;
+  }
+}
+
+on("chat-btn", "click", () => { chatDlg.showModal(); $("chat-text").focus(); });
+on("chat-send", "click", chatSenden);
+// Enter sendet, Umschalt+Enter macht einen Zeilenumbruch.
+on("chat-text", "keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); chatSenden(); }
+});
+
 // Öffnen: Backend macht den Fall zum aktuellen (und parkt den bisherigen offenen).
 // Danach die Seite neu laden – die Start-Logik stellt den Fall sauber wieder her.
 async function openCase(id) {
@@ -897,7 +942,10 @@ const PROMPT_FIELDS = [
 ];
 
 const promptDlg = $("prompt-dialog");
-$("prompt-btn").addEventListener("click", async () => {
+// „Anweisungen" ist jetzt ein Menüpunkt im Einstellungen-Fenster: erst die
+// Einstellungen schließen, dann den Anweisungen-Editor öffnen.
+$("open-prompt-btn").addEventListener("click", async () => {
+  $("settings-dialog").close();
   const s = await (await fetch("/api/settings")).json();
   $("p-general").value = s.prompt_general || "";
   $("p-examples").value = s.prompt_examples || "";
@@ -1055,6 +1103,7 @@ $("settings-btn").addEventListener("click", async () => {
   $("s-imgbb").value = s.imgbb_api_key || "";
   $("s-model-text").value = s.model_text || "claude-opus-4-8";
   $("s-model-price").value = s.model_price || "claude-sonnet-4-6";
+  $("s-model-chat").value = s.model_chat || "claude-haiku-4-5";
   $("s-location").value = s.location;
   $("s-shipping_cost").value = s.shipping_cost;
   renderPrimarySources(s.primary_sources);
@@ -1070,6 +1119,7 @@ $("s-save").addEventListener("click", async (e) => {
       imgbb_api_key: $("s-imgbb").value,
       model_text: $("s-model-text").value,
       model_price: $("s-model-price").value,
+      model_chat: $("s-model-chat").value,
       location: $("s-location").value,
       shipping_cost: $("s-shipping_cost").value,
       primary_sources: collectPrimarySources(),
