@@ -192,6 +192,34 @@ def test_generate_ruft_ai_client(tmp_path):
     # Text-Aufruf nutzt das Text-Modell (Standard Opus).
     assert m.call_args.kwargs["model"] == "claude-opus-4-8"
 
+def _status_error(cls, status, message):
+    import httpx
+    resp = httpx.Response(status, request=httpx.Request("POST", "http://x"))
+    return cls(message, response=resp, body=None)
+
+def test_generate_token_limit_429(tmp_path):
+    c = _client(tmp_path)
+    c.post("/api/settings", json={"anthropic_api_key": "sk-x"})
+    import anthropic
+    err = _status_error(anthropic.RateLimitError, 429, "rate limit exceeded")
+    with patch("app.analyze_book", side_effect=err):
+        data = {"images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
+        r = c.post("/api/generate", data=data, content_type="multipart/form-data")
+    assert r.status_code == 429
+    assert "Limit" in r.get_json()["error"]
+
+def test_generate_eingabe_zu_gross_413(tmp_path):
+    c = _client(tmp_path)
+    c.post("/api/settings", json={"anthropic_api_key": "sk-x"})
+    import anthropic
+    err = _status_error(anthropic.BadRequestError, 400,
+                        "prompt is too long: 250000 tokens > 200000 maximum")
+    with patch("app.analyze_book", side_effect=err):
+        data = {"images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
+        r = c.post("/api/generate", data=data, content_type="multipart/form-data")
+    assert r.status_code == 413
+    assert "Token-Limit" in r.get_json()["error"]
+
 def test_generate_liefert_web_felder(tmp_path):
     c = _client(tmp_path)
     c.post("/api/settings", json={"anthropic_api_key": "sk-x"})

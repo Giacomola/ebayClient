@@ -14,6 +14,11 @@ _Claude verschiebt hierher Backlog-Punkte, die **unklar, schädlich oder klar na
 sind — mit `> Grund: …` — statt sie blind auszuführen. Du klärst: präzisieren und zurück in
 den Tab, oder über `### Push` neu einreichen; Claude entfernt erledigte Punkte._
 
+- [ ] Preisvergleich übersichtlicher gestalten  `→ app.js, index.html, style.css`
+  > Grund: Zu unkonkret. Es gibt inzwischen schon eine Tabelle (Preis · Angebot · Quelle).
+  > Was genau stört (z. B. zu viele Einträge, Sortierung nach Preis, Mittelwert anzeigen,
+  > Spalten kürzen)? Bitte präzisieren, dann setze ich es gezielt um.
+
 ## 🚧 In Arbeit
 _Claims. VOR dem Start hier eintragen (`` `datei` — Aufgabe — seit Zeit ``),
 nach Abschluss entfernen._
@@ -36,16 +41,12 @@ _eBay-File-Exchange-CSV erzeugen, Sammel-CSV, Zielordner, Feld-Grenzen._
 ## 💰 Preisvergleich
 _Preis-Recherche, Vergleichsanzeigen, Suchlogik._
 
-- [ ] Preisvergleich übersichtlicher gestalten  `→ app.js, index.html, style.css`
-
 
 ## ⚙️ Einstellungen
 _API-Schlüssel (Anthropic, imgbb), Konfiguration, Speicherorte._
 
 ## 🌐 Allgemein
 _Tab-übergreifend: Start/Beenden, App-Launcher, Tempo, Dokumentation._
-
-- [ ] Fehlermeldung für "Token Limit erreicht" einrichten  `→ app.py, ai_client.py, index.html`
 
 ## 🕓 Später (zurückgestellt)
 _Bewusst auf später verschoben — nicht ohne Ansage starten._
@@ -73,3 +74,5 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 Alle Links der Seite öffnen in einem neuen Tab/Fenster (global via <base target="_blank">) (index.html).
 - [x] 2026-06-15 Senioren-/Einrichter-Anleitung für Windows per Fernwartung (Abo-Weg) + App-Icon fürs Windows-Paket (EINRICHTUNG-WINDOWS.md, app.ico).
 - [x] 2026-06-15 Inhaltsbreite per ↔−/↔+ in der Kopfzeile verstellbar (Stufen 720/900/1100/1400 px, im Browser gespeichert wie die Schriftgröße); CSS-Variable --page-width (index.html, app.js, style.css).
+- [x] 2026-06-15 Handy-Zugang per QR-Code im Browser (Route /api/handy-zugang liefert WLAN-Adresse + QR als SVG, Knopf „Per Handy hochladen") (app.py, app.js, style.css, index.html, Tests) `ac7b55b`.
+- [x] 2026-06-15 Verständliche Fehlermeldung bei Token-/Anfrage-Limit (429) und zu großer Eingabe (400 „prompt too long" → 413); gemeinsame Hilfsfunktion _ki_fehlerantwort für alle KI-Routen (app.py, Tests).

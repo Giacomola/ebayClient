@@ -35,6 +35,37 @@ def _handy_qr_svg(url: str) -> str:
     except Exception:  # noqa: BLE001
         return ""
 
+def _ki_fehlerantwort(e: Exception, *, kontext: str = "KI-Fehler"):
+    """Wandelt eine Ausnahme aus einem KI-Aufruf in eine verständliche Meldung
+    (JSON + HTTP-Status) um. So sehen alle KI-Routen dieselben klaren Texte."""
+    if isinstance(e, anthropic.AuthenticationError):
+        return jsonify({"error": "Der Anthropic-API-Schlüssel fehlt oder ist "
+                                 "ungültig. Bitte in den Einstellungen den richtigen "
+                                 "Schlüssel eintragen (er beginnt mit „sk-ant-“)."}), 401
+    if isinstance(e, anthropic.APIConnectionError):
+        return jsonify({"error": "Keine Verbindung zu den KI-Servern. Bitte die "
+                                 "Internetverbindung prüfen und erneut versuchen."}), 503
+    if isinstance(e, anthropic.RateLimitError):
+        # 429 = zu viele/zu große Anfragen in kurzer Zeit (Token-Limit pro Minute).
+        return jsonify({"error": "Das Anfrage-Limit ist erreicht (zu viele Token in "
+                                 "kurzer Zeit). Bitte ein bis zwei Minuten warten und "
+                                 "es dann erneut versuchen."}), 429
+    if isinstance(e, anthropic.APIStatusError):
+        msg = (getattr(e, "message", "") or "").lower()
+        # 400 mit Hinweis auf zu viele Token / zu langen Text = Eingabe zu groß.
+        if e.status_code == 400 and any(w in msg for w in
+                ("token", "too long", "context", "prompt is too long")):
+            return jsonify({"error": "Die Anfrage ist zu groß für die KI (Token-Limit "
+                                     "erreicht). Bitte weniger oder kleinere Fotos "
+                                     "verwenden und es erneut versuchen."}), 413
+        if e.status_code >= 500:
+            # 5xx = Server überlastet/kurz weg. Kein Code-Fehler.
+            return jsonify({"error": "Die KI-Server sind gerade überlastet oder kurz "
+                                     "nicht erreichbar. Bitte ein paar Sekunden warten "
+                                     "und es erneut versuchen."}), 503
+        return jsonify({"error": f"KI-Fehler ({e.status_code}): {e.message}"}), 502
+    return jsonify({"error": f"{kontext}: {e}"}), 502
+
 def _open_in_os(path: str) -> None:
     """Öffnet eine Datei im Standardprogramm des Betriebssystems.
 
@@ -141,7 +172,8 @@ def create_app(config_path: str = "config.json",
         ip = _lan_ip()
         if not ip:
             return jsonify({"url": "", "qr_svg": "",
-                            "error": "Keine WLAN-Adresse gefunden. Ist der PC im WLAN?"})
+                            "error": "Keine Netzwerk-Adresse gefunden. Ist der PC mit "
+                                     "dem Netzwerk (WLAN oder Kabel) verbunden?"})
         url = f"http://{ip}:{PORT}"
         return jsonify({"url": url, "qr_svg": _handy_qr_svg(url)})
 
@@ -197,22 +229,8 @@ def create_app(config_path: str = "config.json",
                                 model=settings["model_text"],
                                 prompt=build_system_prompt(settings),
                                 backend=settings["ki_backend"])
-        except anthropic.AuthenticationError:
-            return jsonify({"error": "Der Anthropic-API-Schlüssel fehlt oder ist "
-                                     "ungültig. Bitte in den Einstellungen den richtigen "
-                                     "Schlüssel eintragen (er beginnt mit „sk-ant-“)."}), 401
-        except anthropic.APIConnectionError:
-            return jsonify({"error": "Keine Verbindung zu den KI-Servern. Bitte die "
-                                     "Internetverbindung prüfen und erneut versuchen."}), 503
-        except anthropic.APIStatusError as e:
-            if e.status_code >= 500:
-                # 5xx = Server überlastet/kurz weg. Kein Code-Fehler.
-                return jsonify({"error": "Die KI-Server sind gerade überlastet oder kurz "
-                                         "nicht erreichbar. Bitte ein paar Sekunden warten "
-                                         "und erneut auf „Anzeige erstellen“ klicken."}), 503
-            return jsonify({"error": f"KI-Fehler ({e.status_code}): {e.message}"}), 502
-        except Exception as e:  # noqa: BLE001
-            return jsonify({"error": f"KI-Fehler: {e}"}), 502
+        except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
+            return _ki_fehlerantwort(e)
         return jsonify(book.model_dump())
 
     @app.post("/api/price")
@@ -230,19 +248,8 @@ def create_app(config_path: str = "config.json",
                 publication_year=data.get("publication_year", ""),
                 publisher=data.get("publisher", ""), book_format=data.get("book_format", ""),
                 backend=settings["ki_backend"])
-        except anthropic.AuthenticationError:
-            return jsonify({"error": "Der Anthropic-API-Schlüssel fehlt oder ist "
-                                     "ungültig."}), 401
-        except anthropic.APIConnectionError:
-            return jsonify({"error": "Keine Verbindung zu den KI-Servern. Bitte die "
-                                     "Internetverbindung prüfen."}), 503
-        except anthropic.APIStatusError as e:
-            if e.status_code >= 500:
-                return jsonify({"error": "Die KI-Server sind gerade überlastet. Bitte "
-                                         "kurz warten und erneut versuchen."}), 503
-            return jsonify({"error": f"KI-Fehler ({e.status_code}): {e.message}"}), 502
         except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
-            return jsonify({"error": f"Preis-Recherche fehlgeschlagen: {e}"}), 502
+            return _ki_fehlerantwort(e, kontext="Preis-Recherche fehlgeschlagen")
         return jsonify(result.model_dump())
 
     @app.post("/api/derive-instructions")
@@ -259,19 +266,8 @@ def create_app(config_path: str = "config.json",
             result = derive_from_example(example, api_key=settings["anthropic_api_key"],
                                          model=settings["model_text"],
                                          backend=settings["ki_backend"])
-        except anthropic.AuthenticationError:
-            return jsonify({"error": "Der Anthropic-API-Schlüssel fehlt oder ist "
-                                     "ungültig."}), 401
-        except anthropic.APIConnectionError:
-            return jsonify({"error": "Keine Verbindung zu den KI-Servern. Bitte die "
-                                     "Internetverbindung prüfen."}), 503
-        except anthropic.APIStatusError as e:
-            if e.status_code >= 500:
-                return jsonify({"error": "Die KI-Server sind gerade überlastet. Bitte "
-                                         "kurz warten und erneut versuchen."}), 503
-            return jsonify({"error": f"KI-Fehler ({e.status_code}): {e.message}"}), 502
         except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
-            return jsonify({"error": f"Anweisungen erzeugen fehlgeschlagen: {e}"}), 502
+            return _ki_fehlerantwort(e, kontext="Anweisungen erzeugen fehlgeschlagen")
         return jsonify(result.model_dump())
 
     @app.post("/api/choose-folder")
@@ -350,11 +346,11 @@ def _zeige_handy_zugang(port: int) -> None:
     ip = _lan_ip()
     if not ip:
         print("Hinweis: Keine Netzwerk-Adresse gefunden – das Handy kann nur im "
-              "selben WLAN zugreifen.")
+              "selben Netzwerk (WLAN oder Kabel am selben Router) zugreifen.")
         return
     url = f"http://{ip}:{port}"
     print("\n" + "=" * 52)
-    print("  AUF DEM HANDY (gleiches WLAN) DIESE ADRESSE OEFFNEN:")
+    print("  AUF DEM HANDY (gleiches Netzwerk) DIESE ADRESSE OEFFNEN:")
     print(f"  {url}")
     print("  Tipp: einfach den QR-Code unten mit der Handy-Kamera scannen.")
     print("=" * 52)
