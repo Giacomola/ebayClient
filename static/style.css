@@ -70,6 +70,13 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .case-del:hover { background: #f7ece8; }
 #mark-uploaded-btn { width: 100%; margin-top: .8rem; }
 .status { min-height: 1.4rem; color: #c4623a; }
+/* Großes, gut sichtbares Rückmelde-Banner für Senioren. */
+.banner { font-size: 1.1rem; font-weight: 600; padding: .9rem 1.1rem; border-radius: 10px;
+  margin: .2rem 0 1rem; border: 2px solid; }
+.banner[hidden] { display: none; }
+.banner.success { background: #e7f3ec; color: #1f5b3c; border-color: #2b6a4b; }
+.banner.error   { background: #fbeae6; color: #8a2d12; border-color: #c4421f; }
+.banner.info    { background: #fdf3e7; color: #7a4a14; border-color: #d98b2b; }
 .header-buttons { display: flex; gap: .5rem; }
 dialog { border: none; border-radius: 12px; padding: 1.5rem; min-width: 320px; }
 dialog label { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .8rem;

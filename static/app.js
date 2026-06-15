@@ -39,6 +39,20 @@ let appActive = true;
   });
 })();
 
+// Deutliche Rückmeldung als großes Banner oben. typ: "success" | "error" | "info".
+// dauer > 0 blendet es nach so vielen Millisekunden automatisch wieder aus.
+let bannerTimer = null;
+function banner(typ, text, dauer = 0) {
+  const b = $("banner");
+  if (!b) return;
+  b.className = "banner " + typ;
+  b.textContent = text;
+  b.hidden = false;
+  if (bannerTimer) { clearTimeout(bannerTimer); bannerTimer = null; }
+  if (dauer > 0) bannerTimer = setTimeout(() => { b.hidden = true; }, dauer);
+}
+function bannerAus() { const b = $("banner"); if (b) b.hidden = true; }
+
 // Zeigt die 🌐-Abzeichen nur an den Feldern, die aus der Websuche stammen.
 function applyBadges(keys) {
   document.querySelectorAll(".web-badge").forEach((b) => {
@@ -437,6 +451,7 @@ generateBtn.addEventListener("click", async () => {
   // zweiten Klick mehrere minutenlange Aufrufe und die Seite scheint zu hängen.
   generateBtn.disabled = true;
   status("🔎 recherchiere im Netz … (das kann ~30–60 Sekunden dauern)");
+  banner("info", "⏳ Bitte warten – die Anzeige wird erstellt (ca. 1 Minute) …");
   applyBadges([]);
   renderSources([]);
   $("price-box").hidden = true;
@@ -445,7 +460,11 @@ generateBtn.addEventListener("click", async () => {
     fotosFuerAnalyse().forEach((f) => fd.append("images", f));  // nur ausgewählte Fotos analysieren
     const r = await fetch("/api/generate", { method: "POST", body: fd });
     const data = await r.json();
-    if (!r.ok) { status(data.error || "Fehler bei der Analyse."); return; }
+    if (!r.ok) {
+      status(data.error || "Fehler bei der Analyse.");
+      banner("error", data.error || "Die Anzeige konnte nicht erstellt werden.");
+      return;
+    }
     for (const key of ["title", "author", "book_title", "language", "publisher",
                        "publication_year", "book_format"]) {
       $("f-" + key).value = data[key] || "";
@@ -456,12 +475,14 @@ generateBtn.addEventListener("click", async () => {
     renderSources(data.sources || []);
     $("result").hidden = false;
     status("Text fertig – ich suche jetzt noch Beispielpreise …");
+    banner("success", "✓ Text fertig – ich suche jetzt noch Beispielpreise …", 6000);
     saveFieldsNow();  // Ergebnis sofort in den Entwurf übernehmen
     fetchPrice();     // Preisrecherche automatisch anstoßen (läuft im Hintergrund)
   } catch (e) {
     // Bricht der Aufruf ab (Netzfehler/Timeout), bleibt die Seite bedienbar
     // und zeigt eine klare Meldung statt für immer „recherchiere …".
     status("Die Erstellung ist fehlgeschlagen. Bitte erneut versuchen.");
+    banner("error", "Die Erstellung ist fehlgeschlagen. Bitte erneut versuchen.");
   } finally {
     generateBtn.disabled = false;
   }
@@ -530,6 +551,11 @@ on("fmt-underline", "mousedown", (e) => { e.preventDefault(); richBefehl("underl
 
 // „Neuen Fall starten": alles leeren und den gespeicherten Entwurf zurücksetzen.
 on("new-case-btn", "click", async () => {
+  // Sicherheitsabfrage nur, wenn gerade etwas auf dem Bildschirm steht.
+  const hatInhalt = selectedFiles.length > 0 || !$("result").hidden;
+  if (hatInhalt && !confirm(
+      "Aktuellen Fall beiseitelegen und neu beginnen?\n\n"
+      + "Du findest ihn jederzeit oben unter „Fall wiederaufnehmen“.")) return;
   selectedFiles = [];
   renderThumbs();
   for (const key of RESULT_FIELDS) $("f-" + key).value = "";
@@ -547,9 +573,10 @@ on("new-case-btn", "click", async () => {
   let parked = false;
   try { parked = (await (await fetch("/api/draft/clear", { method: "POST" })).json()).parked; }
   catch (e) {}
+  bannerAus();          // alte Meldung vom vorigen Fall entfernen
   loadCases();          // ein gerade geparkter Fall erscheint in der Liste
   status(parked
-    ? `Fall geparkt – du findest ihn unter „Aktive Fälle". Neuer Fall bereit.`
+    ? `Fall geparkt – du findest ihn oben unter „Fall wiederaufnehmen". Neuer Fall bereit.`
     : "Neuer Fall – bereit für die nächsten Fotos.");
 });
 
@@ -739,6 +766,7 @@ async function loadRecent() {
 // wenn der Nutzer das Überschreiben einer gleichnamigen Anzeige bestätigt hat.
 async function submitListing(overwrite) {
   status("Fotos werden hochgeladen und Datei erstellt …");
+  banner("info", "⏳ Bitte warten – Fotos werden hochgeladen und gespeichert …");
   const fd = new FormData();
   selectedFiles.forEach((f) => fd.append("images", f));
   for (const key of ["title", "author", "book_title", "language", "publisher",
@@ -758,11 +786,17 @@ async function submitListing(overwrite) {
       return submitListing(true);
     }
     status("Speichern abgebrochen – nichts geändert.");
+    banner("info", "Speichern abgebrochen – nichts geändert.", 5000);
     return;
   }
-  if (!r.ok) { status(data.error || "Fehler."); return; }
+  if (!r.ok) {
+    status(data.error || "Fehler.");
+    banner("error", data.error || "Die Anzeige konnte nicht gespeichert werden.");
+    return;
+  }
   $("folder-path").textContent = data.folder;
   status("");
+  banner("success", `✓ Anzeige gespeichert! Jetzt ${data.count} Anzeige(n) in der Sammeldatei.`, 7000);
   $("save-success").textContent =
     `✓ Gespeichert – jetzt ${data.count} Anzeige(n) in „${data.filename}".`;
   $("save-success").hidden = false;
@@ -797,14 +831,14 @@ on("archive-file-btn", "click", async () => {
       body: JSON.stringify({ name }),
     });
     const d = await r.json();
-    if (!r.ok) { alert(d.error || "Konnte nicht archivieren."); return; }
+    if (!r.ok) { banner("error", d.error || "Konnte nicht archivieren."); return; }
     $("save-success").hidden = true;
     $("show-entry-btn").hidden = true;
-    status(`✓ ${d.moved} Eintrag/Einträge archiviert als „${d.filename}". `
-           + `Die Sammeldatei beginnt nun neu.`);
+    banner("success", `✓ ${d.moved} Eintrag/Einträge archiviert als „${d.filename}". `
+           + `Die Sammeldatei beginnt nun neu.`, 8000);
     loadRecent();  // Liste ist jetzt leer → Bereich blendet sich aus
   } catch (e) {
-    alert("Konnte nicht archivieren.");
+    banner("error", "Konnte nicht archivieren.");
   }
 });
 
