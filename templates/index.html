@@ -34,6 +34,10 @@
 
     <button id="generate-btn" type="button" class="primary" disabled>Anzeige erstellen</button>
     <button id="new-case-btn" type="button">Neuen Fall starten</button>
+    <section id="active-cases" class="info-box active-cases" hidden>
+      <h3>Fall wiederaufnehmen <span class="sub">(begonnen, noch nicht abgesendet)</span></h3>
+      <ul id="active-cases-list"></ul>
+    </section>
     <p id="status" class="status"></p>
 
     <section id="result" class="result" hidden>
@@ -104,13 +108,8 @@
       </div>
     </section>
 
-    <section id="active-cases" class="info-box active-cases" hidden>
-      <h3>Aktive Fälle <span class="sub">(begonnen, noch nicht abgesendet)</span></h3>
-      <ul id="active-cases-list"></ul>
-    </section>
-
     <section id="recent" class="info-box recent" hidden>
-      <h3>Noch nicht hochgeladen</h3>
+      <h3>Noch nicht hochgeladen <span id="recent-stats" class="sub"></span></h3>
       <ul id="recent-list"></ul>
       <button id="archive-file-btn" type="button">Sammeldatei archivieren &amp; neu beginnen</button>
     </section>

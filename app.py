@@ -12,7 +12,7 @@ from price_analysis import analyze_price
 from derive_instructions import derive_from_example
 from image_host import upload_image
 from ebay_csv import (append_listing, title_exists, title_for,
-                      recent_listings, archive_as_file, DEFAULT_FILENAME)
+                      recent_listings, listing_stats, archive_as_file, DEFAULT_FILENAME)
 from draft import (load_draft, update_fields, update_images, clear_draft,
                    save_draft, mark_completed, EMPTY)
 from cases import list_cases, save_case, load_case, delete_case
@@ -233,10 +233,13 @@ def create_app(config_path: str = "config.json",
 
     @app.get("/api/listings")
     def listings():
-        """Liefert die zuletzt gespeicherten Anzeigen aus der Sammeldatei."""
+        """Liefert die zuletzt gespeicherten Anzeigen aus der Sammeldatei + Überblick."""
         settings = load_settings(config_path)
         folder = settings.get("save_folder", "")
-        return jsonify({"listings": recent_listings(folder) if folder else []})
+        return jsonify({
+            "listings": recent_listings(folder) if folder else [],
+            "stats": listing_stats(folder) if folder else {"count": 0, "total": 0.0},
+        })
 
     @app.post("/api/archive-file")
     def archive_file():

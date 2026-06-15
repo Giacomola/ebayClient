@@ -560,7 +560,20 @@ async function loadRecent() {
     li.textContent = (item.title || "(ohne Titel)") + preis;
     list.appendChild(li);
   }
-  $("recent").hidden = list.children.length === 0;
+  // Überblick: wie viele Anzeigen liegen bereit und was ist die Preissumme?
+  const stats = data.stats || { count: 0, total: 0 };
+  const statsEl = $("recent-stats");
+  if (statsEl) {
+    if (stats.count > 0) {
+      const summe = stats.total.toLocaleString("de-DE",
+        { style: "currency", currency: "EUR" });
+      const wort = stats.count === 1 ? "Anzeige" : "Anzeigen";
+      statsEl.textContent = `– ${stats.count} ${wort} bereit · Summe Startpreise ${summe}`;
+    } else {
+      statsEl.textContent = "";
+    }
+  }
+  $("recent").hidden = (data.stats ? data.stats.count : list.children.length) === 0;
 }
 
 // Speichert die aktuelle Anzeige in die Sammeldatei. overwrite=true erst senden,

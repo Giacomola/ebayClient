@@ -70,3 +70,5 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 Bei mehr als 2 Fotos auswählbar, welche analysiert werden (🔍-Häkchen je Bild, erste 3 vorausgewählt, höchstens 5); alle Fotos kommen weiterhin in die Anzeige. Backend kappt defensiv bei 5 (app.py, index.html, app.js, Tests).
 - [x] 2026-06-15 Formatierung (Fett/Kursiv/Unterstrichen) für die Beschreibung als schwebende Leiste, die nur über markiertem Text erscheint (statt fester Leiste); saubere <b>/<i>/<u>-Tags, bleibt im eBay-Export erhalten (Test) (index.html, app.js, style.css, Tests).
 - [x] 2026-06-15 Preistabelle übersichtlicher: Spalten Angebot · Quelle · Preis (rechtsbündig, fett), aufsteigend nach Preis sortiert, lange Titel auf eine Zeile gekürzt (… + Tooltip), Zebra-Streifen, Anzahl im Hinweis (index.html, app.js, style.css).
+- [x] 2026-06-15 Export-Überblick: „Noch nicht hochgeladen" zeigt Anzahl bereitliegender Anzeigen + Summe der Startpreise (ebay_csv.listing_stats, /api/listings, app.js, index.html, Test).
+- [x] 2026-06-15 Fälle-Liste „Fall wiederaufnehmen" unter den „Neuen Fall starten"-Button verschoben und umbenannt (index.html).

@@ -182,6 +182,28 @@ def recent_listings(folder: str, filename: str = DEFAULT_FILENAME, limit: int = 
     rows.reverse()  # neueste zuerst
     return rows[:limit]
 
+def listing_stats(folder: str, filename: str = DEFAULT_FILENAME) -> dict:
+    """Überblick über die Sammeldatei: Anzahl der Anzeigen und Summe der Startpreise.
+
+    Gibt {"count": int, "total": float} zurück. Fehlt die Datei, sind beide 0."""
+    path = os.path.join(folder, filename)
+    if not os.path.exists(path):
+        return {"count": 0, "total": 0.0}
+    idx_price = COLUMNS.index("*StartPrice")
+    count = 0
+    total = 0.0
+    with open(path, "r", encoding="utf-8-sig") as f:
+        for line in f:
+            if not line.startswith("Add;"):
+                continue
+            count += 1
+            cells = line.rstrip("\r\n").split(";")
+            text = cells[idx_price] if idx_price < len(cells) else ""
+            m = re.search(r"\d+(?:[.,]\d+)?", text)
+            if m:
+                total += float(m.group(0).replace(",", "."))
+    return {"count": count, "total": round(total, 2)}
+
 def append_listing(folder: str, filename: str = DEFAULT_FILENAME, **kwargs):
     """Fügt eine Anzeige zur gemeinsamen CSV im Ordner hinzu.
 

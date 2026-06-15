@@ -187,5 +187,17 @@ def test_archive_as_file_vermeidet_namenskollision(tmp_path):
     assert erste != zweite                                # zweiter Name weicht aus (_2)
     assert zweite.endswith("_2.csv")
 
+def test_listing_stats_zaehlt_und_summiert(tmp_path):
+    from ebay_csv import listing_stats
+    folder = str(tmp_path)
+    assert listing_stats(folder) == {"count": 0, "total": 0.0}   # keine Datei
+    gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
+                     condition_id="5000", picture_urls=["https://x/1.jpg"])
+    append_listing(folder, title="Eins", price="9.99", **gemeinsam)
+    append_listing(folder, title="Zwei", price="14.50", **gemeinsam)
+    s = listing_stats(folder)
+    assert s["count"] == 2
+    assert s["total"] == 24.49
+
 def test_archive_as_file_leer_macht_nichts(tmp_path):
     assert archive_as_file(str(tmp_path)) == (0, "")      # gar keine Datei
