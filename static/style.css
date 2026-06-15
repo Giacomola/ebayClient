@@ -80,6 +80,14 @@ dialog input, dialog select, dialog textarea { font-size: 1rem; padding: .5rem;
 dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 #font-dec, #font-inc { padding: .4rem .7rem; font-weight: 600; }
 #prompt-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
+/* Einzelinstanz-Hinweis: deckt das ganze Fenster ab, bis übernommen wird. */
+.si-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center; }
+.si-overlay[hidden] { display: none; }
+.si-box { background: #fff; border-radius: 12px; padding: 1.5rem 1.8rem; max-width: 420px;
+  margin: 1rem; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.3); }
+.si-box h2 { margin-top: 0; }
+.si-box button { margin-top: .5rem; }
 .overview-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
 .overview-dialog h3 { margin: 1rem 0 .3rem; font-size: 1rem; }
 .ov-list { list-style: none; padding-left: 0; margin: 0; }

@@ -3,6 +3,42 @@ let selectedFiles = [];
 const $ = (id) => document.getElementById(id);
 const status = (msg) => { $("status").textContent = msg; };
 
+// --- Einzelinstanz: nur EIN aktives Fenster ---------------------------------
+// Zwei Fenster auf demselben Server teilen sich dieselbe draft.json und würden
+// sich gegenseitig überschreiben (und durch die 2,5-Sek-Abfrage „flackern").
+// Über einen BroadcastChannel einigen sich die Fenster: nur eines ist aktiv,
+// weitere zeigen einen Hinweis und pausieren (appActive=false → kein Speichern).
+let appActive = true;
+(function einzelinstanz() {
+  if (!("BroadcastChannel" in window)) return;   // sehr alte Browser: einfach lassen
+  const kanal = new BroadcastChannel("buch-anzeigen-helfer");
+  const meineId = Math.random().toString(36).slice(2);
+  const overlay = $("single-instance-overlay");
+
+  function werdeAktiv()     { appActive = true;  if (overlay) overlay.hidden = true; }
+  function werdeBlockiert() { appActive = false; if (overlay) overlay.hidden = false; }
+
+  kanal.onmessage = (e) => {
+    const m = e.data || {};
+    if (m.id === meineId) return;                 // eigene Nachrichten ignorieren
+    if (m.type === "hallo" && appActive) {
+      kanal.postMessage({ type: "hier", id: meineId });   // „ich bin schon aktiv"
+    } else if (m.type === "hier" || m.type === "uebernahme") {
+      werdeBlockiert();                           // anderes aktives Fenster / Übernahme
+    }
+  };
+  // Beim Start fragen: ist schon ein aktives Fenster da? (Antwort kommt in ms.)
+  kanal.postMessage({ type: "hallo", id: meineId });
+
+  // „Dieses Fenster übernehmen": andere zurücktreten lassen, selbst aktiv werden.
+  const btn = $("si-takeover");
+  if (btn) btn.addEventListener("click", () => {
+    kanal.postMessage({ type: "uebernahme", id: meineId });
+    werdeAktiv();
+    location.reload();   // frischen Stand laden und sauber weiterarbeiten
+  });
+})();
+
 // Zeigt die 🌐-Abzeichen nur an den Feldern, die aus der Websuche stammen.
 function applyBadges(keys) {
   document.querySelectorAll(".web-badge").forEach((b) => {
@@ -220,6 +256,7 @@ function currentFields() {
   return fields;
 }
 async function saveFieldsNow() {
+  if (!appActive) return;   // blockiertes Fenster schreibt nicht in die gemeinsame Datei
   await fetch("/api/draft", {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ fields: currentFields(),
@@ -231,6 +268,7 @@ async function saveFieldsNow() {
 // keine unnötige Neu-Ladung aus – nur Änderungen von anderswo (Handy) tun das.
 let knownImagesRev = 0;
 async function saveImagesNow() {
+  if (!appActive) return;   // blockiertes Fenster schreibt nicht in die gemeinsame Datei
   const fd = new FormData();
   selectedFiles.forEach((f) => fd.append("images", f));
   const r = await fetch("/api/draft/images", { method: "POST", body: fd });
@@ -249,6 +287,7 @@ async function reloadImagesFromDraft() {
 // Fragt regelmäßig die leichte Foto-Version ab. Hat sich etwas geändert (z. B. ein
 // Foto vom Handy), werden die Fotos in die Computerseite übernommen.
 async function pollPhoneImages() {
+  if (!appActive) return;   // pausiertes Fenster nicht mitlaufen lassen
   try {
     const d = await (await fetch("/api/draft/images-rev")).json();
     if (d.images_rev !== knownImagesRev) {

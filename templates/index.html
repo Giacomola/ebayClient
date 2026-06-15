@@ -9,6 +9,15 @@
   <link rel="stylesheet" href="/static/style.css?v={{ asset_ver }}">
 </head>
 <body>
+  <!-- Einzelinstanz: ein zweites Fenster bekommt diesen Hinweis statt mitzukonkurrieren. -->
+  <div id="single-instance-overlay" class="si-overlay" hidden>
+    <div class="si-box">
+      <h2>Schon geöffnet</h2>
+      <p>Der Buch-Anzeigen-Helfer ist bereits in einem anderen Fenster oder Tab offen.
+         Zwei Fenster gleichzeitig können sich gegenseitig stören.</p>
+      <button id="si-takeover" type="button" class="primary">Dieses Fenster übernehmen</button>
+    </div>
+  </div>
   <header>
     <h1>Buch-Anzeigen-Helfer <span class="app-version">Stand: {{ asset_stand }}</span></h1>
     <div class="header-buttons">

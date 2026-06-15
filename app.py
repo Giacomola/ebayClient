@@ -465,6 +465,20 @@ def _lan_ip() -> str:
     finally:
         s.close()
 
+def _server_laeuft_schon(port: int) -> bool:
+    """True, wenn auf diesem PC bereits ein Server auf dem Port antwortet.
+    So starten wir keinen zweiten (konkurrierenden) Server."""
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(0.4)
+    try:
+        s.connect(("127.0.0.1", port))
+        return True
+    except OSError:
+        return False
+    finally:
+        s.close()
+
 def _zeige_handy_zugang(port: int) -> None:
     """Zeigt beim Start die Adresse fürs Handy an – und, wenn möglich, einen QR-Code
     zum Abscannen. Fehlt das QR-Paket, wird nur die Adresse angezeigt (kein Abbruch)."""
@@ -492,6 +506,12 @@ def _zeige_handy_zugang(port: int) -> None:
 if __name__ == "__main__":
     import webbrowser
     # Port 5050 statt 5000: 5000 ist unter macOS oft vom AirPlay-Empfänger belegt.
+    # Einzelinstanz: Läuft schon ein Server auf diesem PC, KEINEN zweiten starten –
+    # nur das Fenster im Browser öffnen. Sonst konkurrieren zwei Server um Port/Dateien.
+    if _server_laeuft_schon(PORT):
+        print("Das Programm läuft bereits – ich öffne nur das Fenster.")
+        webbrowser.open(f"http://127.0.0.1:{PORT}")
+        sys.exit(0)
     app = create_app()
     _zeige_handy_zugang(PORT)
     webbrowser.open(f"http://127.0.0.1:{PORT}")  # öffnet das Programm auf DIESEM PC
