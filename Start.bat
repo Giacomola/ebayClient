@@ -5,6 +5,8 @@ rem darum hier bewusst ae/oe/ue/ss.
 setlocal EnableExtensions
 cd /d "%~dp0"
 title Buch-Anzeigen-Helfer
+rem UTF-8, damit der QR-Code (Block-Zeichen) im Fenster sauber dargestellt wird
+chcp 65001 >nul
 
 echo Buch-Anzeigen-Helfer wird gestartet ...
 echo.

@@ -263,12 +263,54 @@ def create_app(config_path: str = "config.json",
 
     return app
 
+def _lan_ip() -> str:
+    """Ermittelt die IP-Adresse dieses Rechners im lokalen Netzwerk (WLAN).
+
+    Trick: eine UDP-Verbindung zu einer öffentlichen Adresse „vorbereiten" (es werden
+    KEINE Daten gesendet) und die dabei gewählte lokale Adresse ablesen. Klappt das
+    nicht (z. B. offline), wird leer zurückgegeben."""
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))
+        return s.getsockname()[0]
+    except OSError:
+        return ""
+    finally:
+        s.close()
+
+def _zeige_handy_zugang(port: int) -> None:
+    """Zeigt beim Start die Adresse fürs Handy an – und, wenn möglich, einen QR-Code
+    zum Abscannen. Fehlt das QR-Paket, wird nur die Adresse angezeigt (kein Abbruch)."""
+    ip = _lan_ip()
+    if not ip:
+        print("Hinweis: Keine Netzwerk-Adresse gefunden – das Handy kann nur im "
+              "selben WLAN zugreifen.")
+        return
+    url = f"http://{ip}:{port}"
+    print("\n" + "=" * 52)
+    print("  AUF DEM HANDY (gleiches WLAN) DIESE ADRESSE OEFFNEN:")
+    print(f"  {url}")
+    print("  Tipp: einfach den QR-Code unten mit der Handy-Kamera scannen.")
+    print("=" * 52)
+    try:
+        import qrcode
+        qr = qrcode.QRCode(border=2)
+        qr.add_data(url)
+        qr.make()
+        qr.print_ascii(invert=True)
+    except Exception:  # noqa: BLE001 - QR ist Komfort, kein Muss
+        print("(Kein QR-Code verfügbar – bitte die Adresse oben am Handy eintippen.)")
+    print()
+
 if __name__ == "__main__":
     import webbrowser
     # Port 5050 statt 5000: 5000 ist unter macOS oft vom AirPlay-Empfänger belegt.
+    PORT = 5050
     app = create_app()
-    webbrowser.open("http://127.0.0.1:5050")
-    # threaded=True: Der Server beantwortet mehrere Anfragen gleichzeitig. Sonst
-    # blockiert die lange Anzeige-Erstellung (~1 Minute) jeden anderen Aufruf
-    # (Auto-Speichern, Einstellungen …) und die ganze Seite wirkt eingefroren.
-    app.run(host="127.0.0.1", port=5050, debug=False, threaded=True)
+    _zeige_handy_zugang(PORT)
+    webbrowser.open(f"http://127.0.0.1:{PORT}")  # öffnet das Programm auf DIESEM PC
+    # host="0.0.0.0": auch von anderen Geräten im selben WLAN erreichbar (z. B. Handy
+    # zum Fotografieren). threaded=True: mehrere Anfragen gleichzeitig, sonst friert
+    # die Seite während der ~1-minütigen Anzeige-Erstellung ein.
+    app.run(host="0.0.0.0", port=PORT, debug=False, threaded=True)
