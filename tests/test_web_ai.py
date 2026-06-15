@@ -28,3 +28,13 @@ def test_complete_json_setzt_pause_turn_fort():
                              content=[{"type": "text", "text": "P"}])
     assert data == {"ok": True}
     assert fake_client.messages.create.call_count == 2
+
+def test_complete_json_bricht_nach_zu_vielen_runden_ab():
+    import pytest
+    paused = SimpleNamespace(stop_reason="pause_turn", content=[_text_block("…suche…")])
+    fake_client = MagicMock()
+    fake_client.messages.create.return_value = paused
+    with patch("web_ai.anthropic.Anthropic", return_value=fake_client):
+        with pytest.raises(RuntimeError):
+            complete_json(api_key="sk", model="claude-opus-4-8",
+                          content=[{"type": "text", "text": "P"}])

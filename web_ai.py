@@ -31,5 +31,8 @@ def complete_json(*, api_key: str, model: str, content: list, max_tokens: int = 
             messages.append({"role": "assistant", "content": resp.content})
             continue
         break
+    if resp.stop_reason == "pause_turn":
+        raise RuntimeError("Die KI hat die Recherche nach mehreren Runden nicht "
+                           "abgeschlossen. Bitte erneut versuchen.")
     text = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
     return _extract_json(text)
