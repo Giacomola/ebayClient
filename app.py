@@ -98,6 +98,9 @@ def _pick_folder_dialog() -> str:
 def create_app(config_path: str = "config.json",
                draft_path: str = "draft.json") -> Flask:
     app = Flask(__name__)
+    # Statische Dateien (app.js/style.css) nicht im Browser zwischenspeichern, damit
+    # nach einem Update ein normales Neuladen reicht (sonst läuft veralteter Code).
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
     ensure_anweisungen(config_path)  # anweisungen.txt anlegen, falls sie fehlt
 
     @app.get("/")

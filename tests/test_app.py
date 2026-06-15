@@ -6,7 +6,9 @@ from price_analysis import PriceAnalysis
 from derive_instructions import DerivedInstructions
 
 def _client(tmp_path):
-    app = create_app(config_path=str(tmp_path / "config.json"))
+    # draft_path mit isolieren, damit Tests nicht die echte draft.json verändern.
+    app = create_app(config_path=str(tmp_path / "config.json"),
+                     draft_path=str(tmp_path / "draft.json"))
     app.config.update(TESTING=True)
     return app.test_client()
 
