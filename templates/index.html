@@ -23,6 +23,10 @@
   </header>
 
   <main>
+    <section id="active-cases" class="info-box active-cases" hidden>
+      <h3>Fall wiederaufnehmen <span class="sub">(begonnen, noch nicht abgesendet)</span></h3>
+      <ul id="active-cases-list"></ul>
+    </section>
     <section id="drop-zone" class="drop-zone">
       <p>Fotos des Buches hierher ziehen</p>
       <input id="file-input" type="file" accept="image/*" multiple hidden>
@@ -35,10 +39,6 @@
 
     <button id="generate-btn" type="button" class="primary" disabled>Anzeige erstellen</button>
     <button id="new-case-btn" type="button">Neuen Fall starten</button>
-    <section id="active-cases" class="info-box active-cases" hidden>
-      <h3>Fall wiederaufnehmen <span class="sub">(begonnen, noch nicht abgesendet)</span></h3>
-      <ul id="active-cases-list"></ul>
-    </section>
     <p id="status" class="status"></p>
 
     <section id="result" class="result" hidden>
