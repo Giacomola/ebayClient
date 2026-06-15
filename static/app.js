@@ -95,6 +95,7 @@ async function fetchPrice() {
   }
   if (!r.ok) { $("price-status").textContent = d.error || "Preise nicht ermittelbar."; return; }
   renderPrice(d);
+  status("");  // Hauptzeile leeren – die Preisbox zeigt das Ergebnis selbst
 }
 
 // Hängt einen Listener nur an, wenn das Element existiert. So legt ein einzelnes
@@ -223,8 +224,9 @@ generateBtn.addEventListener("click", async () => {
     applyBadges(data.web_sourced_fields || []);
     renderSources(data.sources || []);
     $("result").hidden = false;
-    status("Text fertig. Preis bei Bedarf mit „Preis recherchieren“ prüfen.");
+    status("Text fertig – ich suche jetzt noch Beispielpreise …");
     saveFieldsNow();  // Ergebnis sofort in den Entwurf übernehmen
+    fetchPrice();     // Preisrecherche automatisch anstoßen (läuft im Hintergrund)
   } catch (e) {
     // Bricht der Aufruf ab (Netzfehler/Timeout), bleibt die Seite bedienbar
     // und zeigt eine klare Meldung statt für immer „recherchiere …".
@@ -430,6 +432,42 @@ $("prompt-btn").addEventListener("click", async () => {
 });
 $("p-general").addEventListener("input", () => autosize($("p-general")));
 $("p-examples").addEventListener("input", () => autosize($("p-examples")));
+
+// „Anweisungen aus Beispiel erzeugen": schickt die Beispiel-Beschreibung an die KI
+// und füllt die Felder „Allgemeine Regeln" und „Beschreibung". Der Nutzer prüft und
+// speichert danach selbst (nichts wird ungefragt gespeichert).
+on("p-derive", "click", async () => {
+  const st = $("p-derive-status");
+  const example = $("p-examples").value.trim();
+  if (!example) {
+    if (st) st.textContent = "Bitte zuerst eine Beispiel-Beschreibung eingeben.";
+    return;
+  }
+  const btn = $("p-derive");
+  if (btn) btn.disabled = true;
+  if (st) st.textContent = "✍️ erzeuge Anweisungen aus dem Beispiel …";
+  try {
+    const r = await fetch("/api/derive-instructions", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ example }),
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      if (st) st.textContent = d.error || "Konnte keine Anweisungen erzeugen.";
+      return;
+    }
+    if (d.prompt_general) $("p-general").value = d.prompt_general;
+    const descField = $("p-field-description");
+    if (descField && d.description) descField.value = d.description;
+    promptDlg.querySelectorAll("textarea").forEach(autosize);
+    if (st) st.textContent = "Fertig – bitte prüfen und dann unten speichern.";
+  } catch (e) {
+    if (st) st.textContent = "Erzeugen nicht möglich (Verbindung?).";
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+});
+
 $("p-save").addEventListener("click", async (e) => {
   e.preventDefault();
   const prompt_fields = {};

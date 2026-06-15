@@ -60,3 +60,4 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 DNB/DDB als Primärquelle der Recherche, andere Quellen nur als Rückfall (anweisungen.txt).
 - [x] 2026-06-15 Beschreibungs-Prompt exakt an die Beispiel-Vorlage angeglichen (jeder Punkt eigener <p>, <b> nur für Autor/Titel & „Zustand:"/„Zum Werk:"), Semikolon im Beispiel entfernt; config.py-Default synchron (anweisungen.txt, config.py).
 - [x] 2026-06-15 Beschreibung aufgeteilt (#27+#28): Zustand & sichtbare/physische Beschreibung AUSSCHLIESSLICH aus den Fotos; „Zum Werk"/bibliografischer Teil darf aus Quellen (bevorzugt ZVAB). Datenquellen DNB/DDB/ZVAB gleichrangig (anweisungen.txt, config.py).
+- [x] 2026-06-15 Preisrecherche startet automatisch, sobald der Text fertig ist (app.js).
