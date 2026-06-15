@@ -67,6 +67,10 @@ FIELD_LABELS = {key: label for key, label, _instr in PROMPT_FIELDS}
 _FIELD_LABELS = [(key, label) for key, label, _instr in PROMPT_FIELDS]
 
 DEFAULTS = {
+    # Woher die Rechenleistung kommt: "api_key" = Anthropic-API (pro Nutzung bezahlt,
+    # Standard), "abo" = Claude-Abo über die Claude-Code-CLI (Verbrauch geht aufs
+    # Monatsguthaben, kein API-Schlüssel nötig).
+    "ki_backend": "api_key",
     "anthropic_api_key": "",
     "imgbb_api_key": "",
     # Getrennt wählbar: starkes Modell für die Texte, schnelleres für die

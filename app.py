@@ -149,7 +149,7 @@ def create_app(config_path: str = "config.json",
     @app.post("/api/generate")
     def generate():
         settings = load_settings(config_path)
-        if not settings["anthropic_api_key"]:
+        if settings["ki_backend"] != "abo" and not settings["anthropic_api_key"]:
             return jsonify({"error": "Kein Anthropic-API-Schlüssel hinterlegt. "
                                      "Bitte in den Einstellungen eintragen."}), 400
         files = request.files.getlist("images")
@@ -159,7 +159,8 @@ def create_app(config_path: str = "config.json",
         try:
             book = analyze_book(images, api_key=settings["anthropic_api_key"],
                                 model=settings["model_text"],
-                                prompt=build_system_prompt(settings))
+                                prompt=build_system_prompt(settings),
+                                backend=settings["ki_backend"])
         except anthropic.AuthenticationError:
             return jsonify({"error": "Der Anthropic-API-Schlüssel fehlt oder ist "
                                      "ungültig. Bitte in den Einstellungen den richtigen "
@@ -181,7 +182,7 @@ def create_app(config_path: str = "config.json",
     @app.post("/api/price")
     def price():
         settings = load_settings(config_path)
-        if not settings["anthropic_api_key"]:
+        if settings["ki_backend"] != "abo" and not settings["anthropic_api_key"]:
             return jsonify({"error": "Kein Anthropic-API-Schlüssel hinterlegt. "
                                      "Bitte in den Einstellungen eintragen."}), 400
         data = request.get_json(force=True) or {}
@@ -191,7 +192,8 @@ def create_app(config_path: str = "config.json",
                 author=data.get("author", ""), book_title=data.get("book_title", ""),
                 title=data.get("title", ""), language=data.get("language", ""),
                 publication_year=data.get("publication_year", ""),
-                publisher=data.get("publisher", ""), book_format=data.get("book_format", ""))
+                publisher=data.get("publisher", ""), book_format=data.get("book_format", ""),
+                backend=settings["ki_backend"])
         except anthropic.AuthenticationError:
             return jsonify({"error": "Der Anthropic-API-Schlüssel fehlt oder ist "
                                      "ungültig."}), 401

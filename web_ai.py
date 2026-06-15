@@ -93,15 +93,41 @@ def _log(msg: str) -> None:
     aber beim Mitschauen/Debuggen hilfreich)."""
     print(f"[web_ai] {msg}", file=sys.stderr, flush=True)
 
-def complete_json(*, api_key: str, model: str, content: list, max_tokens: int = 4000,
-                   max_searches: int | None = None, use_search: bool = True) -> dict:
-    # max_retries klein halten, damit sich bei Hängern nichts minutenlang aufsummiert.
-    # timeout mit Luft über der Realdauer (~60–90 s pro Aufruf), sonst greift der
-    # Timeout zu früh und löst unnötige Wiederholungen aus.
-    #
-    # max_searches: überschreibt die erlaubte Anzahl Einzelsuchen (None = Standardwert
-    # aus WEB_SEARCH_TOOL). use_search=False schaltet die Websuche ganz ab – nützlich,
-    # um die reine Modellgeschwindigkeit ohne Recherche zu messen.
+def complete_json(*, api_key: str | None = None, model: str, content: list,
+                   max_tokens: int = 4000, max_searches: int | None = None,
+                   use_search: bool = True, backend: str = "api_key") -> dict:
+    """Schickt den Auftrag an Claude und gibt das zurückgegebene JSON als dict zurück.
+
+    backend="api_key": über den Anthropic-API-Schlüssel (pro Nutzung bezahlt).
+    backend="abo":     über das Claude-Abo via Agent SDK / Claude-Code-CLI – der
+                       Verbrauch geht aufs Monatsguthaben des Abos, KEIN API-Schlüssel.
+
+    Beide Wege liefern denselben Antworttext; die JSON-Auswertung darunter ist gleich."""
+    if backend == "abo":
+        text = _via_abo(model=model, content=content, use_search=use_search)
+    else:
+        text = _via_api(api_key=api_key, model=model, content=content,
+                        max_tokens=max_tokens, max_searches=max_searches,
+                        use_search=use_search)
+    _log(f"Antworttext: {len(text)} Zeichen · Anfang={text[:160]!r}")
+    try:
+        return _extract_json(text)
+    except ValueError as e:
+        _log(f"JSON-Auslesen fehlgeschlagen: {e} · Ende={text[-300:]!r}")
+        _dump_bad_json(text)
+        raise
+
+def _via_api(*, api_key: str | None, model: str, content: list, max_tokens: int,
+             max_searches: int | None, use_search: bool) -> str:
+    """Weg über den Anthropic-API-Schlüssel (bisheriges Verhalten).
+
+    max_retries klein halten, damit sich bei Hängern nichts minutenlang aufsummiert.
+    timeout mit Luft über der Realdauer (~60–90 s pro Aufruf), sonst greift der
+    Timeout zu früh und löst unnötige Wiederholungen aus.
+
+    max_searches: überschreibt die erlaubte Anzahl Einzelsuchen (None = Standardwert
+    aus WEB_SEARCH_TOOL). use_search=False schaltet die Websuche ganz ab – nützlich,
+    um die reine Modellgeschwindigkeit ohne Recherche zu messen."""
     if use_search:
         tool = dict(WEB_SEARCH_TOOL)
         if max_searches is not None:
@@ -127,14 +153,67 @@ def complete_json(*, api_key: str, model: str, content: list, max_tokens: int = 
     if resp.stop_reason == "pause_turn":
         raise RuntimeError("Die KI hat die Recherche nach mehreren Runden nicht "
                            "abgeschlossen. Bitte erneut versuchen.")
-    text = "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
-    _log(f"Antworttext: {len(text)} Zeichen · Anfang={text[:160]!r}")
+    return "".join(b.text for b in resp.content if getattr(b, "type", None) == "text")
+
+def _find_claude_cli() -> str | None:
+    """Sucht den 'claude'-Befehl robust – erst über PATH, dann an üblichen Orten.
+    Wichtig, weil eine per Doppelklick gestartete .app oft einen kargen PATH hat."""
+    import shutil
+    found = shutil.which("claude")
+    if found:
+        return found
+    for p in (os.path.expanduser("~/.local/bin/claude"),
+              "/opt/homebrew/bin/claude", "/usr/local/bin/claude"):
+        if os.path.exists(p):
+            return p
+    return None
+
+def _via_abo(*, model: str, content: list, use_search: bool) -> str:
+    """Weg über das Claude-Abo (Agent SDK steuert die Claude-Code-CLI). Kein API-Schlüssel –
+    der Verbrauch geht aufs Monatsguthaben. Es werden bewusst nur die Websuche und keine
+    Datei-/Shell-Werkzeuge erlaubt, damit die KI ausschließlich analysiert und JSON liefert."""
     try:
-        return _extract_json(text)
-    except ValueError as e:
-        _log(f"JSON-Auslesen fehlgeschlagen: {e} · Ende={text[-300:]!r}")
-        _dump_bad_json(text)
-        raise
+        import anyio
+        from claude_agent_sdk import (query, ClaudeAgentOptions,
+                                      AssistantMessage, TextBlock)
+    except ImportError as e:
+        raise RuntimeError(
+            "Der Abo-Weg braucht das Paket 'claude-agent-sdk'. Bitte in der .venv "
+            "installieren: pip install claude-agent-sdk"
+        ) from e
+
+    cli = _find_claude_cli()
+    if not cli:
+        raise RuntimeError(
+            "Claude Code (Befehl 'claude') wurde nicht gefunden. Für den Abo-Weg muss "
+            "Claude Code installiert und eingeloggt sein."
+        )
+
+    async def _run() -> str:
+        async def messages():
+            yield {"type": "user", "message": {"role": "user", "content": content}}
+        options = ClaudeAgentOptions(
+            model=model,
+            allowed_tools=["WebSearch"] if use_search else [],
+            disallowed_tools=["Bash", "Edit", "Write", "Read", "Glob", "Grep"],
+            max_turns=6,
+            cli_path=cli,
+            system_prompt=("Du fuellst eBay-Buchanzeigen aus Fotos. Folge den "
+                           "Anweisungen im Auftrag genau und antworte wie verlangt."),
+        )
+        text = ""
+        async for msg in query(prompt=messages(), options=options):
+            if isinstance(msg, AssistantMessage):
+                for b in msg.content:
+                    if isinstance(b, TextBlock):
+                        text += b.text
+        return text
+
+    _log(f"Abo-Weg (Agent SDK): Modell={model}, Websuche={use_search}")
+    t0 = time.time()
+    text = anyio.run(_run)
+    _log(f"Abo-Weg fertig in {time.time() - t0:.1f}s")
+    return text
 
 def _dump_bad_json(text: str) -> None:
     """Sichert die komplette KI-Rohantwort in logs/last_bad_json.txt, damit man die

@@ -46,9 +46,9 @@ class PriceAnalysis(BaseModel):
 
     _texte = field_validator("note", mode="before")(_to_text)
 
-def analyze_price(*, api_key: str, model: str, author: str, book_title: str,
+def analyze_price(*, api_key: str | None = None, model: str, author: str, book_title: str,
                   title: str, language: str, publication_year: str,
-                  publisher: str, book_format: str) -> PriceAnalysis:
+                  publisher: str, book_format: str, backend: str = "api_key") -> PriceAnalysis:
     summary = (
         f"Buch: {author} – {book_title}. Sprache: {language}. "
         f"Verlag: {publisher}. Erscheinungsjahr: {publication_year}. "
@@ -58,5 +58,6 @@ def analyze_price(*, api_key: str, model: str, author: str, book_title: str,
     # Die Preissuche darf etwas mehr suchen als die Textgenerierung (Standard 2),
     # damit sie Angebote von mehreren Seiten (ZVAB, Booklooker, AbeBooks, eBay)
     # zusammentragen kann. Sie läuft nur auf Knopfdruck, daher vertretbar.
-    data = complete_json(api_key=api_key, model=model, content=content, max_searches=3)
+    data = complete_json(api_key=api_key, model=model, content=content, max_searches=3,
+                         backend=backend)
     return PriceAnalysis(**data)

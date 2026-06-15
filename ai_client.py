@@ -39,7 +39,8 @@ def _media_type(image_bytes: bytes) -> str:
         return "image/png"
     return "image/jpeg"
 
-def analyze_book(images: list[bytes], *, api_key: str, model: str, prompt: str) -> BookFields:
+def analyze_book(images: list[bytes], *, api_key: str | None = None, model: str,
+                 prompt: str, backend: str = "api_key") -> BookFields:
     content = []
     for img in images:
         content.append({
@@ -51,5 +52,5 @@ def analyze_book(images: list[bytes], *, api_key: str, model: str, prompt: str) 
             },
         })
     content.append({"type": "text", "text": prompt + JSON_INSTRUCTIONS})
-    data = complete_json(api_key=api_key, model=model, content=content)
+    data = complete_json(api_key=api_key, model=model, content=content, backend=backend)
     return BookFields(**data)
