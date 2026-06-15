@@ -24,6 +24,9 @@ _Fotos reinziehen, Ordnerwahl, Upload zu imgbb, Vorschau._
 ## ✍️ KI-Anzeigentext
 _Claude-Generierung, Felder (Titel, Beschreibung, Merkmale), Preis, Zustand, Stilvorlage._
 
+- [ ] Beschreibung aus dem ZVAB übernehmen (Primärquelle)  `→ anweisungen.txt`
+- [ ] Bei Artikelbeschreibung AUSSCHLIEßLICH auf gegebene Abbildung zurückgreifen  `→ anweisungen.txt`
+
 
 ## 📄 CSV-Export
 _eBay-File-Exchange-CSV erzeugen, Sammel-CSV, Zielordner, Feld-Grenzen._
