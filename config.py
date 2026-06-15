@@ -2,25 +2,41 @@ import json
 import os
 
 # Allgemeine Regeln, die für die ganze KI-Analyse gelten.
-DEFAULT_PROMPT_GENERAL = (
-    "Du bist ein Assistent für den Verkauf antiquarischer und gebrauchter Bücher auf "
-    "eBay.de. Analysiere die Fotos EINES Buches (Einband, Buchrücken, Titelseite, "
-    "Impressum, ggf. Inhaltsverzeichnis) und fülle die Anzeigenfelder aus. Schreibe auf "
-    "Deutsch, sachlich und korrekt im Stil einer antiquarischen Beschreibung. Gib nur an, "
-    "was auf den Fotos sicher erkennbar ist; rate nichts dazu und lass Unsicheres weg. "
-    "Verwende niemals Semikolons. Formatiere die Beschreibung als eBay-taugliches HTML: "
-    "Absätze mit <p>…</p>, Zeilenumbrüche mit <br>, Hervorhebungen mit <b>…</b>; verwende "
-    "KEINE echten Zeilenumbrüche (Enter-Taste), sondern ausschließlich diese HTML-Tags."
+DEFAULT_PROMPT_GENERAL = """### eBay-Anzeige für antiquarische & gebrauchte Bücher
+Erstelle aus den Fotos EINES Buches eine fertige, verkaufsstarke und rechtssichere Anzeige auf Deutsch.
+
+## INHALT
+- Nur was auf den Fotos sicher erkennbar ist. Niemals raten oder erfinden. Du hast NUR die Fotos – nicht recherchieren.
+- Pflichtangaben prüfen und, wenn erkennbar, nennen: Autor, Titel (bei Sets Vollständigkeit und Einzeltitel), Übersetzer (bei fremdsprachigem Original immer prüfen), Herausgeber, Verlag und Ort, Sprache, Format/Größe, Einband und Schutzumschlag, Seitenzahl, Auflage und Jahr, ISBN, Zustand, Genre/Thema.
+- Nicht erkennbare Pflichtangabe an Ort und Stelle als FARBIGEN Platzhalter einsetzen, exakt so: <span style="color:#c00">[Angabe – bitte prüfen]</span> (zum Beispiel <span style="color:#c00">[Jahr – bitte prüfen]</span>).
+- Zustand ehrlich und vorsichtig formulieren (rechtlich bindend). Keine Übertreibungen wie „neuwertig“ oder „makellos“ ohne sichtbaren Beleg.
+
+## FORM (WICHTIG – sonst zeigt eBay Fehler an)
+- Formatiere AUSSCHLIESSLICH mit HTML: Absätze <p>…</p>, Zeilenumbruch <br>, fett <b>…</b>, Farbe <span style="color:#c00">…</span>.
+- NIEMALS Markdown (kein **, *, #, -). NIEMALS Semikolons. KEINE echten Zeilenumbrüche – nur die HTML-Tags."""
+
+# Anweisung für den 80-Zeichen-Anzeigentitel.
+DEFAULT_TITLE_PROMPT = (
+    "eBay-Anzeigentitel, höchstens 80 Zeichen, keine Semikolons. Aufbau: "
+    "[Jahr] [Autor-Nachname] [Kurztitel] [Bändezahl falls Set] [Verlag] "
+    "[Einband oder Übersetzer als Keyword]. Das Erscheinungsjahr steht immer an "
+    "erster Stelle. Weitere Angaben nur, soweit sie in 80 Zeichen passen."
 )
+
+# Anweisung für die HTML-Beschreibung (7 Absätze in fester Reihenfolge).
+DEFAULT_DESCRIPTION_PROMPT = """Beschreibung als HTML-Fließtext mit Absätzen (<p>), in dieser Reihenfolge:
+1. <b>Autor</b> – <b>Titel</b>, darunter eine Kurzzeile mit Bänden, Verlag und Ort.
+2. Bibliografische Fakten in EINEM Satz, nur Erkennbares: Vollständigkeit/Einzeltitel, Übersetzer, Auflage und Jahr, Format, Einband, Seitenzahl, ISBN.
+3. Sichtbare physische Beschreibung: Einbandmotive, Prägungen, Rücken – nur Belegbares.
+4. <b>Zustand:</b> ehrlich und konkret. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung.“ ergänzen.
+5. <b>Zum Werk:</b> 2–3 Sätze, die GEZIELT DIESE Ausgabe aufwerten (Bedeutung, Sammler- oder Lesereiz) – kein generisches Allgemeinwissen.
+6. Schlagworte: 5–8 Stück, mit · getrennt.
+7. Rechtshinweis je nach Verkäufertyp. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.“"""
 
 # Reihenfolge, Beschriftung und Standard-Anweisung je Feld, das die KI füllt.
 # (key, deutsche Beschriftung für die Oberfläche, Standard-Anweisung an die KI)
 PROMPT_FIELDS = [
-    ("title", "Titel",
-     "eBay-Anzeigentitel mit höchstens 80 Zeichen. Das Erscheinungsjahr steht IMMER an "
-     "erster Stelle. Danach, soweit es in 80 Zeichen passt, in dieser Reihenfolge: Autor, "
-     "Buchtitel, Sprache, Verlag, Original oder Faksimile, Genre/Thema, Einband, "
-     "Erscheinungsort, Format/Größe. Keine Semikolons."),
+    ("title", "Titel", DEFAULT_TITLE_PROMPT),
     ("author", "Autor",
      "Verfasser mit vollständigem Namen; wenn üblich auch die originale bzw. lateinische "
      "Namensform, zum Beispiel Publius Ovidius Naso (Ovid)."),
@@ -29,20 +45,7 @@ PROMPT_FIELDS = [
      "Metamorphoses, Gottlieb Erdmann Gierig."),
     ("language", "Sprache",
      "Sprache des Buchinhalts, zum Beispiel Deutsch oder Latein."),
-    ("description", "Beschreibung",
-     "Strukturierte antiquarische Beschreibung als Fließtext mit Absätzen (HTML: <p>, "
-     "<br>, <b>) in genau dieser Reihenfolge: "
-     "1. Verfasser (Verfassername in <b>fett</b>). "
-     "2. Titel, danach Herausgeber. "
-     "3. Erscheinungsort / Verlag / Jahr, z. B. Lipsiae (Leipzig), sumtu E. B. "
-     "Schwickerti, 1807. "
-     "4. Auflage und Band, z. B. Editio altera …, Tomus posterior. "
-     "5. Format und Größe (Oktav, Großoktav usw. oder in cm), Seitenzahl und Einband. "
-     "6. Zustandsbeschreibung unter Berücksichtigung des Einbandes. "
-     "7. Inhalt des Buches sowie Angaben zum Verfasser/Autor. "
-     "Nenne, falls erkennbar, ob es sich um ein Original oder ein Faksimile handelt, "
-     "sowie Genre/Thema (Unterthema/Spezialthema). Ist ein Inhaltsverzeichnis sichtbar, "
-     "ergänze am Ende eine kurze Verschlagwortung (Stichwörter) daraus."),
+    ("description", "Beschreibung", DEFAULT_DESCRIPTION_PROMPT),
     ("publisher", "Verlag",
      "Verlag, nur wenn erkennbar, sonst leer lassen."),
     ("publication_year", "Erscheinungsjahr",
