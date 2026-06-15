@@ -15,7 +15,8 @@ from ebay_csv import (append_listing, title_exists, title_for,
                       recent_listings, listing_stats, archive_as_file, DEFAULT_FILENAME)
 from draft import (load_draft, update_fields, update_images, clear_draft,
                    save_draft, mark_completed, EMPTY)
-from cases import list_cases, save_case, load_case, delete_case
+from cases import (list_cases, save_case, load_case, delete_case,
+                   find_csv_case_id, case_status, delete_in_csv_cases)
 
 # Port, auf dem das Programm läuft (auch in der Handy-Adresse verwendet).
 PORT = 5050
@@ -162,11 +163,12 @@ def create_app(config_path: str = "config.json",
 
     @app.get("/api/cases")
     def get_cases():
-        """Liste der geparkten Fälle (begonnen, aber noch nicht abgeschlossen)."""
-        return jsonify({"cases": list_cases(cases_dir)})
+        """Liste der Fälle zum Wiederaufnehmen (nur offene, noch nicht abgesendete)."""
+        return jsonify({"cases": list_cases(cases_dir, status="offen")})
 
     @app.post("/api/cases/<case_id>/open")
     def open_case(case_id):
+        status = case_status(case_id, cases_dir)
         target = load_case(case_id, cases_dir)
         if target is None:
             return jsonify({"error": "Fall nicht gefunden."}), 404
@@ -179,7 +181,10 @@ def create_app(config_path: str = "config.json",
         new_draft["result_visible"] = target.get("result_visible", False)
         new_draft["images_rev"] = int(cur.get("images_rev", 0))  # Zähler nicht zurückwerfen
         save_draft(new_draft, draft_path)
-        delete_case(case_id, cases_dir)
+        # Einen offenen (geparkten) Fall „verbraucht" das Öffnen → löschen. Einen
+        # „in Sammeldatei"-Fall behalten: er bleibt der bearbeitbare CSV-Datensatz.
+        if status != "in_csv":
+            delete_case(case_id, cases_dir)
         return jsonify({"ok": True})
 
     @app.post("/api/cases/<case_id>/delete")
@@ -233,11 +238,15 @@ def create_app(config_path: str = "config.json",
 
     @app.get("/api/listings")
     def listings():
-        """Liefert die zuletzt gespeicherten Anzeigen aus der Sammeldatei + Überblick."""
+        """Liefert die zuletzt gespeicherten Anzeigen aus der Sammeldatei + Überblick.
+        Pro Zeile case_id, falls ein bearbeitbarer Fall dazu vorliegt."""
         settings = load_settings(config_path)
         folder = settings.get("save_folder", "")
+        rows = recent_listings(folder) if folder else []
+        for r in rows:
+            r["case_id"] = find_csv_case_id(r.get("title", ""), cases_dir)
         return jsonify({
-            "listings": recent_listings(folder) if folder else [],
+            "listings": rows,
             "stats": listing_stats(folder) if folder else {"count": 0, "total": 0.0},
         })
 
@@ -253,6 +262,7 @@ def create_app(config_path: str = "config.json",
         count, archive_name = archive_as_file(folder, name)
         if count == 0:
             return jsonify({"error": "Die Sammeldatei ist leer – nichts zu archivieren."}), 400
+        delete_in_csv_cases(cases_dir)  # die zugehörigen bearbeitbaren Fälle sind nun archiviert
         return jsonify({"ok": True, "moved": count, "filename": archive_name})
 
     @app.post("/api/open-csv")
@@ -379,6 +389,21 @@ def create_app(config_path: str = "config.json",
         except Exception as e:  # noqa: BLE001
             return jsonify({"error": f"Datei konnte nicht gespeichert werden: {e}"}), 500
         mark_completed(draft_path)  # Fall gilt jetzt als abgeschlossen (wird nicht geparkt)
+        # Den Fall als „in Sammeldatei" behalten (mit allen Feldern + Fotos), damit er
+        # sich später vollständig bearbeiten lässt. Gleichen Titel vorher ersetzen.
+        csv_title = title_for(form.get("title", ""))
+        if csv_title:
+            alt = find_csv_case_id(csv_title, cases_dir)
+            if alt:
+                delete_case(alt, cases_dir)
+            case_fields = {k: form.get(k, "") for k in
+                           ("title", "author", "book_title", "language", "publisher",
+                            "publication_year", "book_format", "description",
+                            "price", "condition_id")}
+            d = load_draft(draft_path)
+            save_case({"fields": case_fields, "images": d.get("images", []),
+                       "result_visible": True},
+                      cases_dir, status="in_csv", csv_title=csv_title)
         return jsonify({"ok": True, "folder": folder,
                         "filename": DEFAULT_FILENAME, "path": path, "count": count})
 

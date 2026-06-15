@@ -556,8 +556,22 @@ async function loadRecent() {
   list.innerHTML = "";
   for (const item of data.listings || []) {
     const li = document.createElement("li");
+    li.className = "recent-row";
     const preis = item.price ? ` – ${item.price} EUR` : "";
-    li.textContent = (item.title || "(ohne Titel)") + preis;
+    const info = document.createElement("span");
+    info.className = "recent-info";
+    info.textContent = (item.title || "(ohne Titel)") + preis;
+    li.appendChild(info);
+    // Liegt zu dieser Anzeige ein vollständiger Fall vor? Dann bearbeitbar.
+    if (item.case_id) {
+      const edit = document.createElement("button");
+      edit.type = "button";
+      edit.className = "recent-edit";
+      edit.textContent = "Bearbeiten";
+      edit.title = "Diese Anzeige öffnen und ändern – beim Speichern wird die CSV-Zeile aktualisiert";
+      edit.addEventListener("click", () => openCase(item.case_id));
+      li.appendChild(edit);
+    }
     list.appendChild(li);
   }
   // Überblick: wie viele Anzeigen liegen bereit und was ist die Preissumme?

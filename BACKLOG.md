@@ -72,3 +72,4 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 Preistabelle übersichtlicher: Spalten Angebot · Quelle · Preis (rechtsbündig, fett), aufsteigend nach Preis sortiert, lange Titel auf eine Zeile gekürzt (… + Tooltip), Zebra-Streifen, Anzahl im Hinweis (index.html, app.js, style.css).
 - [x] 2026-06-15 Export-Überblick: „Noch nicht hochgeladen" zeigt Anzahl bereitliegender Anzeigen + Summe der Startpreise (ebay_csv.listing_stats, /api/listings, app.js, index.html, Test).
 - [x] 2026-06-15 Fälle-Liste „Fall wiederaufnehmen" unter den „Neuen Fall starten"-Button verschoben und umbenannt (index.html).
+- [x] 2026-06-16 Fälle nach dem Hinzufügen zur Sammeldatei behalten (Status „in_csv", voll mit Feldern + Fotos); „Bearbeiten" an jeder „Noch nicht hochgeladen"-Zeile öffnet den Fall, erneutes Speichern überschreibt die CSV-Zeile; Archivieren räumt diese Fälle auf (cases.py, app.py, app.js, style.css, Tests).

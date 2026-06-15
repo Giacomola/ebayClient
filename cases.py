@@ -29,8 +29,13 @@ def _name_from_fields(fields: dict) -> str:
     return " – ".join(teile)
 
 
-def save_case(draft: dict, cases_dir: str = "cases", name: str | None = None) -> str:
-    """Speichert den Entwurf als neuen geparkten Fall und gibt dessen ID zurück."""
+def save_case(draft: dict, cases_dir: str = "cases", name: str | None = None,
+              status: str = "offen", csv_title: str = "") -> str:
+    """Speichert den Entwurf als Fall und gibt dessen ID zurück.
+
+    status="offen" = begonnen, noch nicht abgesendet (zum Wiederaufnehmen).
+    status="in_csv" = bereits in der Sammeldatei; csv_title ist dann der genaue
+    Titel der CSV-Zeile (zum Zuordnen beim Bearbeiten)."""
     os.makedirs(cases_dir, exist_ok=True)
     case_id = "case_%d" % int(time.time() * 1000)
     i = 0
@@ -43,6 +48,8 @@ def save_case(draft: dict, cases_dir: str = "cases", name: str | None = None) ->
         "id": case_id,
         "name": name,
         "saved_at": time.time(),
+        "status": status,
+        "csv_title": csv_title,
         "draft": {
             "fields": draft.get("fields", {}),
             "images": draft.get("images", []),
@@ -54,27 +61,78 @@ def save_case(draft: dict, cases_dir: str = "cases", name: str | None = None) ->
     return case_id
 
 
-def list_cases(cases_dir: str = "cases") -> list:
-    """Liefert die geparkten Fälle als Kurzinfos, neueste zuerst."""
+def _read_record(cases_dir: str, fn: str):
+    """Liest einen Fall-Datensatz; gibt None bei kaputter/fehlender Datei zurück."""
+    try:
+        with open(os.path.join(cases_dir, fn), encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def list_cases(cases_dir: str = "cases", status: str | None = None) -> list:
+    """Liefert Fälle als Kurzinfos, neueste zuerst. status filtert (z. B. nur "offen").
+    Fehlt das Status-Feld (alte Fälle), gilt der Fall als "offen"."""
     if not os.path.isdir(cases_dir):
         return []
     out = []
     for fn in os.listdir(cases_dir):
         if not fn.endswith(".json"):
             continue
-        try:
-            with open(os.path.join(cases_dir, fn), encoding="utf-8") as f:
-                rec = json.load(f)
-        except (json.JSONDecodeError, OSError):
+        rec = _read_record(cases_dir, fn)
+        if rec is None:
             continue  # kaputte Datei nicht die Liste sprengen lassen
+        st = rec.get("status", "offen")
+        if status is not None and st != status:
+            continue
         out.append({
             "id": rec.get("id") or fn[:-5],
             "name": rec.get("name") or "Unbenannter Fall",
             "photo_count": len(rec.get("draft", {}).get("images", [])),
             "saved_at": rec.get("saved_at", 0),
+            "status": st,
         })
     out.sort(key=lambda c: c["saved_at"], reverse=True)
     return out
+
+
+def find_csv_case_id(csv_title: str, cases_dir: str = "cases") -> str | None:
+    """ID des „in Sammeldatei"-Falls mit genau diesem CSV-Titel (oder None)."""
+    if not (csv_title or "").strip() or not os.path.isdir(cases_dir):
+        return None
+    for fn in os.listdir(cases_dir):
+        if not fn.endswith(".json"):
+            continue
+        rec = _read_record(cases_dir, fn)
+        if rec and rec.get("status") == "in_csv" and rec.get("csv_title") == csv_title:
+            return rec.get("id") or fn[:-5]
+    return None
+
+
+def case_status(case_id: str, cases_dir: str = "cases") -> str | None:
+    """Status eines Falls ("offen"/"in_csv") oder None, wenn es ihn nicht gibt."""
+    if not _ID_RE.match(case_id or ""):
+        return None
+    rec = _read_record(cases_dir, case_id + ".json")
+    return rec.get("status", "offen") if rec else None
+
+
+def delete_in_csv_cases(cases_dir: str = "cases") -> int:
+    """Löscht alle „in Sammeldatei"-Fälle (z. B. beim Archivieren). Anzahl zurück."""
+    if not os.path.isdir(cases_dir):
+        return 0
+    n = 0
+    for fn in os.listdir(cases_dir):
+        if not fn.endswith(".json"):
+            continue
+        rec = _read_record(cases_dir, fn)
+        if rec and rec.get("status") == "in_csv":
+            try:
+                os.remove(os.path.join(cases_dir, fn))
+                n += 1
+            except OSError:
+                pass
+    return n
 
 
 def load_case(case_id: str, cases_dir: str = "cases") -> dict | None:

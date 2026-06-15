@@ -1,4 +1,5 @@
-from cases import save_case, list_cases, load_case, delete_case, _name_from_fields
+from cases import (save_case, list_cases, load_case, delete_case, _name_from_fields,
+                   find_csv_case_id, case_status, delete_in_csv_cases)
 
 def _draft(title="Faust", author="Goethe", images=1):
     return {
@@ -56,6 +57,33 @@ def test_unsichere_id_wird_abgewiesen(tmp_path):
     save_case(_draft(), d)
     assert load_case("../config", d) is None        # kein Ausbruch aus dem Ordner
     assert delete_case("../config", d) is False
+
+def test_status_und_filter(tmp_path):
+    d = str(tmp_path / "cases")
+    save_case(_draft(title="Offen"), d)                         # Standard: offen
+    save_case(_draft(title="Drin"), d, status="in_csv", csv_title="Drin")
+    assert {c["status"] for c in list_cases(d)} == {"offen", "in_csv"}
+    nur_offen = list_cases(d, status="offen")
+    assert len(nur_offen) == 1 and nur_offen[0]["name"].endswith("Offen")
+
+def test_find_csv_case_und_status(tmp_path):
+    d = str(tmp_path / "cases")
+    cid = save_case(_draft(title="Drin"), d, status="in_csv", csv_title="Mein CSV Titel")
+    assert find_csv_case_id("Mein CSV Titel", d) == cid
+    assert find_csv_case_id("Gibt es nicht", d) is None
+    assert case_status(cid, d) == "in_csv"
+    # Ein offener Fall taucht bei der CSV-Suche nicht auf.
+    save_case(_draft(title="X"), d)
+    assert find_csv_case_id("", d) is None
+
+def test_delete_in_csv_cases(tmp_path):
+    d = str(tmp_path / "cases")
+    save_case(_draft(title="Offen"), d)
+    save_case(_draft(title="A"), d, status="in_csv", csv_title="A")
+    save_case(_draft(title="B"), d, status="in_csv", csv_title="B")
+    assert delete_in_csv_cases(d) == 2
+    rest = list_cases(d)
+    assert len(rest) == 1 and rest[0]["status"] == "offen"   # nur der offene bleibt
 
 def test_load_und_delete_bei_unbekannt(tmp_path):
     d = str(tmp_path / "cases")

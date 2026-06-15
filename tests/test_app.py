@@ -185,6 +185,40 @@ def test_create_csv_overwrite_ersetzt(tmp_path):
     assert body["ok"] is True
     assert body["count"] == 1                   # ersetzt, nicht zusätzlich angehängt
 
+def _add_listing(c, folder, title="Mein Buch"):
+    """Legt über die echte create-csv-Route eine Anzeige an (Foto-Upload gemockt)."""
+    c.post("/api/settings", json={"imgbb_api_key": "k", "save_folder": str(folder)})
+    data = {"title": title, "author": "A", "book_title": "B", "language": "Deutsch",
+            "description": "D", "price": "9.99", "condition_id": "5000",
+            "images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
+    with patch("app.upload_image", return_value="https://img/1.jpg"):
+        return c.post("/api/create-csv", data=data, content_type="multipart/form-data")
+
+def test_create_csv_legt_bearbeitbaren_fall_an(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    assert _add_listing(c, folder).status_code == 200
+    listings = c.get("/api/listings").get_json()["listings"]
+    assert listings[0]["title"] == "Mein Buch"
+    cid = listings[0]["case_id"]
+    assert cid                                   # bearbeitbarer Fall liegt vor
+    # Der Fall taucht NICHT in „Fall wiederaufnehmen" auf (nur offene Fälle dort).
+    assert c.get("/api/cases").get_json()["cases"] == []
+    # Öffnen zum Bearbeiten darf den in_csv-Fall nicht verbrauchen.
+    assert c.post(f"/api/cases/{cid}/open").status_code == 200
+    listings2 = c.get("/api/listings").get_json()["listings"]
+    assert listings2[0]["case_id"] == cid        # Fall besteht weiter
+
+def test_archive_entfernt_bearbeitbare_faelle(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    _add_listing(c, folder)
+    assert c.get("/api/listings").get_json()["listings"][0]["case_id"]
+    r = c.post("/api/archive-file", json={"name": "Romane"})
+    assert r.status_code == 200
+    # CSV ist leer und der zugehörige bearbeitbare Fall wurde mit aufgeräumt.
+    assert c.get("/api/listings").get_json()["listings"] == []
+
 def test_generate_ohne_schluessel_gibt_fehler(tmp_path):
     c = _client(tmp_path)
     data = {"images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
