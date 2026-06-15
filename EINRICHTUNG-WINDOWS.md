@@ -103,14 +103,37 @@ Wenn das klappt, ist die Einrichtung komplett.
 
 ---
 
+## 6b. Desktop-Verknüpfung mit Logo anlegen (ohne Terminal)
+
+Damit dein Vater künftig **nur ein Symbol mit Logo** anklickt und **kein schwarzes
+Fenster** mehr aufgeht:
+
+1. [ ] Im Projektordner **`Verknuepfung-auf-Desktop.cmd`** doppelklicken.
+   - Es erscheint kurz ein Fenster und meldet „Verknüpfung … liegt jetzt auf dem Desktop".
+2. [ ] Auf dem Desktop liegt nun das Symbol **„Buch-Anzeigen-Helfer"** mit dem Logo.
+3. [ ] **Test:** Doppelklick darauf → der Browser öffnet sich, **kein Terminal**.
+
+> Technik dahinter: Das Symbol startet `Start-leise.vbs`, das die App über
+> `pythonw.exe` (Python ohne Konsole) unsichtbar im Hintergrund laufen lässt.
+> Die einmalige Erstinstallation (Schritt 4 mit `Start.bat`) muss **vorher** gelaufen
+> sein – sonst springt der leise Start automatisch auf den sichtbaren Einrichter um.
+>
+> Wichtig: Den **Projektordner danach nicht mehr verschieben/umbenennen** – die
+> Verknüpfung merkt sich den festen Pfad. Falls doch verschoben, einfach
+> `Verknuepfung-auf-Desktop.cmd` erneut ausführen.
+
+---
+
 ## 7. Tägliche Nutzung (kurz für deinen Vater erklären)
 
-1. **`Start.bat`** doppelklicken → Browser öffnet sich.
+1. **Desktop-Symbol „Buch-Anzeigen-Helfer"** doppelklicken → Browser öffnet sich
+   (kein schwarzes Fenster mehr).
 2. Fotos reinziehen → **„Anzeige erstellen"** → prüfen/anpassen.
 3. **„Zur eBay-Sammeldatei hinzufügen"**.
 4. Wenn alle Bücher drin sind: die **CSV bei eBay hochladen** (File-Exchange).
 5. Danach in der App **„Als zu eBay hochgeladen markieren"** (damit nichts doppelt hochgeladen wird).
-6. Beenden: das schwarze Fenster schließen (oder unten „Programm beenden").
+6. Beenden: unten auf der Seite **„Programm beenden"** (es läuft ja unsichtbar im
+   Hintergrund – darum gibt es kein Fenster zum Schließen).
 
 ---
 
