@@ -4,6 +4,21 @@ def test_load_missing_returns_empty(tmp_path):
     d = load_draft(str(tmp_path / "draft.json"))
     assert d == EMPTY
 
+def test_update_images_erhoeht_rev(tmp_path):
+    p = str(tmp_path / "draft.json")
+    assert load_draft(p)["images_rev"] == 0
+    d1 = update_images([{"media_type": "image/jpeg", "data_url": "data:..."}], p)
+    d2 = update_images([{"media_type": "image/jpeg", "data_url": "data:..."}], p)
+    assert d1["images_rev"] == 1
+    assert d2["images_rev"] == 2          # jede Foto-Änderung zählt hoch
+
+def test_update_fields_aendert_rev_nicht(tmp_path):
+    p = str(tmp_path / "draft.json")
+    update_images([{"media_type": "image/jpeg", "data_url": "data:..."}], p)
+    rev = load_draft(p)["images_rev"]
+    update_fields({"title": "X"}, True, p)
+    assert load_draft(p)["images_rev"] == rev   # Textänderung ändert die Foto-Version nicht
+
 def test_update_fields_keeps_images(tmp_path):
     p = str(tmp_path / "draft.json")
     update_images([{"media_type": "image/jpeg", "data_url": "data:..."}], p)
