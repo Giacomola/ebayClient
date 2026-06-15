@@ -14,11 +14,6 @@ _Claude verschiebt hierher Backlog-Punkte, die **unklar, schädlich oder klar na
 sind — mit `> Grund: …` — statt sie blind auszuführen. Du klärst: präzisieren und zurück in
 den Tab, oder über `### Push` neu einreichen; Claude entfernt erledigte Punkte._
 
-- [ ] Preisvergleich übersichtlicher gestalten  `→ app.js, index.html, style.css`
-  > Grund: Zu unkonkret. Es gibt inzwischen schon eine Tabelle (Preis · Angebot · Quelle).
-  > Was genau stört (z. B. zu viele Einträge, Sortierung nach Preis, Mittelwert anzeigen,
-  > Spalten kürzen)? Bitte präzisieren, dann setze ich es gezielt um.
-
 ## 🚧 In Arbeit
 _Claims. VOR dem Start hier eintragen (`` `datei` — Aufgabe — seit Zeit ``),
 nach Abschluss entfernen._
@@ -74,3 +69,4 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 Verständliche Fehlermeldung bei Token-/Anfrage-Limit (429) und zu großer Eingabe (400 „prompt too long" → 413); gemeinsame Hilfsfunktion _ki_fehlerantwort für alle KI-Routen (app.py, Tests).
 - [x] 2026-06-15 Bei mehr als 2 Fotos auswählbar, welche analysiert werden (🔍-Häkchen je Bild, erste 3 vorausgewählt, höchstens 5); alle Fotos kommen weiterhin in die Anzeige. Backend kappt defensiv bei 5 (app.py, index.html, app.js, Tests).
 - [x] 2026-06-15 Formatierung (Fett/Kursiv/Unterstrichen) für die Beschreibung als schwebende Leiste, die nur über markiertem Text erscheint (statt fester Leiste); saubere <b>/<i>/<u>-Tags, bleibt im eBay-Export erhalten (Test) (index.html, app.js, style.css, Tests).
+- [x] 2026-06-15 Preistabelle übersichtlicher: Spalten Angebot · Quelle · Preis (rechtsbündig, fett), aufsteigend nach Preis sortiert, lange Titel auf eine Zeile gekürzt (… + Tooltip), Zebra-Streifen, Anzahl im Hinweis (index.html, app.js, style.css).

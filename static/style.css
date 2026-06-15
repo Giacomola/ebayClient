@@ -97,11 +97,19 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 .price-line input { flex: 1; }
 .price-line button { white-space: nowrap; }
 
-/* Preistabelle: Preis | Angebot | Quelle – übersichtlicher als eine Liste. */
-.price-table { width: 100%; border-collapse: collapse; margin: .3rem 0; font-size: .95rem; }
+/* Preistabelle: Angebot · Quelle · Preis – nach Preis sortiert, gut lesbar. */
+.price-table { width: 100%; border-collapse: collapse; margin: .4rem 0;
+  font-size: .95rem; table-layout: fixed; background: #fff; border-radius: 6px;
+  overflow: hidden; }
 .price-table th, .price-table td {
-  text-align: left; padding: .35rem .5rem; border-bottom: 1px solid #e3e0d8;
-  vertical-align: top;
+  text-align: left; padding: .4rem .55rem; border-bottom: 1px solid #eceae3;
+  vertical-align: middle;
 }
-.price-table th { color: #555; font-size: .85rem; border-bottom: 2px solid #d8d4ca; }
-.price-table .price-cell { font-weight: bold; white-space: nowrap; }
+.price-table th { color: #6b665c; font-size: .78rem; text-transform: uppercase;
+  letter-spacing: .03em; border-bottom: 2px solid #d8d4ca; }
+.price-table tbody tr:nth-child(even) { background: #f5f3ee; }   /* Zebra-Streifen */
+/* Angebot füllt den Rest und wird bei langen Titeln mit … gekürzt (eine Zeile). */
+.price-table .col-angebot { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.price-table .col-quelle { width: 5.5rem; color: #6b665c; }
+.price-table .col-preis { width: 5.5rem; text-align: right; font-weight: bold;
+  white-space: nowrap; }

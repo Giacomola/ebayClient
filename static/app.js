@@ -39,21 +39,32 @@ function chooseTitle(el) {
   $("f-title").value = el.textContent;
   saveFieldsSoon();
 }
+// Zieht die Zahl aus einem Preistext (z. B. "ca. 12,50 €" → 12.5) zum Sortieren.
+// Findet keine Zahl → NaN (solche Einträge wandern ans Ende).
+function preisZahl(text) {
+  const m = String(text || "").replace(/\s/g, "").match(/\d+(?:[.,]\d+)?/);
+  return m ? parseFloat(m[0].replace(",", ".")) : NaN;
+}
+
 // Zeigt nur die gefundenen Beispielpreise mit Quelle – bewusst keine Empfehlung.
+// Aufsteigend nach Preis sortiert; Spalten: Angebot · Quelle · Preis (rechts).
 function renderPrice(d) {
   $("price-box").hidden = false;
   const body = $("price-comparables");   // <tbody> der Preistabelle
   body.innerHTML = "";
-  const items = d.comparables || [];
+  const items = (d.comparables || []).slice().sort((a, b) => {
+    const x = preisZahl(a.price), y = preisZahl(b.price);
+    if (isNaN(x)) return 1;            // ohne erkennbaren Preis nach hinten
+    if (isNaN(y)) return -1;
+    return x - y;                      // günstigste zuerst
+  });
   for (const c of items) {
     const tr = document.createElement("tr");
-    // Spalte 1: Preis (fett, in einer Zeile).
-    const tdPreis = document.createElement("td");
-    tdPreis.className = "price-cell";
-    tdPreis.textContent = c.price || "—";
-    // Spalte 2: Angebot als anklickbarer Link (Titel).
+    // Spalte 1: Angebot als anklickbarer Link (lange Titel werden gekürzt).
     const tdAngebot = document.createElement("td");
+    tdAngebot.className = "col-angebot";
     const titel = c.title || "Angebot";
+    tdAngebot.title = titel;           // voller Titel als Tooltip
     if (c.url) {
       const a = document.createElement("a");
       a.href = c.url; a.target = "_blank"; a.rel = "noopener";
@@ -62,18 +73,24 @@ function renderPrice(d) {
     } else {
       tdAngebot.textContent = titel;
     }
-    // Spalte 3: Quelle (z. B. ZVAB).
+    // Spalte 2: Quelle (z. B. ZVAB), dezent.
     const tdQuelle = document.createElement("td");
+    tdQuelle.className = "col-quelle";
     tdQuelle.textContent = c.source || "";
-    tr.appendChild(tdPreis);
+    // Spalte 3: Preis (fett, rechtsbündig, in einer Zeile).
+    const tdPreis = document.createElement("td");
+    tdPreis.className = "col-preis";
+    tdPreis.textContent = c.price || "—";
     tr.appendChild(tdAngebot);
     tr.appendChild(tdQuelle);
+    tr.appendChild(tdPreis);
     body.appendChild(tr);
   }
   // Leere Tabelle ausblenden, damit nur der Hinweistext sichtbar bleibt.
   $("price-table").hidden = items.length === 0;
   $("price-status").textContent =
-    items.length === 0 ? "Keine Beispielpreise gefunden." : "";
+    items.length === 0 ? "Keine Beispielpreise gefunden."
+                       : `${items.length} Beispielpreise gefunden:`;
   $("price-note").textContent = d.note || "";
 }
 // Holt die Beispielpreise anhand der aktuellen Feldwerte.
