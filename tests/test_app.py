@@ -16,6 +16,20 @@ def test_settings_speichern_und_lesen(tmp_path):
     r2 = c.get("/api/settings")
     assert r2.get_json()["model"] == "claude-opus-4-8"
 
+def test_open_anweisungen_oeffnet_datei(tmp_path):
+    c = _client(tmp_path)  # create_app legt tmp/anweisungen.txt an
+    with patch("app.subprocess.run") as m:
+        r = c.post("/api/open-anweisungen")
+    assert r.status_code == 200
+    assert m.called
+    assert m.call_args.args[0][-1].endswith("anweisungen.txt")
+
+def test_open_anweisungen_fehlt_gibt_404(tmp_path):
+    c = _client(tmp_path)
+    (tmp_path / "anweisungen.txt").unlink()
+    r = c.post("/api/open-anweisungen")
+    assert r.status_code == 404
+
 def test_generate_ohne_schluessel_gibt_fehler(tmp_path):
     c = _client(tmp_path)
     data = {"images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}

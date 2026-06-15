@@ -1,7 +1,9 @@
 import base64
+import os
 import subprocess
 import sys
 import anthropic
+import anweisungen
 from flask import Flask, request, jsonify, render_template
 from config import (load_settings, save_settings, build_system_prompt,
                     ensure_anweisungen)
@@ -86,6 +88,23 @@ def create_app(config_path: str = "config.json",
         current.update(request.get_json(force=True))
         save_settings(current, config_path)
         return jsonify({"ok": True})
+
+    @app.post("/api/open-anweisungen")
+    def open_anweisungen():
+        """Öffnet anweisungen.txt im Standard-Editor des Systems (schneller Zugriff)."""
+        path = os.path.abspath(anweisungen.path_for(config_path))
+        if not os.path.exists(path):
+            return jsonify({"error": "anweisungen.txt wurde nicht gefunden."}), 404
+        try:
+            if sys.platform == "darwin":
+                subprocess.run(["open", path], check=False)
+            elif sys.platform == "win32":
+                os.startfile(path)  # type: ignore[attr-defined]
+            else:
+                subprocess.run(["xdg-open", path], check=False)
+        except Exception as e:  # noqa: BLE001
+            return jsonify({"error": f"Konnte die Datei nicht öffnen: {e}"}), 500
+        return jsonify({"ok": True, "path": path})
 
     @app.post("/api/generate")
     def generate():

@@ -328,6 +328,20 @@ $("p-save").addEventListener("click", async (e) => {
   status("Anweisungen gespeichert.");
 });
 
+// Klick auf „anweisungen.txt" im Tipp öffnet die Datei im Standard-Editor.
+$("open-anweisungen").addEventListener("click", async (e) => {
+  e.preventDefault();
+  try {
+    const r = await fetch("/api/open-anweisungen", { method: "POST" });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      alert(d.error || "Konnte anweisungen.txt nicht öffnen.");
+    }
+  } catch (err) {
+    alert("Konnte anweisungen.txt nicht öffnen.");
+  }
+});
+
 // „Programm beenden": stoppt den Server. Der Stand ist ohnehin gespeichert.
 on("quit-btn", "click", async () => {
   if (!confirm("Programm wirklich beenden? Der aktuelle Stand bleibt gespeichert.")) return;
