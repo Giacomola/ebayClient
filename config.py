@@ -27,14 +27,16 @@ DEFAULT_TITLE_PROMPT = (
 )
 
 # Anweisung für die HTML-Beschreibung (7 Absätze in fester Reihenfolge).
-DEFAULT_DESCRIPTION_PROMPT = """Beschreibung als HTML-Fließtext mit Absätzen (<p>), in dieser Reihenfolge:
-1. <b>Autor</b> – <b>Titel</b>, darunter eine Kurzzeile mit Bänden, Verlag und Ort.
-2. Bibliografische Fakten in EINEM Satz, nur Erkennbares: Vollständigkeit/Einzeltitel, Übersetzer, Auflage und Jahr, Format, Einband, Seitenzahl, ISBN.
-3. Sichtbare physische Beschreibung: Einbandmotive, Prägungen, Rücken – nur Belegbares.
-4. <b>Zustand:</b> ehrlich und konkret. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung.“ ergänzen.
-5. <b>Zum Werk:</b> 2–3 Sätze, die GEZIELT DIESE Ausgabe aufwerten (Bedeutung, Sammler- oder Lesereiz) – kein generisches Allgemeinwissen.
-6. Schlagworte: 5–8 Stück, mit · getrennt.
-7. Rechtshinweis je nach Verkäufertyp. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.“"""
+DEFAULT_DESCRIPTION_PROMPT = """Falls unten eine Muster-Vorlage steht, übernimm deren Aufbau und Formatierung GENAU.
+Jeder der folgenden sieben Punkte ist ein eigener Absatz <p>…</p>, in dieser Reihenfolge:
+1. <p><b>Autor</b> – <b>Buchtitel</b><br>danach eine Kurzzeile mit Verlag und Ort (bei Sets auch Bändezahl).</p>
+2. <p>Bibliografische Fakten, nur Erkennbares: Auflage und Jahr, Druckart (z. B. Frakturdruck), Format, Seitenzahl, Übersetzer, ISBN.</p>
+3. <p>Sichtbare physische Beschreibung: Einband, Prägungen, Rücken, Gebrauchsspuren – nur Belegbares. Nicht beurteilbar? Auf die Fotos verweisen.</p>
+4. <p><b>Zustand:</b> ehrlich und konkret. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung.“ ergänzen.</p>
+5. <p><b>Zum Werk:</b> 2–3 Sätze, die GEZIELT DIESE Ausgabe aufwerten (Bedeutung, Sammler- oder Lesereiz) – kein generisches Allgemeinwissen.</p>
+6. <p>Schlagworte: 5–8 Stück, mit · getrennt.</p>
+7. <p>Rechtshinweis. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.“</p>
+Formatierung: <b> nur für die Autor-/Titel-Zeile und die Marken „Zustand:“ und „Zum Werk:“. Keine Semikolons, kein Markdown, keine echten Zeilenumbrüche – ausschließlich diese HTML-Tags."""
 
 # Reihenfolge, Beschriftung und Standard-Anweisung je Feld, das die KI füllt.
 # (key, deutsche Beschriftung für die Oberfläche, Standard-Anweisung an die KI)

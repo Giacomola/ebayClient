@@ -57,3 +57,4 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 Strukturierte antiquarische Beispiel-Beschreibung in reinem HTML als Stil-Vorlage (anweisungen.txt).
 - [x] 2026-06-15 Beschreibungs-Textfeld nutzt mehr Bildschirmhöhe (max-height 65vh) (style.css).
 - [x] 2026-06-15 DNB/DDB als Primärquelle der Recherche, andere Quellen nur als Rückfall (anweisungen.txt).
+- [x] 2026-06-15 Beschreibungs-Prompt exakt an die Beispiel-Vorlage angeglichen (jeder Punkt eigener <p>, <b> nur für Autor/Titel & „Zustand:"/„Zum Werk:"), Semikolon im Beispiel entfernt; config.py-Default synchron (anweisungen.txt, config.py).

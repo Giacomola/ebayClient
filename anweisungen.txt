@@ -25,14 +25,16 @@ Reiner Buchtitel. Falls vorhanden mit Herausgeber, zum Beispiel Metamorphoses, G
 Sprache des Buchinhalts, zum Beispiel Deutsch oder Latein. Nur wenn sicher erkennbar.
 
 # Beschreibung #
-Beschreibung als HTML-Fließtext mit Absätzen (<p>), in dieser Reihenfolge:
-1. <b>Autor</b> – <b>Titel</b>, darunter eine Kurzzeile mit Bänden, Verlag und Ort.
-2. Bibliografische Fakten in EINEM Satz, nur Erkennbares: Vollständigkeit/Einzeltitel, Übersetzer, Auflage und Jahr, Format, Einband, Seitenzahl, ISBN.
-3. Sichtbare physische Beschreibung: Einbandmotive, Prägungen, Rücken – nur Belegbares.
-4. <b>Zustand:</b> ehrlich und konkret. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung.“ ergänzen.
-5. <b>Zum Werk:</b> 2–3 Sätze, die GEZIELT DIESE Ausgabe aufwerten (Bedeutung, Sammler- oder Lesereiz) – kein generisches Allgemeinwissen.
-6. Schlagworte: 5–8 Stück, mit · getrennt.
-7. Rechtshinweis je nach Verkäufertyp. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.“
+Falls unten eine Muster-Vorlage steht, übernimm deren Aufbau und Formatierung GENAU.
+Jeder der folgenden sieben Punkte ist ein eigener Absatz <p>…</p>, in dieser Reihenfolge:
+1. <p><b>Autor</b> – <b>Buchtitel</b><br>danach eine Kurzzeile mit Verlag und Ort (bei Sets auch Bändezahl).</p>
+2. <p>Bibliografische Fakten, nur Erkennbares: Auflage und Jahr, Druckart (z. B. Frakturdruck), Format, Seitenzahl, Übersetzer, ISBN.</p>
+3. <p>Sichtbare physische Beschreibung: Einband, Prägungen, Rücken, Gebrauchsspuren – nur Belegbares. Nicht beurteilbar? Auf die Fotos verweisen.</p>
+4. <p><b>Zustand:</b> ehrlich und konkret. Bei Sets alle Bände. Schutzumschlag, Einträge, Flecken benennen. Innenzustand nicht beurteilbar? Ausdrücklich sagen und „Die Fotos sind Teil der Beschreibung.“ ergänzen.</p>
+5. <p><b>Zum Werk:</b> 2–3 Sätze, die GEZIELT DIESE Ausgabe aufwerten (Bedeutung, Sammler- oder Lesereiz) – kein generisches Allgemeinwissen.</p>
+6. <p>Schlagworte: 5–8 Stück, mit · getrennt.</p>
+7. <p>Rechtshinweis. Privat: „Privatverkauf, keine Garantie oder Rücknahme – bitte vor dem Kauf Fragen stellen.“</p>
+Formatierung: <b> nur für die Autor-/Titel-Zeile und die Marken „Zustand:“ und „Zum Werk:“. Keine Semikolons, kein Markdown, keine echten Zeilenumbrüche – ausschließlich diese HTML-Tags.
 
 # Verlag #
 Verlag, nur wenn sicher erkennbar, sonst leer lassen (kein Platzhalter).
@@ -46,7 +48,7 @@ Einband und Größe/Format, nur soweit sicher ersichtlich, zum Beispiel Halblede
 # Beispiel-Beschreibung #
 <p><b>Christian Gottlieb Riccius</b> – <b>Zuverlässiger Entwurf von der in Teutschland üblichen Jagdgerechtigkeit</b><br>Andreäische Buchhandlung, Frankfurt am Main.</p>
 <p>Zweite vielvermehrte Auflage, 1772. Frakturdruck.</p>
-<p>Zeitgenössischer Einband; sichtbare Gebrauchsspuren bitte den Fotos entnehmen.</p>
+<p>Zeitgenössischer Einband – sichtbare Gebrauchsspuren bitte den Fotos entnehmen.</p>
 <p><b>Zustand:</b> Altersgemäß, ehrlich beschrieben. Einband berieben, Papier zeitbedingt gebräunt, vereinzelt Flecken möglich. Innenzustand und Vollständigkeit bitte anhand der Fotos beurteilen. Die Fotos sind Teil der Beschreibung.</p>
 <p><b>Zum Werk:</b> Seltene rechts- und forstgeschichtliche Abhandlung über die in den deutschen Territorien geltenden Jagdrechte und Jagdordnungen, behandelt zahlreiche Länder wie Holstein, Schleswig, Braunschweig, Bayern und Brandenburg. Eine bedeutende Quelle zur Rechts- und Verwaltungsgeschichte des Alten Reiches – für Sammler zum Jagdwesen und zur deutschen Rechtsgeschichte ein gesuchtes Werk.</p>
 <p>Schlagworte: Jagdgerechtigkeit · Jagdordnung · Jagdrecht · Rechtsgeschichte · Forstgeschichte · Frakturdruck · 18. Jahrhundert</p>
