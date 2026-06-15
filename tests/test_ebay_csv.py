@@ -53,6 +53,20 @@ def test_semikolon_und_titel_werden_bereinigt():
     assert ";" not in row["*Description"]
     assert len(row["*Title"]) <= 80
 
+def test_formatierung_bleibt_im_export_erhalten():
+    # Fett/Kursiv/Unterstrichen aus dem Beschreibungsfeld muss in der CSV ankommen.
+    data = build_csv(
+        title="T", author="A", book_title="B", language="Deutsch",
+        description="<p><b>Fett</b> und <i>kursiv</i> und <u>unterstrichen</u>.</p>",
+        price="9.99", condition_id="5000", picture_urls=["https://x/1.jpg"],
+    )
+    lines = _parse(data)
+    header = lines[1].split(";")
+    row = dict(zip(header, lines[2].split(";")))
+    assert "<b>" in row["*Description"]
+    assert "<i>" in row["*Description"]
+    assert "<u>" in row["*Description"]
+
 def test_lange_artikelmerkmale_werden_auf_65_gekuerzt():
     langer_titel = ("Fünfftes Supplement zu seinen Historischen und Genealogischen "
                     "wie auch Geographischen Fragen so viel sich im Jahre 1712 zugetragen hat")

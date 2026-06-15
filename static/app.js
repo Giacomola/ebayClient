@@ -393,6 +393,21 @@ $("f-price").addEventListener("input", saveFieldsSoon);
 $("f-condition").addEventListener("change", saveFieldsSoon);
 $("f-description").addEventListener("input", saveFieldsSoon);
 
+// --- Formatierung der Beschreibung (Fett/Kursiv/Unterstrichen) -------------
+// execCommand ist zwar veraltet, aber in allen Browsern vorhanden und für diesen
+// einfachen Zweck robust. styleWithCSS=false sorgt für saubere <b>/<i>/<u>-Tags
+// (statt style="..."), die eBay zuverlässig anzeigt und kein Semikolon enthalten.
+try { document.execCommand("styleWithCSS", false, false); } catch (e) { /* egal */ }
+function richBefehl(cmd) {
+  $("f-description").focus();
+  document.execCommand(cmd, false, null);
+  saveFieldsSoon();   // formatiertes HTML in den Entwurf übernehmen
+}
+// mousedown statt click: verhindert, dass der Knopf die Textmarkierung wegnimmt.
+on("fmt-bold", "mousedown", (e) => { e.preventDefault(); richBefehl("bold"); });
+on("fmt-italic", "mousedown", (e) => { e.preventDefault(); richBefehl("italic"); });
+on("fmt-underline", "mousedown", (e) => { e.preventDefault(); richBefehl("underline"); });
+
 // „Neuen Fall starten": alles leeren und den gespeicherten Entwurf zurücksetzen.
 on("new-case-btn", "click", async () => {
   selectedFiles = [];

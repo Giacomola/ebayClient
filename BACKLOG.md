@@ -29,8 +29,6 @@ _Fotos reinziehen, Ordnerwahl, Upload zu imgbb, Vorschau._
 ## ✍️ KI-Anzeigentext
 _Claude-Generierung, Felder (Titel, Beschreibung, Merkmale), Preis, Zustand, Stilvorlage._
 
-- [ ] Bearbeitungstool für Text-Formatierung (Fett, Kursiv, Unterstrichen, Schriftgröße); Formatierung bleibt beim eBay-Export erhalten  `→ index.html, app.js, style.css, ebay_csv.py`
-
 
 
 ## 📄 CSV-Export
@@ -75,3 +73,4 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-15 Handy-Zugang per QR-Code im Browser (Route /api/handy-zugang liefert WLAN-Adresse + QR als SVG, Knopf „Per Handy hochladen") (app.py, app.js, style.css, index.html, Tests) `ac7b55b`.
 - [x] 2026-06-15 Verständliche Fehlermeldung bei Token-/Anfrage-Limit (429) und zu großer Eingabe (400 „prompt too long" → 413); gemeinsame Hilfsfunktion _ki_fehlerantwort für alle KI-Routen (app.py, Tests).
 - [x] 2026-06-15 Bei mehr als 2 Fotos auswählbar, welche analysiert werden (🔍-Häkchen je Bild, erste 3 vorausgewählt, höchstens 5); alle Fotos kommen weiterhin in die Anzeige. Backend kappt defensiv bei 5 (app.py, index.html, app.js, Tests).
+- [x] 2026-06-15 Formatier-Bedienleiste über der Beschreibung (Fett/Kursiv/Unterstrichen via execCommand, saubere <b>/<i>/<u>-Tags); Formatierung bleibt im eBay-Export erhalten (Test) (index.html, app.js, style.css, Tests).
