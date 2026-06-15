@@ -67,6 +67,11 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 .src-row { flex-direction: row; align-items: center; gap: .4rem; margin-bottom: .25rem;
   font-size: .9rem; }
 .src-prio { width: 3.4rem; text-align: center; }
+.handy-qr { display: flex; justify-content: center; margin: .5rem 0; }
+.handy-qr svg { width: 220px; height: 220px; }
+.handy-url { text-align: center; font-family: ui-monospace, monospace; font-weight: 600;
+  word-break: break-all; margin: .2rem 0 .6rem; }
+#handy-btn { margin-top: .6rem; }
 .price-line { display: flex; gap: .5rem; align-items: center; }
 .price-line input { flex: 1; }
 .price-line button { white-space: nowrap; }

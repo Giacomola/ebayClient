@@ -230,6 +230,26 @@ dz.addEventListener("drop", (e) => {
 $("choose-btn").addEventListener("click", () => $("file-input").click());
 $("file-input").addEventListener("change", (e) => addFiles(e.target.files));
 
+// „Per Handy hochladen": zeigt QR-Code + WLAN-Adresse dieses PCs an.
+on("handy-btn", "click", async () => {
+  const qr = $("handy-qr"), urlEl = $("handy-url"), fehler = $("handy-fehler");
+  qr.innerHTML = ""; urlEl.textContent = ""; fehler.hidden = true;
+  let d;
+  try {
+    d = await (await fetch("/api/handy-zugang")).json();
+  } catch (e) {
+    d = { error: "Adresse konnte nicht ermittelt werden." };
+  }
+  if (!d.url) {
+    fehler.textContent = d.error || "Keine WLAN-Adresse gefunden.";
+    fehler.hidden = false;
+  } else {
+    if (d.qr_svg) qr.innerHTML = d.qr_svg;   // QR als SVG direkt einbetten
+    urlEl.textContent = d.url;
+  }
+  $("handy-dialog").showModal();
+});
+
 const generateBtn = $("generate-btn");
 generateBtn.addEventListener("click", async () => {
   // Knopf sperren, solange die Erstellung läuft – sonst stapeln sich bei einem

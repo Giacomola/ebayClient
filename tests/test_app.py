@@ -28,6 +28,24 @@ def test_primary_sources_persistiert(tmp_path):
     assert r.status_code == 200
     assert c.get("/api/settings").get_json()["primary_sources"] == ["dnb", "zvab"]
 
+def test_handy_zugang_mit_ip(tmp_path):
+    c = _client(tmp_path)
+    with patch("app._lan_ip", return_value="192.168.0.5"):
+        r = c.get("/api/handy-zugang")
+    body = r.get_json()
+    assert r.status_code == 200
+    assert body["url"] == "http://192.168.0.5:5050"
+    assert not body.get("error")
+
+def test_handy_zugang_ohne_netz(tmp_path):
+    c = _client(tmp_path)
+    with patch("app._lan_ip", return_value=""):
+        r = c.get("/api/handy-zugang")
+    body = r.get_json()
+    assert r.status_code == 200
+    assert body["url"] == ""
+    assert body["error"]
+
 def test_open_anweisungen_oeffnet_datei(tmp_path):
     c = _client(tmp_path)  # create_app legt tmp/anweisungen.txt an
     with patch("app.subprocess.run") as m:

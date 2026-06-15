@@ -26,6 +26,7 @@
       <p>Fotos des Buches hierher ziehen</p>
       <input id="file-input" type="file" accept="image/*" multiple hidden>
       <button id="choose-btn" type="button">Fotos auswählen</button>
+      <button id="handy-btn" type="button">📱 Per Handy hochladen</button>
       <div id="thumbs" class="thumbs"></div>
     </section>
 
@@ -164,6 +165,21 @@
       <menu>
         <button id="p-save" value="save">Speichern</button>
         <button value="cancel">Abbrechen</button>
+      </menu>
+    </form>
+  </dialog>
+
+  <dialog id="handy-dialog">
+    <form method="dialog">
+      <h2>Per Handy hochladen</h2>
+      <p class="hint">PC und Handy müssen im <b>gleichen WLAN</b> sein. Scanne den
+        QR-Code mit der Handy-Kamera – die App öffnet sich im Handy-Browser, dort
+        „Fotos auswählen" → Kamera oder Mediathek.</p>
+      <div id="handy-qr" class="handy-qr"></div>
+      <p class="handy-url" id="handy-url"></p>
+      <p class="hint" id="handy-fehler" hidden></p>
+      <menu>
+        <button value="cancel">Schließen</button>
       </menu>
     </form>
   </dialog>

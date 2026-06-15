@@ -15,6 +15,26 @@ from ebay_csv import (append_listing, title_exists, title_for,
                       recent_listings, archive_as_file, DEFAULT_FILENAME)
 from draft import load_draft, update_fields, update_images, clear_draft
 
+# Port, auf dem das Programm läuft (auch in der Handy-Adresse verwendet).
+PORT = 5050
+
+def _handy_qr_svg(url: str) -> str:
+    """Erzeugt einen QR-Code als SVG-Text (skaliert sauber, braucht kein Pillow).
+    Bei einem Fehler kommt ein leerer String zurück (QR ist Komfort, kein Muss)."""
+    try:
+        import io
+        import qrcode
+        import qrcode.image.svg
+        qr = qrcode.QRCode(border=2)
+        qr.add_data(url)
+        qr.make(fit=True)
+        img = qr.make_image(image_factory=qrcode.image.svg.SvgPathImage)
+        buf = io.BytesIO()
+        img.save(buf)
+        return buf.getvalue().decode("utf-8")
+    except Exception:  # noqa: BLE001
+        return ""
+
 def _open_in_os(path: str) -> None:
     """Öffnet eine Datei im Standardprogramm des Betriebssystems.
 
@@ -113,6 +133,17 @@ def create_app(config_path: str = "config.json",
         except Exception as e:  # noqa: BLE001
             return jsonify({"error": f"Konnte die Datei nicht öffnen: {e}"}), 500
         return jsonify({"ok": True, "path": path})
+
+    @app.get("/api/handy-zugang")
+    def handy_zugang():
+        """Liefert die WLAN-Adresse dieses PCs (+ QR-Code), damit ein Handy im selben
+        WLAN die App öffnen und Fotos hochladen kann."""
+        ip = _lan_ip()
+        if not ip:
+            return jsonify({"url": "", "qr_svg": "",
+                            "error": "Keine WLAN-Adresse gefunden. Ist der PC im WLAN?"})
+        url = f"http://{ip}:{PORT}"
+        return jsonify({"url": url, "qr_svg": _handy_qr_svg(url)})
 
     @app.get("/api/listings")
     def listings():
@@ -340,7 +371,6 @@ def _zeige_handy_zugang(port: int) -> None:
 if __name__ == "__main__":
     import webbrowser
     # Port 5050 statt 5000: 5000 ist unter macOS oft vom AirPlay-Empfänger belegt.
-    PORT = 5050
     app = create_app()
     _zeige_handy_zugang(PORT)
     webbrowser.open(f"http://127.0.0.1:{PORT}")  # öffnet das Programm auf DIESEM PC
