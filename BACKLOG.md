@@ -24,8 +24,19 @@ _Fotos reinziehen, Ordnerwahl, Upload zu imgbb, Vorschau._
 ## ✍️ KI-Anzeigentext
 _Claude-Generierung, Felder (Titel, Beschreibung, Merkmale), Preis, Zustand, Stilvorlage._
 
+- [ ] Fehlende Informationen nicht anzeigen  `→ app.py`
+- [ ] Zwei Titelvorschläge ausgeben (Auswahl über anklicken)  `→ app.py`
+- [ ] Deutsche Nationalbibliothek/Deutsche Digitalbibliothek (DnB/DDB) als Quelle für Aufnahmetext  `→ draft.py`
+- [ ] Strukturierte antiquarische Beschreibung als Vorlage für KI-Generierung  `→ draft.py`
+
 ## 📄 CSV-Export
 _eBay-File-Exchange-CSV erzeugen, Sammel-CSV, Zielordner, Feld-Grenzen._
+
+## 💰 Preisvergleich
+_Preis-Recherche, Vergleichsanzeigen, Suchlogik._
+
+- [ ] Preisvergleich strukturierter Anzeigen (deutlicher Preis + Link)  `→ app.py`
+- [ ] Suchbegriff für Preissuche: erste 4 Wörter des Titels + Jahr  `→ draft.py`
 
 ## ⚙️ Einstellungen
 _API-Schlüssel (Anthropic, imgbb), Konfiguration, Speicherorte._
