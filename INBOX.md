@@ -11,6 +11,8 @@ den Tab davor (z. B. „KI-Text: …").
 
 ## KI-Anzeigentext
 
+## Bearbeitung Anzeigentext
+
 ## Preisvergleich
 
 ## CSV-Export
