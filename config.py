@@ -38,22 +38,23 @@ DEFAULT_DESCRIPTION_PROMPT = """Beschreibung als HTML-Fließtext mit Absätzen (
 PROMPT_FIELDS = [
     ("title", "Titel", DEFAULT_TITLE_PROMPT),
     ("author", "Autor",
-     "Verfasser mit vollständigem Namen; wenn üblich auch die originale bzw. lateinische "
-     "Namensform, zum Beispiel Publius Ovidius Naso (Ovid)."),
+     "Verfasser mit vollständigem Namen. Wenn üblich auch die originale oder lateinische "
+     "Namensform, zum Beispiel Publius Ovidius Naso (Ovid). Nur wenn sicher erkennbar."),
     ("book_title", "Buchtitel",
-     "Reiner Buchtitel; falls vorhanden mit Herausgeber, zum Beispiel "
-     "Metamorphoses, Gottlieb Erdmann Gierig."),
+     "Reiner Buchtitel. Falls vorhanden mit Herausgeber, zum Beispiel "
+     "Metamorphoses, Gottlieb Erdmann Gierig. Nur wenn sicher erkennbar."),
     ("language", "Sprache",
-     "Sprache des Buchinhalts, zum Beispiel Deutsch oder Latein."),
+     "Sprache des Buchinhalts, zum Beispiel Deutsch oder Latein. Nur wenn sicher erkennbar."),
     ("description", "Beschreibung", DEFAULT_DESCRIPTION_PROMPT),
     ("publisher", "Verlag",
-     "Verlag, nur wenn erkennbar, sonst leer lassen."),
+     "Verlag, nur wenn sicher erkennbar, sonst leer lassen (kein Platzhalter)."),
     ("publication_year", "Erscheinungsjahr",
-     "Erscheinungsjahr (vierstellig), nur wenn erkennbar. Wird im Titel an erster Stelle "
-     "verwendet."),
+     "Erscheinungsjahr vierstellig, nur wenn sicher erkennbar, sonst leer lassen "
+     "(kein Platzhalter). Wird im Titel an erster Stelle verwendet."),
     ("book_format", "Format",
-     "Einband und Größe/Format, soweit ersichtlich, zum Beispiel Halbleder, Großoktav. "
-     "Größe als antiquarisches Format (Oktav, Großoktav usw.) oder in cm."),
+     "Einband und Größe/Format, nur soweit sicher ersichtlich, zum Beispiel Halbleder, "
+     "Großoktav. Größe als antiquarisches Format (Oktav, Großoktav usw.) oder in cm. "
+     "Sonst leer lassen (kein Platzhalter)."),
 ]
 
 # Praktische Hilfs-Strukturen, abgeleitet aus PROMPT_FIELDS.
