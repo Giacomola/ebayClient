@@ -85,3 +85,4 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-16 Das Chat-Modell stellt sich mit seinem Namen vor (Haiku/Sonnet/Opus): Anzeigename wird aus model_chat ermittelt und im System-Prompt gesetzt (app.py CHAT_MODELLNAMEN, web_ai._chat_system/chat, Tests).
 - [x] 2026-06-16 „Chat"-Knopf aus der Kopfzeile entfernt – der runde Knopf unten rechts übernimmt das Öffnen (index.html, app.js).
 - [x] 2026-06-16 Dubletten in der Sammel-CSV über Autor+Buchtitel erkennen (statt über den Anzeigentitel): kleine Titeländerungen erzeugen so keine zweite Zeile mehr. title_exists()→entry_exists(), Abgleich normalisiert (klein, Leerzeichen) (ebay_csv.py, app.py, app.js, Tests) `29f7b06`.
+- [x] 2026-06-16 Chat-Wissen: eBay-Upload-Seite https://www.ebay.de/sh/reports/uploads hinterlegt; zusätzlich erklärt der Chat die eBay-Ergebnis-/Statusdatei (Warning/ItemID = eingestellt, Failure mit Grund; Code 21919188 = Verkäufer-Limit, Konto-Sache) (chat_wissen.txt).

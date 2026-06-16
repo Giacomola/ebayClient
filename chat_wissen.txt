@@ -28,9 +28,10 @@ eBay sie anzeigen kann. Das Programm läuft auf dem eigenen Computer im Browser.
 7. Unter „Speicherordner" mit „Ordner wählen" festlegen, wo die Sammeldatei liegt.
 8. „Zur eBay-Sammeldatei hinzufügen" – die Anzeige wird in die gemeinsame CSV
    geschrieben. Mehrere Bücher sammeln sich so in einer Datei.
-9. Wenn alle Bücher fertig sind: Die CSV bei eBay im CSV-Manager (File-Exchange)
-   hochladen. Danach kann man mit „Sammeldatei archivieren & neu beginnen" eine
-   neue, leere Sammeldatei starten.
+9. Wenn alle Bücher fertig sind: Die CSV bei eBay hochladen. Die Upload-Seite ist:
+   https://www.ebay.de/sh/reports/uploads (eBay-Seite „Verkäufer-Cockpit Pro →
+   Berichte → Uploads", File-Exchange). Danach kann man mit „Sammeldatei
+   archivieren & neu beginnen" eine neue, leere Sammeldatei starten.
 
 == Die Knöpfe oben (Kopfzeile) ==
 - „A−" / „A+": Schrift kleiner / größer.
@@ -96,4 +97,12 @@ Schlüssel und der aktuelle Entwurf werden nur lokal auf dem Computer gespeicher
 - Meldung über zu viel / zu lange Eingabe: weniger Fotos zur Analyse auswählen (🔍).
 - Die Preissuche findet nichts: Titel/Autor prüfen und „Preis recherchieren" erneut
   klicken; den Preis kann man auch von Hand eintragen.
-- Wo lade ich die CSV hoch? Bei eBay im „CSV-Manager" (File-Exchange).
+- Wo lade ich die CSV hoch? Auf der eBay-Seite https://www.ebay.de/sh/reports/uploads
+  (Verkäufer-Cockpit Pro → Berichte → Uploads, File-Exchange).
+- Was sagt mir die Datei, die eBay nach dem Hochladen zurückgibt? Das ist die
+  Ergebnis-/Statusdatei. Pro Zeile steht der Status: „Warning" oder eine ItemID =
+  erfolgreich eingestellt (Warnungen sind oft nur Hinweise, z. B. zu einbehaltenen
+  Zahlungen); „Failure" = nicht eingestellt, mit Grund. Häufiger Grund-Code 21919188:
+  das Verkäufer-Limit des Kontos („Höchstbetrag für eingestellte Artikel") wäre
+  überschritten – das ist eine eBay-Konto-Einstellung, kein Fehler des Programms;
+  Abhilfe: bei eBay eine Limit-Erhöhung beantragen oder weniger/günstiger einstellen.
