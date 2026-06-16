@@ -61,6 +61,11 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .recent-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .4rem; }
 .recent-info { flex: 1; word-break: break-word; }
 .recent-edit { padding: .3rem .7rem; font-size: .85rem; white-space: nowrap; }
+/* Knopf, der die eBay-Upload-Seite öffnet (als Link gestaltet wie ein Knopf). */
+.ebay-upload-btn { display: block; box-sizing: border-box; width: 100%; margin: 1rem 0 .3rem;
+  padding: .7rem 1.1rem; text-align: center; text-decoration: none; font-size: 1rem;
+  background: #c4623a; color: #fff; border-radius: 8px; }
+.ebay-upload-btn:hover { background: #d6764f; }
 .active-cases { margin-top: 1.5rem; }
 .active-cases ul { list-style: none; padding-left: 0; }
 .case-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .4rem; }
