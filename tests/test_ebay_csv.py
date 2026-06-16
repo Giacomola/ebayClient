@@ -329,3 +329,20 @@ def test_remove_draft_file(tmp_path):
     open(ziel, "w").write("x")
     assert remove_draft_file(folder) is True
     assert not os.path.exists(ziel)
+
+def test_build_draft_file_preis_komma_wird_punkt(tmp_path):
+    from ebay_csv import build_draft_file
+    folder = str(tmp_path)
+    append_listing(folder, title="T", author="A", book_title="T", language="Deutsch",
+                   description="D", price="9999,99", condition_id="5000",
+                   picture_urls=["https://x/1.jpg"], action="Draft")
+    path, _ = build_draft_file(folder)
+    row = open(path, "r", encoding="utf-8-sig").read().splitlines()[2].split(";")
+    assert row[5] == "9999.99"          # Komma -> Punkt (eBay braucht Punkt)
+
+def test_preis_punkt_varianten():
+    from ebay_csv import _preis_punkt
+    assert _preis_punkt("9,99") == "9.99"
+    assert _preis_punkt("9.99") == "9.99"
+    assert _preis_punkt("1.234,56") == "1234.56"   # deutsches Tausenderformat
+    assert _preis_punkt("  12,50 ") == "12.50"

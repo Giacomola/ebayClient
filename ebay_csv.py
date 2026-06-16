@@ -327,6 +327,17 @@ DRAFT_COLUMNS = [
 ]
 DRAFT_HEADER = ";".join(DRAFT_COLUMNS)
 
+def _preis_punkt(text: str) -> str:
+    """Macht aus einem Preis mit Dezimal-Komma einen mit Punkt (9999,99 -> 9999.99).
+
+    eBays Entwurf-Prozessor kann „9999,99" nicht verarbeiten („Could not serialize
+    field [manifest.msrp]") und braucht den Punkt. Deutsches Tausender-Format
+    (1.234,56) wird dabei korrekt zu 1234.56."""
+    t = (text or "").strip()
+    if "," in t and "." in t:
+        t = t.replace(".", "")          # Tausenderpunkte entfernen
+    return t.replace(",", ".")          # Dezimalkomma -> Punkt
+
 def _full_to_draft_row(row: str) -> str:
     """Wandelt eine volle Datenzeile in eine Entwurf-Zeile (11 Spalten) um.
 
@@ -337,13 +348,13 @@ def _full_to_draft_row(row: str) -> str:
         i = COLUMNS.index(col)
         return cells[i] if i < len(cells) else ""
     werte = [
-        "Draft",                 # Action
-        hol("CustomLabel"),      # Custom label (SKU)
-        hol("*Category"),        # Category ID
-        hol("*Title"),           # Title
-        "",                      # UPC (haben wir nicht)
-        hol("*StartPrice"),      # Price
-        hol("*Quantity"),        # Quantity
+        "Draft",                       # Action
+        hol("CustomLabel"),            # Custom label (SKU)
+        hol("*Category"),              # Category ID
+        hol("*Title"),                 # Title
+        "",                            # UPC (haben wir nicht)
+        _preis_punkt(hol("*StartPrice")),  # Price (Punkt statt Komma)
+        hol("*Quantity"),              # Quantity
         hol("PicURL"),           # Item photo URL (mehrere mit | getrennt)
         hol("*ConditionID"),     # Condition ID (Zahl, z. B. 5000)
         hol("*Description"),     # Description
