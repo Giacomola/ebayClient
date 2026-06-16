@@ -861,7 +861,8 @@ async function submitListing(overwrite) {
   const data = await r.json();
   // Schon eine Anzeige mit gleichem Titel da? Einmal nachfragen.
   if (data.duplicate) {
-    if (confirm(`Es gibt bereits einen Eintrag mit dem Titel „${data.title}".\n`
+    if (confirm(`Es gibt bereits einen Eintrag für „${data.title}" `
+                + `(gleicher Autor und Buchtitel).\n`
                 + `Soll der alte Eintrag überschrieben werden?`)) {
       return submitListing(true);
     }

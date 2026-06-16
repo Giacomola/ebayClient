@@ -165,13 +165,15 @@ def test_create_csv_fragt_bei_dublette(tmp_path):
                    language="Deutsch", description="D", price="9.99",
                    condition_id="5000", picture_urls=["https://x/1.jpg"])
     c.post("/api/settings", json={"imgbb_api_key": "k", "save_folder": str(folder)})
-    data = {"title": "Mein Buch", "images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
+    # Anderer Anzeigentitel, aber gleicher Autor+Buchtitel -> trotzdem Dublette.
+    data = {"title": "Mein Buch (leicht anders)", "author": "A", "book_title": "B",
+            "images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
     with patch("app.upload_image") as up:
         r = c.post("/api/create-csv", data=data, content_type="multipart/form-data")
     body = r.get_json()
     assert r.status_code == 200
     assert body.get("duplicate") is True
-    assert body["title"] == "Mein Buch"
+    assert body["title"] == "B – A"            # Label aus Buchtitel + Autor
     assert not up.called                       # kein Foto-Upload auf dem Abbruch-Pfad
 
 def test_create_csv_overwrite_ersetzt(tmp_path):
@@ -183,14 +185,15 @@ def test_create_csv_overwrite_ersetzt(tmp_path):
                    language="Deutsch", description="D", price="9.99",
                    condition_id="5000", picture_urls=["https://x/1.jpg"])
     c.post("/api/settings", json={"imgbb_api_key": "k", "save_folder": str(folder)})
-    data = {"title": "Mein Buch", "overwrite": "true", "price": "5.00",
+    data = {"title": "Mein Buch neu", "author": "A", "book_title": "B",
+            "overwrite": "true", "price": "5.00",
             "images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
     with patch("app.upload_image", return_value="https://img/1.jpg"):
         r = c.post("/api/create-csv", data=data, content_type="multipart/form-data")
     body = r.get_json()
     assert r.status_code == 200
     assert body["ok"] is True
-    assert body["count"] == 1                   # ersetzt, nicht zusätzlich angehängt
+    assert body["count"] == 1                   # ersetzt (gleicher Autor+Buchtitel), nicht angehängt
 
 def _add_listing(c, folder, title="Mein Buch"):
     """Legt über die echte create-csv-Route eine Anzeige an (Foto-Upload gemockt)."""

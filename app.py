@@ -12,7 +12,7 @@ from price_analysis import analyze_price
 from web_ai import chat
 from derive_instructions import derive_from_example
 from image_host import upload_image
-from ebay_csv import (append_listing, title_exists, title_for,
+from ebay_csv import (append_listing, entry_exists, title_for,
                       recent_listings, listing_stats, list_archives,
                       archive_as_file, DEFAULT_FILENAME)
 from draft import (load_draft, update_fields, update_images, clear_draft,
@@ -488,11 +488,16 @@ def create_app(config_path: str = "config.json",
             return jsonify({"error": "Kein Speicherordner gewählt. "
                                      "Bitte zuerst auf 'Ordner wählen' klicken."}), 400
         form = request.form
-        # Gibt es schon eine Anzeige mit gleichem Titel? Dann erst nachfragen
-        # (noch VOR dem Foto-Upload, damit der Abbruch nichts kostet).
+        # Schon eine Anzeige mit gleichem Autor + Buchtitel? Dann erst nachfragen
+        # (noch VOR dem Foto-Upload, damit der Abbruch nichts kostet). Der Abgleich
+        # läuft über Autor+Buchtitel, nicht über den Anzeigentitel.
         title = form.get("title", "")
-        if form.get("overwrite") != "true" and title_exists(folder, title):
-            return jsonify({"duplicate": True, "title": title_for(title)}), 200
+        author = form.get("author", "")
+        book_title = form.get("book_title", "")
+        if form.get("overwrite") != "true" and entry_exists(folder, author, book_title):
+            label = " – ".join(p for p in (book_title.strip(), author.strip()) if p) \
+                or title_for(title)
+            return jsonify({"duplicate": True, "title": label}), 200
         files = request.files.getlist("images")
         try:
             urls = [upload_image(f.read(), settings["imgbb_api_key"]) for f in files]

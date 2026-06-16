@@ -107,22 +107,34 @@ def build_csv(**kwargs) -> bytes:
     text = "\r\n".join([INFO_LINE, HEADER, build_row(**kwargs)]) + "\r\n"
     return ("﻿" + text).encode("utf-8")
 
-# Position der Titel-Spalte in einer Datenzeile (0-basiert) – für den Dubletten-Abgleich.
-_TITLE_INDEX = COLUMNS.index("*Title")
+# Dubletten werden über Autor + Buchtitel erkannt (nicht über den Anzeigentitel) –
+# so erzeugen kleine Änderungen am Anzeigentitel keine zweite Zeile.
+_AUTOR_INDEX = COLUMNS.index("*C:Autor")
+_BUCHTITEL_INDEX = COLUMNS.index("*C:Buchtitel")
 
-def title_exists(folder: str, title, filename: str = DEFAULT_FILENAME) -> bool:
-    """Sagt, ob in der Sammeldatei schon eine Anzeige mit diesem Titel steht.
+def _norm(value) -> str:
+    """Vergleichsform: Trennzeichen/Umbrüche weg, Kleinbuchstaben, Mehrfach-Leerzeichen
+    zusammengefasst. So zählen Groß-/Kleinschreibung und Leerzeichen nicht als Unterschied."""
+    return " ".join(_clean(value).lower().split())
 
-    Leerer Titel zählt nie als Dublette."""
-    target = title_for(title)
-    if not target:
+def _row_key(row: str) -> tuple:
+    """(Autor, Buchtitel) einer Datenzeile in Vergleichsform."""
+    cells = row.split(";")
+    return (_norm(cells[_AUTOR_INDEX]), _norm(cells[_BUCHTITEL_INDEX]))
+
+def entry_exists(folder: str, author, book_title, filename: str = DEFAULT_FILENAME) -> bool:
+    """True, wenn schon eine Anzeige mit gleichem Autor UND Buchtitel existiert.
+
+    Buchtitel + Autor sind der Schlüssel. Ohne Buchtitel gibt es keinen verlässlichen
+    Abgleich – dann nie eine Dublette."""
+    key = (_norm(author), _norm(book_title))
+    if not key[1]:
         return False
     path = os.path.join(folder, filename)
     if not os.path.exists(path):
         return False
     with open(path, "r", encoding="utf-8-sig") as f:
-        return any(line.startswith("Add;")
-                   and line.rstrip("\r\n").split(";")[_TITLE_INDEX] == target
+        return any(line.startswith("Add;") and _row_key(line.rstrip("\r\n")) == key
                    for line in f)
 
 def _safe_name(name: str) -> str:
@@ -222,14 +234,14 @@ def list_archives(folder: str) -> list:
 def append_listing(folder: str, filename: str = DEFAULT_FILENAME, **kwargs):
     """Fügt eine Anzeige zur gemeinsamen CSV im Ordner hinzu.
 
-    Gibt es bereits eine Anzeige mit GLEICHEM (nicht-leerem) Titel, wird sie
-    ersetzt statt eine zweite Zeile anzuhängen – so sammeln sich keine Dubletten.
-    Legt die Datei mit BOM, Info- und Kopfzeile an, falls sie noch nicht
-    existiert. Gibt (Pfad, Anzahl der Anzeigen) zurück."""
+    Gibt es bereits eine Anzeige mit GLEICHEM Autor UND Buchtitel, wird sie
+    ersetzt statt eine zweite Zeile anzuhängen – so erzeugen kleine Änderungen am
+    Anzeigentitel keine Dublette. Legt die Datei mit BOM, Info- und Kopfzeile an,
+    falls sie noch nicht existiert. Gibt (Pfad, Anzahl der Anzeigen) zurück."""
     os.makedirs(folder, exist_ok=True)
     path = os.path.join(folder, filename)
     new_row = build_row(**kwargs)
-    new_title = new_row.split(";")[_TITLE_INDEX]
+    new_key = _row_key(new_row)
 
     # Vorhandene Datenzeilen einlesen (Info-/Kopfzeile werden neu geschrieben).
     rows = []
@@ -237,9 +249,9 @@ def append_listing(folder: str, filename: str = DEFAULT_FILENAME, **kwargs):
         with open(path, "r", encoding="utf-8-sig") as f:
             rows = [line.rstrip("\r\n") for line in f if line.startswith("Add;")]
 
-    # Bei gleichem, nicht-leerem Titel die alte Zeile entfernen (sie wird ersetzt).
-    if new_title:
-        rows = [r for r in rows if r.split(";")[_TITLE_INDEX] != new_title]
+    # Bei gleichem Autor + Buchtitel die alte Zeile entfernen (sie wird ersetzt).
+    if new_key[1]:   # nur bei vorhandenem Buchtitel
+        rows = [r for r in rows if _row_key(r) != new_key]
     rows.append(new_row)
 
     # Komplette Datei neu schreiben: BOM + Info + Kopf + alle Datenzeilen.

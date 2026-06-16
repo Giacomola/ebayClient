@@ -1,6 +1,6 @@
 import os
 from datetime import date
-from ebay_csv import (build_csv, append_listing, title_exists,
+from ebay_csv import (build_csv, append_listing, entry_exists,
                       recent_listings, archive_as_file, COLUMNS)
 
 def _parse(data: bytes):
@@ -84,11 +84,11 @@ def test_lange_artikelmerkmale_werden_auf_65_gekuerzt():
 
 def test_append_listing_sammelt_in_einer_datei(tmp_path):
     folder = str(tmp_path)
-    gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
+    gemeinsam = dict(author="A", language="Deutsch", description="D",
                      price="9.99", condition_id="5000", picture_urls=["https://x/1.jpg"])
-    path, count = append_listing(folder, title="Buch 1", **gemeinsam)
+    path, count = append_listing(folder, title="Buch 1", book_title="Buch 1", **gemeinsam)
     assert count == 1
-    path2, count2 = append_listing(folder, title="Buch 2", **gemeinsam)
+    path2, count2 = append_listing(folder, title="Buch 2", book_title="Buch 2", **gemeinsam)
     assert path == path2           # gleiche Sammeldatei
     assert count2 == 2
     data = open(path, "rb").read()
@@ -100,46 +100,49 @@ def test_append_listing_sammelt_in_einer_datei(tmp_path):
     assert lines[3].split(";")[0] == "Add"
     assert len(lines) == 4                          # Info + Kopf + 2 Anzeigen
 
-def test_append_listing_ueberschreibt_bei_gleichem_titel(tmp_path):
+def test_append_listing_ueberschreibt_bei_gleichem_autor_buchtitel(tmp_path):
     folder = str(tmp_path)
-    gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
-                     condition_id="5000", picture_urls=["https://x/1.jpg"])
-    # Gleiche Anzeige zweimal mit unterschiedlichem Preis speichern.
-    _, count1 = append_listing(folder, title="Gleicher Titel", price="9.99", **gemeinsam)
-    path, count2 = append_listing(folder, title="Gleicher Titel", price="14.99", **gemeinsam)
+    gemeinsam = dict(author="Goethe", book_title="Faust", language="Deutsch",
+                     description="D", condition_id="5000", picture_urls=["https://x/1.jpg"])
+    # Gleiches Buch (Autor+Buchtitel), aber LEICHT anderer Anzeigentitel + anderer Preis.
+    _, count1 = append_listing(folder, title="Faust gebraucht", price="9.99", **gemeinsam)
+    path, count2 = append_listing(folder, title="Faust – sehr gut", price="14.99", **gemeinsam)
     assert count1 == 1
-    assert count2 == 1                               # nicht angehängt, sondern ersetzt
+    assert count2 == 1                               # ersetzt trotz anderem Anzeigentitel
     lines = open(path, "rb").read().decode("utf-8-sig").splitlines()
     assert len(lines) == 3                           # Info + Kopf + EINE Anzeige
     header = lines[1].split(";")
     row = dict(zip(header, lines[2].split(";")))
     assert row["*StartPrice"] == "14.99"             # der neueste Stand gewann
 
-def test_append_listing_leerer_titel_wird_nicht_zusammengefasst(tmp_path):
+def test_append_listing_ohne_buchtitel_wird_nicht_zusammengefasst(tmp_path):
     folder = str(tmp_path)
-    gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
+    gemeinsam = dict(author="A", book_title="", language="Deutsch", description="D",
                      price="9.99", condition_id="5000", picture_urls=["https://x/1.jpg"])
-    _, c1 = append_listing(folder, title="", **gemeinsam)
-    path, c2 = append_listing(folder, title="", **gemeinsam)
-    assert c1 == 1 and c2 == 2                        # leere Titel zählen nicht als Dublette
+    _, c1 = append_listing(folder, title="X", **gemeinsam)
+    path, c2 = append_listing(folder, title="Y", **gemeinsam)
+    assert c1 == 1 and c2 == 2                        # ohne Buchtitel kein Abgleich
 
-def test_title_exists(tmp_path):
+def test_entry_exists(tmp_path):
     folder = str(tmp_path)
-    gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
-                     price="9.99", condition_id="5000", picture_urls=["https://x/1.jpg"])
-    assert title_exists(folder, "Irgendwas") is False     # Datei existiert noch nicht
-    append_listing(folder, title="Mein Buch", **gemeinsam)
-    assert title_exists(folder, "Mein Buch") is True
-    assert title_exists(folder, "Anderes Buch") is False
-    assert title_exists(folder, "") is False              # leerer Titel nie eine Dublette
+    gemeinsam = dict(language="Deutsch", description="D", price="9.99",
+                     condition_id="5000", picture_urls=["https://x/1.jpg"])
+    assert entry_exists(folder, "Goethe", "Faust") is False     # Datei existiert noch nicht
+    append_listing(folder, title="Faust gebraucht", author="Goethe",
+                   book_title="Faust", **gemeinsam)
+    assert entry_exists(folder, "Goethe", "Faust") is True      # gleicher Autor+Buchtitel
+    assert entry_exists(folder, "goethe", "  faust ") is True   # Groß/Klein + Leerzeichen egal
+    assert entry_exists(folder, "Schiller", "Faust") is False   # anderer Autor
+    assert entry_exists(folder, "Goethe", "Werther") is False   # anderer Buchtitel
+    assert entry_exists(folder, "Goethe", "") is False          # ohne Buchtitel nie Dublette
 
 def test_recent_listings_neueste_zuerst(tmp_path):
     folder = str(tmp_path)
-    gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
+    gemeinsam = dict(author="A", language="Deutsch", description="D",
                      condition_id="5000", picture_urls=["https://x/1.jpg"])
     assert recent_listings(folder) == []                  # noch keine Datei
-    append_listing(folder, title="Erstes", price="1.00", **gemeinsam)
-    append_listing(folder, title="Zweites", price="2.00", **gemeinsam)
+    append_listing(folder, title="Erstes", book_title="Erstes", price="1.00", **gemeinsam)
+    append_listing(folder, title="Zweites", book_title="Zweites", price="2.00", **gemeinsam)
     recent = recent_listings(folder)
     assert [r["title"] for r in recent] == ["Zweites", "Erstes"]   # neueste zuerst
     assert recent[0]["price"] == "2.00"
@@ -147,18 +150,18 @@ def test_recent_listings_neueste_zuerst(tmp_path):
 
 def test_recent_listings_limit(tmp_path):
     folder = str(tmp_path)
-    gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
+    gemeinsam = dict(author="A", language="Deutsch", description="D",
                      price="1.00", condition_id="5000", picture_urls=["https://x/1.jpg"])
     for i in range(15):
-        append_listing(folder, title=f"Buch {i}", **gemeinsam)
+        append_listing(folder, title=f"Buch {i}", book_title=f"Buch {i}", **gemeinsam)
     assert len(recent_listings(folder, limit=10)) == 10
 
 def test_archive_as_file_benennt_um_und_macht_platz(tmp_path):
     folder = str(tmp_path)
-    gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
+    gemeinsam = dict(author="A", language="Deutsch", description="D",
                      price="9.99", condition_id="5000", picture_urls=["https://x/1.jpg"])
-    append_listing(folder, title="Buch 1", **gemeinsam)
-    append_listing(folder, title="Buch 2", **gemeinsam)
+    append_listing(folder, title="Buch 1", book_title="Buch 1", **gemeinsam)
+    append_listing(folder, title="Buch 2", book_title="Buch 2", **gemeinsam)
     count, name = archive_as_file(folder, "Romane")
     assert count == 2
     heute = date.today().isoformat()
@@ -191,10 +194,10 @@ def test_listing_stats_zaehlt_und_summiert(tmp_path):
     from ebay_csv import listing_stats
     folder = str(tmp_path)
     assert listing_stats(folder) == {"count": 0, "total": 0.0}   # keine Datei
-    gemeinsam = dict(author="A", book_title="B", language="Deutsch", description="D",
+    gemeinsam = dict(author="A", language="Deutsch", description="D",
                      condition_id="5000", picture_urls=["https://x/1.jpg"])
-    append_listing(folder, title="Eins", price="9.99", **gemeinsam)
-    append_listing(folder, title="Zwei", price="14.50", **gemeinsam)
+    append_listing(folder, title="Eins", book_title="Eins", price="9.99", **gemeinsam)
+    append_listing(folder, title="Zwei", book_title="Zwei", price="14.50", **gemeinsam)
     s = listing_stats(folder)
     assert s["count"] == 2
     assert s["total"] == 24.49
