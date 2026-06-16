@@ -141,10 +141,19 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 .chat-eingabe button { white-space: nowrap; }
 .overview-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
 .overview-dialog h3 { margin: 1rem 0 .3rem; font-size: 1rem; }
-.ov-list { list-style: none; padding-left: 0; margin: 0; }
-.ov-row { display: flex; align-items: center; gap: .5rem; margin-bottom: .35rem; }
-.ov-info { flex: 1; word-break: break-word; }
-.ov-row button { padding: .25rem .6rem; font-size: .85rem; white-space: nowrap; }
+/* Suchfeld oben im Übersicht-Fenster (filtert alle Tabellen). */
+.ov-search { width: 100%; box-sizing: border-box; margin: .2rem 0 1rem;
+  padding: .55rem .7rem; font-size: 1rem; border: 1px solid #c9c3b5; border-radius: 8px; }
+/* Status-Tabellen: Eintrag · Info · Aktionen, mit Zebra-Streifen. */
+.ov-table { width: 100%; border-collapse: collapse; margin: 0 0 .3rem; }
+.ov-table td { padding: .35rem .4rem; font-size: .9rem; vertical-align: top;
+  border-bottom: 1px solid #eceae4; }
+.ov-table tr:nth-child(even) td { background: #faf9f6; }
+.ovt-name { word-break: break-word; }
+.ovt-info { white-space: nowrap; color: #555; }
+.ovt-act { text-align: right; white-space: nowrap; width: 1%; }
+.ovt-act button { padding: .2rem .5rem; font-size: .8rem;
+  margin: 0 0 .15rem .25rem; }
 /* Kurze Erklärzeile direkt unter einer Status-Überschrift. */
 .ov-help { margin: 0 0 .4rem; }
 .up-summary { font-size: .95rem; color: #444; margin: .2rem 0 .6rem; }

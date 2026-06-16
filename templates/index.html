@@ -176,21 +176,23 @@
     <form method="dialog">
       <h2>Übersicht &amp; Verwaltung</h2>
       <button id="ov-to-upload-btn" type="button" class="menu-link">📤 → Zum Upload</button>
+      <input id="ov-search" type="search" class="ov-search"
+             placeholder="🔍 Suchen (Autor oder Titel) …" autocomplete="off">
       <h3>🛠️ In Arbeit <span id="ov-cases-count" class="sub"></span></h3>
       <p class="sub ov-help">Begonnen, noch nicht fertig.</p>
-      <ul id="ov-cases" class="ov-list"></ul>
+      <table class="ov-table"><tbody id="ov-cases"></tbody></table>
       <h3>⏸️ Zurückgehalten <span id="ov-held-count" class="sub"></span></h3>
       <p class="sub ov-help">Fertig gespeichert, aber noch nicht zum Hochladen freigegeben.</p>
-      <ul id="ov-held" class="ov-list"></ul>
+      <table class="ov-table"><tbody id="ov-held"></tbody></table>
       <h3>✅ Freigegeben (in der Sammeldatei) <span id="ov-listings-count" class="sub"></span></h3>
       <p class="sub ov-help">Stehen in der Sammeldatei und werden beim nächsten Upload hochgeladen.</p>
-      <ul id="ov-listings" class="ov-list"></ul>
+      <table class="ov-table"><tbody id="ov-listings"></tbody></table>
       <h3>🗄️ Archivierte Einträge <span id="ov-archived-count" class="sub"></span></h3>
       <p class="sub ov-help">Weggeräumt, aber wiederherstellbar. Werden nicht hochgeladen.</p>
-      <ul id="ov-archived" class="ov-list"></ul>
+      <table class="ov-table"><tbody id="ov-archived"></tbody></table>
       <h3>📁 Archivierte Sammeldateien <span id="ov-archives-count" class="sub"></span></h3>
       <p class="sub ov-help">Früher abgeschlossene Sammeldateien (ganze CSV-Dateien).</p>
-      <ul id="ov-archives" class="ov-list"></ul>
+      <table class="ov-table"><tbody id="ov-archives"></tbody></table>
       <menu>
         <button value="cancel">Schließen</button>
       </menu>

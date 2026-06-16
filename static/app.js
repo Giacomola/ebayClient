@@ -647,29 +647,68 @@ const overviewDlg = $("overview-dialog");
 function euro(n) {
   return (n || 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
-// Baut eine Zeile mit Text + beliebig vielen Knöpfen ([{text, onClick, cls}]).
-function ovRow(text, knoepfe) {
-  const li = document.createElement("li");
-  li.className = "ov-row";
-  const info = document.createElement("span");
-  info.className = "ov-info";
-  info.textContent = text;
-  li.appendChild(info);
+// Baut eine Tabellenzeile: Name · Info · Aktionsknöpfe ([{text, onClick, cls}]).
+// data-search hält Name+Info klein geschrieben für die Suche.
+function ovtRow(name, info, knoepfe) {
+  const tr = document.createElement("tr");
+  tr.dataset.search = `${name} ${info}`.toLowerCase();
+  const tdN = document.createElement("td");
+  tdN.className = "ovt-name";
+  tdN.textContent = name;
+  const tdI = document.createElement("td");
+  tdI.className = "ovt-info";
+  tdI.textContent = info;
+  const tdA = document.createElement("td");
+  tdA.className = "ovt-act";
   for (const k of (knoepfe || [])) {
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = k.text;
     if (k.cls) b.className = k.cls;
     b.addEventListener("click", k.onClick);
-    li.appendChild(b);
+    tdA.appendChild(b);
   }
-  return li;
+  tr.append(tdN, tdI, tdA);
+  return tr;
 }
-function ovHinweis(text) {
-  const li = document.createElement("li");
-  li.className = "sub";
-  li.textContent = text;
-  return li;
+// Leerzeile (keine Einträge) bzw. „keine Treffer"-Zeile (vom Filter gesteuert).
+function ovEmptyRow(text) {
+  const tr = document.createElement("tr");
+  tr.className = "ov-empty";
+  const td = document.createElement("td");
+  td.colSpan = 3; td.className = "sub"; td.textContent = text;
+  tr.appendChild(td);
+  return tr;
+}
+function ovNoResultRow() {
+  const tr = document.createElement("tr");
+  tr.className = "ov-noresult"; tr.hidden = true;
+  const td = document.createElement("td");
+  td.colSpan = 3; td.className = "sub"; td.textContent = "Keine Treffer.";
+  tr.appendChild(td);
+  return tr;
+}
+// Füllt eine Tabelle (tbody-id) mit Zeilen; hängt Leer- bzw. Treffer-Zeile an.
+function fillTable(id, items, rowFn, leerText) {
+  const tb = $(id);
+  tb.innerHTML = "";
+  for (const it of items) tb.appendChild(rowFn(it));
+  tb.appendChild(items.length ? ovNoResultRow() : ovEmptyRow(leerText));
+}
+// Filtert alle Tabellen im Übersicht-Fenster nach dem Suchtext.
+function ovFilter() {
+  const q = ($("ov-search").value || "").trim().toLowerCase();
+  document.querySelectorAll("#overview-dialog tbody").forEach((tb) => {
+    const rows = tb.querySelectorAll("tr[data-search]");
+    let sichtbar = 0;
+    rows.forEach((tr) => {
+      const treffer = !q || tr.dataset.search.includes(q);
+      tr.hidden = !treffer;
+      if (treffer) sichtbar++;
+    });
+    const nores = tb.querySelector("tr.ov-noresult");
+    if (nores) nores.hidden = !(rows.length > 0 && sichtbar === 0);
+  });
 }
 function ovCount(n, ein, mehr) {
   return n ? `– ${n} ${n === 1 ? ein : mehr}` : "– keine";
@@ -710,86 +749,74 @@ async function renderOverview() {
   // 🛠️ In Arbeit (offene Fälle)
   const cases = d.active_cases || [];
   $("ov-cases-count").textContent = ovCount(cases.length, "Fall", "Fälle");
-  const ulC = $("ov-cases"); ulC.innerHTML = "";
-  for (const c of cases) {
-    ulC.appendChild(ovRow(`${c.name} · ${ovFotos(c)}`, [
+  fillTable("ov-cases", cases, (c) =>
+    ovtRow(c.name, `${ovFotos(c)} · ${formatDatum(c.saved_at)}`, [
       { text: "Bearbeiten", onClick: () => openCase(c.id) },
       aktArchivieren(c.id),
       aktLoeschen(c.id, c.name, " Das lässt sich nicht rückgängig machen."),
-    ]));
-  }
-  if (!cases.length) ulC.appendChild(ovHinweis("Keine begonnenen Fälle."));
+    ]), "Keine begonnenen Fälle.");
 
   // ⏸️ Zurückgehalten (fertig, aber nicht hochgeladen)
   const held = d.held_cases || [];
   $("ov-held-count").textContent = ovCount(held.length, "Eintrag", "Einträge");
-  const ulH = $("ov-held"); ulH.innerHTML = "";
-  for (const c of held) {
-    ulH.appendChild(ovRow(`${c.name} · ${ovFotos(c)}`, [
+  fillTable("ov-held", held, (c) =>
+    ovtRow(c.name, `${ovFotos(c)} · ${formatDatum(c.saved_at)}`, [
       { text: "Bearbeiten", onClick: () => openCase(c.id) },
       { text: "Freigeben", cls: "case-go", onClick: () =>
           caseAction(c.id, "freigeben", "Eintrag freigegeben – jetzt in der Sammeldatei.") },
       aktArchivieren(c.id),
       aktLoeschen(c.id, c.name),
-    ]));
-  }
-  if (!held.length) ulH.appendChild(ovHinweis("Nichts zurückgehalten."));
+    ]), "Nichts zurückgehalten.");
 
   // ✅ Freigegeben (in der Sammeldatei)
   const stats = d.stats || { count: 0, total: 0 };
   $("ov-listings-count").textContent = stats.count
     ? `– ${stats.count} ${stats.count === 1 ? "Anzeige" : "Anzeigen"} · ${euro(stats.total)}`
     : "– keine";
-  const ulL = $("ov-listings"); ulL.innerHTML = "";
-  for (const item of d.listings || []) {
-    const preis = item.price ? ` – ${item.price} EUR` : "";
-    const text = (item.title || "(ohne Titel)") + preis;
+  fillTable("ov-listings", d.listings || [], (item) => {
+    const info = item.price ? `${item.price} EUR` : "";
+    const name = item.title || "(ohne Titel)";
     if (item.case_id) {
       const id = item.case_id;
-      ulL.appendChild(ovRow(text, [
+      return ovtRow(name, info, [
         { text: "Bearbeiten", onClick: () => openCase(id) },
         { text: "Zurückziehen", onClick: () =>
             caseAction(id, "zurueckziehen",
               "Eintrag zurückgezogen – nicht mehr in der Sammeldatei.") },
         aktArchivieren(id),
-        aktLoeschen(id, item.title || "", " Auch die CSV-Zeile wird entfernt."),
-      ]));
-    } else {
-      ulL.appendChild(ovRow(text));
+        aktLoeschen(id, name, " Auch die CSV-Zeile wird entfernt."),
+      ]);
     }
-  }
-  if (!(d.listings || []).length)
-    ulL.appendChild(ovHinweis("Noch nichts in der Sammeldatei."));
+    return ovtRow(name, info, []);
+  }, "Noch nichts in der Sammeldatei.");
 
   // 🗄️ Archivierte Einträge (weggeräumt, wiederherstellbar)
   const archd = d.archived_cases || [];
   $("ov-archived-count").textContent = ovCount(archd.length, "Eintrag", "Einträge");
-  const ulAd = $("ov-archived"); ulAd.innerHTML = "";
-  for (const c of archd) {
-    ulAd.appendChild(ovRow(`${c.name} · ${ovFotos(c)}`, [
+  fillTable("ov-archived", archd, (c) =>
+    ovtRow(c.name, `${ovFotos(c)} · ${formatDatum(c.saved_at)}`, [
       { text: "Wiederherstellen", cls: "case-go", onClick: () =>
           caseAction(c.id, "wiederherstellen",
             "Eintrag wiederhergestellt (zurückgehalten).") },
       aktLoeschen(c.id, c.name, " Endgültig."),
-    ]));
-  }
-  if (!archd.length) ulAd.appendChild(ovHinweis("Keine archivierten Einträge."));
+    ]), "Keine archivierten Einträge.");
 
   // 📁 Archivierte Sammeldateien (ganze CSVs, nur zur Info)
   const arch = d.archives || [];
   $("ov-archives-count").textContent = ovCount(arch.length, "Datei", "Dateien");
-  const ulA = $("ov-archives"); ulA.innerHTML = "";
-  for (const a of arch) {
-    const anz = a.count === 1 ? "1 Anzeige" : `${a.count} Anzeigen`;
-    ulA.appendChild(ovHinweis(`${a.filename} · ${anz} · ${euro(a.total)}`));
-  }
-  if (!arch.length) ulA.appendChild(ovHinweis("Noch nichts archiviert."));
+  fillTable("ov-archives", arch, (a) =>
+    ovtRow(a.filename,
+      `${a.count === 1 ? "1 Anzeige" : a.count + " Anzeigen"} · ${euro(a.total)}`, []),
+    "Noch nichts archiviert.");
+
+  ovFilter();   // aktiven Suchtext nach dem Neuaufbau wieder anwenden
 }
 async function openOverview() {
   await renderOverview();
   overviewDlg.showModal();
 }
 on("overview-btn", "click", openOverview);
+on("ov-search", "input", ovFilter);
 
 // --- „Zum Upload"-Fenster: alles rund ums Hochladen gebündelt -----------------
 const uploadDlg = $("upload-dialog");
