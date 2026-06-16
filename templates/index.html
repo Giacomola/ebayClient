@@ -124,17 +124,7 @@
       </div>
     </section>
 
-    <section id="recent" class="info-box recent" hidden>
-      <h3>Noch nicht hochgeladen <span id="recent-stats" class="sub"></span></h3>
-      <ul id="recent-list"></ul>
-      <a id="ebay-upload-link" class="ebay-upload-btn"
-         href="https://www.ebay.de/sh/reports/uploads">📤 Bei eBay hochladen (Upload-Seite öffnen)</a>
-      <button id="open-folder-btn" type="button">📁 Speicherordner öffnen</button>
-      <p class="hint">So lädst du hoch: Auf „📤 Bei eBay hochladen" klicken, dort die
-        Datei <b>ebay-anzeigen.csv</b> aus deinem Speicherordner auswählen. Mit
-        „📁 Speicherordner öffnen" zeigt dir der Computer, wo diese Datei liegt.</p>
-      <button id="archive-file-btn" type="button">Sammeldatei archivieren &amp; neu beginnen</button>
-    </section>
+    <button id="upload-btn" type="button" class="upload-cta">📤 Zum Upload<span id="upload-count"></span></button>
 
     <button id="quit-btn" type="button" class="quit">Programm beenden</button>
   </main>
@@ -156,18 +146,50 @@
     </div>
   </section>
 
+  <dialog id="upload-dialog" class="overview-dialog">
+    <form method="dialog">
+      <h2>📤 Zum Upload</h2>
+
+      <h3>Noch nicht hochgeladen <span id="recent-stats" class="sub"></span></h3>
+      <ul id="recent-list" class="ov-list"></ul>
+
+      <h3>Hochladen &amp; Speicherort</h3>
+      <a id="ebay-upload-link" class="ebay-upload-btn"
+         href="https://www.ebay.de/sh/reports/uploads">📤 Bei eBay hochladen (Upload-Seite öffnen)</a>
+      <button id="open-folder-btn" type="button">📁 Speicherordner öffnen</button>
+      <p class="hint">So lädst du hoch: Auf „📤 Bei eBay hochladen" klicken, dort die
+        Datei <b>ebay-anzeigen.csv</b> aus deinem Speicherordner auswählen. Mit
+        „📁 Speicherordner öffnen" zeigt dir der Computer, wo diese Datei liegt.</p>
+      <button id="archive-file-btn" type="button">Sammeldatei archivieren &amp; neu beginnen</button>
+
+      <h3>Stand nach Status</h3>
+      <p id="up-status-summary" class="up-summary sub"></p>
+      <button id="up-manage-btn" type="button">Einträge verwalten …</button>
+
+      <menu>
+        <button value="cancel">Schließen</button>
+      </menu>
+    </form>
+  </dialog>
+
   <dialog id="overview-dialog" class="overview-dialog">
     <form method="dialog">
       <h2>Übersicht &amp; Verwaltung</h2>
+      <button id="ov-to-upload-btn" type="button" class="menu-link">📤 → Zum Upload</button>
       <h3>🛠️ In Arbeit <span id="ov-cases-count" class="sub"></span></h3>
+      <p class="sub ov-help">Begonnen, noch nicht fertig.</p>
       <ul id="ov-cases" class="ov-list"></ul>
       <h3>⏸️ Zurückgehalten <span id="ov-held-count" class="sub"></span></h3>
+      <p class="sub ov-help">Fertig gespeichert, aber noch nicht zum Hochladen freigegeben.</p>
       <ul id="ov-held" class="ov-list"></ul>
       <h3>✅ Freigegeben (in der Sammeldatei) <span id="ov-listings-count" class="sub"></span></h3>
+      <p class="sub ov-help">Stehen in der Sammeldatei und werden beim nächsten Upload hochgeladen.</p>
       <ul id="ov-listings" class="ov-list"></ul>
       <h3>🗄️ Archivierte Einträge <span id="ov-archived-count" class="sub"></span></h3>
+      <p class="sub ov-help">Weggeräumt, aber wiederherstellbar. Werden nicht hochgeladen.</p>
       <ul id="ov-archived" class="ov-list"></ul>
       <h3>📁 Archivierte Sammeldateien <span id="ov-archives-count" class="sub"></span></h3>
+      <p class="sub ov-help">Früher abgeschlossene Sammeldateien (ganze CSV-Dateien).</p>
       <ul id="ov-archives" class="ov-list"></ul>
       <menu>
         <button value="cancel">Schließen</button>

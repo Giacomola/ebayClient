@@ -791,6 +791,27 @@ async function openOverview() {
 }
 on("overview-btn", "click", openOverview);
 
+// --- „Zum Upload"-Fenster: alles rund ums Hochladen gebündelt -----------------
+const uploadDlg = $("upload-dialog");
+async function openUpload() {
+  await loadRecent();   // „Noch nicht hochgeladen"-Liste + Zähler füllen
+  // Kompakter Stand nach Status (eine Zeile) aus der Übersicht.
+  try {
+    const d = await (await fetch("/api/overview")).json();
+    const a = (d.active_cases || []).length;
+    const h = (d.held_cases || []).length;
+    const f = (d.stats || {}).count || 0;
+    const ar = (d.archived_cases || []).length;
+    $("up-status-summary").textContent =
+      `🛠️ In Arbeit: ${a} · ⏸️ Zurückgehalten: ${h} · ✅ Freigegeben: ${f} · 🗄️ Archiviert: ${ar}`;
+  } catch (e) { $("up-status-summary").textContent = ""; }
+  uploadDlg.showModal();
+}
+on("upload-btn", "click", openUpload);
+// Querverweise zwischen den beiden Fenstern (immer erst schließen, dann öffnen).
+on("up-manage-btn", "click", () => { uploadDlg.close(); openOverview(); });
+on("ov-to-upload-btn", "click", () => { overviewDlg.close(); openUpload(); });
+
 // --- Fragen-Fenster: einfacher Chat mit der KI ------------------------------
 const chatPanel = $("chat-panel");
 let chatVerlauf = [];   // [{role:"user"|"assistant", content:"…"}]
@@ -956,10 +977,12 @@ async function loadRecent() {
       const wort = stats.count === 1 ? "Anzeige" : "Anzeigen";
       statsEl.textContent = `– ${stats.count} ${wort} bereit · Summe Startpreise ${summe}`;
     } else {
-      statsEl.textContent = "";
+      statsEl.textContent = "Noch nichts in der Sammeldatei.";
     }
   }
-  $("recent").hidden = (data.stats ? data.stats.count : list.children.length) === 0;
+  // Zähler direkt am roten „Zum Upload"-Knopf, damit man bereitliegende Anzeigen sieht.
+  const badge = $("upload-count");
+  if (badge) badge.textContent = stats.count ? ` · ${stats.count} bereit` : "";
 }
 
 // Speichert die aktuelle Anzeige in die Sammeldatei. overwrite=true erst senden,
