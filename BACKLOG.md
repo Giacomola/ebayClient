@@ -47,6 +47,8 @@ _Bewusst auf später verschoben — nicht ohne Ansage starten._
 ## ✅ Erledigt
 _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 
+- [x] 2026-06-16 Aktualisieren-Knopf live getestet (POST /api/update: 59 Dateien, ok). Dabei zwei Befunde: (1) Selbst-Update verlor das Ausführbar-Bit der .command-Skripte → behoben, apply_update setzt nun +x für .command/.sh (updater.py, Test) `0b0b2f8`; (2) iCloud-Konflikt-Kopien beim Überschreiben vieler Dateien (umgebungsbedingt, kein Code-Fehler; Vater nicht in OneDrive installieren). `main` auf GitHub aktualisiert; Export-ZIP neu gebaut.
+
 - [x] 2026-06-16 „Programm aktualisieren"-Knopf in den Einstellungen (Abschnitt 🔄): ruft das schon vorhandene Backend `/api/update` auf (holt neuesten Stand vom `main`-Branch, sichert vorher, rollt bei Fehlern zurück), fragt vorher per Bestätigung, zeigt Fortschritt/Ergebnis + Neustart-Hinweis (index.html, app.js, chat_wissen.txt) `abe2b02`.
 - [x] 2026-06-16 Entwurf-Preis-Fix vertieft: Preis schon beim Schreiben der vollen Datei auf Punkt normiert, bestehende Zeilen heilen sich beim Neuschreiben (ebay_csv.py, Tests) `81a7c91`; Entwurf-Export normiert zusätzlich (`58947ff`). Behebt eBay-Entwurf-Fehler „Could not serialize field [manifest.msrp]". Live bestätigt: Entwürfe gehen durch.
 
