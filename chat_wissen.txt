@@ -104,6 +104,11 @@ Mögliche Aktionen je Eintrag (es erscheinen nur die passenden):
   CSV, wird auch die CSV-Zeile entfernt.
 
 == Einstellungen ==
+Die Einstellungen sind in aufklappbare Abschnitte gegliedert (auf die Überschrift
+klicken zum Auf- oder Zuklappen): „Modelle & Schlüssel" (Rechenleistung, Anthropic-
+und imgbb-Schlüssel, KI-Modelle), „Recherche-Quellen" (Primärquellen), „Verkauf &
+Versand" (Hochlade-Verhalten, Standort, Versandkosten) und ganz unten „Anweisungen
+zur Textgenerierung". Die einzelnen Punkte:
 - „Anweisungen bearbeiten": legt fest, wie die KI Titel und Beschreibung schreibt
   (allgemeine Regeln und je Feld eine Anweisung; optional eine Beispiel-Beschreibung
   als Stilvorlage).

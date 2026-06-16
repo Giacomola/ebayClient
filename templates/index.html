@@ -200,55 +200,72 @@
   <dialog id="settings-dialog">
     <form method="dialog">
       <h2>Einstellungen</h2>
-      <button id="open-prompt-btn" type="button" class="menu-link">📝 Anweisungen bearbeiten …</button>
-      <p class="hint">Legt fest, wie die KI Titel und Beschreibung schreibt.</p>
-      <label>Rechenleistung
-        <select id="s-ki-backend">
-          <option value="api_key">API-Schlüssel (pro Nutzung bezahlt)</option>
-          <option value="abo">Claude-Abo (Monatsguthaben, kein Schlüssel nötig)</option>
-        </select>
-      </label>
-      <p class="hint" id="ki-backend-hint"></p>
-      <label>Anthropic-API-Schlüssel <input id="s-anthropic" type="password"></label>
-      <label>imgbb-API-Schlüssel <input id="s-imgbb" type="password"></label>
-      <label>KI-Modell für die Texte
-        <select id="s-model-text">
-          <option value="claude-haiku-4-5">Haiku (am günstigsten)</option>
-          <option value="claude-sonnet-4-6">Sonnet (ausgewogen)</option>
-          <option value="claude-opus-4-8">Opus (beste Texte)</option>
-        </select>
-      </label>
-      <label>KI-Modell für die Preissuche
-        <select id="s-model-price">
-          <option value="claude-haiku-4-5">Haiku (am günstigsten)</option>
-          <option value="claude-sonnet-4-6">Sonnet (schnell)</option>
-          <option value="claude-opus-4-8">Opus (stärker)</option>
-        </select>
-      </label>
-      <label>KI-Modell für das Fragen-Fenster
-        <select id="s-model-chat">
-          <option value="claude-haiku-4-5">Haiku (am günstigsten)</option>
-          <option value="claude-sonnet-4-6">Sonnet (ausgewogen)</option>
-          <option value="claude-opus-4-8">Opus (beste Antworten)</option>
-        </select>
-      </label>
-      <fieldset class="src-fieldset">
-        <legend>Primärquellen für die Recherche</legend>
-        <div id="primary-sources"></div>
-        <p class="hint">Zahl = Priorität (1 = zuerst). Leer lassen = Quelle wird nicht genutzt.
-          Zustand &amp; sichtbare Beschreibung kommen immer aus deinen Fotos, nicht aus diesen Quellen.</p>
-      </fieldset>
-      <label>Beim Hochladen zu eBay
-        <select id="s-upload-action">
-          <option value="draft">Als Entwurf speichern (empfohlen)</option>
-          <option value="add">Sofort einstellen</option>
-        </select>
-      </label>
-      <p class="hint">„Entwurf" legt die Angebote in deinem eBay-Entwürfe-Ordner ab –
-        nichts geht ungewollt sofort online; du aktivierst sie dort selbst.
-        „Sofort einstellen" veröffentlicht sie direkt beim Hochladen.</p>
-      <label>Standort <input id="s-location" value="Berlin"></label>
-      <label>Versandkosten <input id="s-shipping_cost" value="5.49"></label>
+
+      <details class="set-section">
+        <summary>⚙ Modelle &amp; Schlüssel</summary>
+        <label>Rechenleistung
+          <select id="s-ki-backend">
+            <option value="api_key">API-Schlüssel (pro Nutzung bezahlt)</option>
+            <option value="abo">Claude-Abo (Monatsguthaben, kein Schlüssel nötig)</option>
+          </select>
+        </label>
+        <p class="hint" id="ki-backend-hint"></p>
+        <label>Anthropic-API-Schlüssel <input id="s-anthropic" type="password"></label>
+        <label>imgbb-API-Schlüssel <input id="s-imgbb" type="password"></label>
+        <label>KI-Modell für die Texte
+          <select id="s-model-text">
+            <option value="claude-haiku-4-5">Haiku (am günstigsten)</option>
+            <option value="claude-sonnet-4-6">Sonnet (ausgewogen)</option>
+            <option value="claude-opus-4-8">Opus (beste Texte)</option>
+          </select>
+        </label>
+        <label>KI-Modell für die Preissuche
+          <select id="s-model-price">
+            <option value="claude-haiku-4-5">Haiku (am günstigsten)</option>
+            <option value="claude-sonnet-4-6">Sonnet (schnell)</option>
+            <option value="claude-opus-4-8">Opus (stärker)</option>
+          </select>
+        </label>
+        <label>KI-Modell für das Fragen-Fenster
+          <select id="s-model-chat">
+            <option value="claude-haiku-4-5">Haiku (am günstigsten)</option>
+            <option value="claude-sonnet-4-6">Sonnet (ausgewogen)</option>
+            <option value="claude-opus-4-8">Opus (beste Antworten)</option>
+          </select>
+        </label>
+      </details>
+
+      <details class="set-section">
+        <summary>🔎 Recherche-Quellen</summary>
+        <fieldset class="src-fieldset">
+          <legend>Primärquellen für die Recherche</legend>
+          <div id="primary-sources"></div>
+          <p class="hint">Zahl = Priorität (1 = zuerst). Leer lassen = Quelle wird nicht genutzt.
+            Zustand &amp; sichtbare Beschreibung kommen immer aus deinen Fotos, nicht aus diesen Quellen.</p>
+        </fieldset>
+      </details>
+
+      <details class="set-section">
+        <summary>📦 Verkauf &amp; Versand</summary>
+        <label>Beim Hochladen zu eBay
+          <select id="s-upload-action">
+            <option value="draft">Als Entwurf speichern (empfohlen)</option>
+            <option value="add">Sofort einstellen</option>
+          </select>
+        </label>
+        <p class="hint">„Entwurf" legt die Angebote in deinem eBay-Entwürfe-Ordner ab –
+          nichts geht ungewollt sofort online; du aktivierst sie dort selbst.
+          „Sofort einstellen" veröffentlicht sie direkt beim Hochladen.</p>
+        <label>Standort <input id="s-location" value="Berlin"></label>
+        <label>Versandkosten <input id="s-shipping_cost" value="5.49"></label>
+      </details>
+
+      <details class="set-section">
+        <summary>📝 Anweisungen zur Textgenerierung</summary>
+        <button id="open-prompt-btn" type="button" class="menu-link">📝 Anweisungen bearbeiten …</button>
+        <p class="hint">Legt fest, wie die KI Titel und Beschreibung schreibt.</p>
+      </details>
+
       <menu>
         <button id="s-save" value="save">Speichern</button>
         <button value="cancel">Abbrechen</button>

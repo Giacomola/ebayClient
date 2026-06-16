@@ -150,6 +150,15 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 .up-summary { font-size: .95rem; color: #444; margin: .2rem 0 .6rem; }
 .hint { font-size: .85rem; color: #6b665c; margin: 0 0 1rem; }
 .menu-link { width: 100%; text-align: left; font-weight: 600; margin-bottom: .2rem; }
+/* Aufklappbare Abschnitte im Einstellungen-Dialog. */
+.set-section { border: 1px solid #e3e0d8; border-radius: 8px; margin-bottom: .7rem;
+  padding: 0 .8rem; background: #faf9f6; }
+.set-section > summary { cursor: pointer; font-weight: 600; padding: .7rem .2rem;
+  list-style: none; user-select: none; }
+.set-section > summary::-webkit-details-marker { display: none; }
+.set-section > summary::before { content: "▸ "; color: #8a857a; }
+.set-section[open] > summary::before { content: "▾ "; }
+.set-section[open] { padding-bottom: .6rem; }
 /* Großer roter Knopf ganz unten: führt zum „Zum Upload"-Fenster. */
 .upload-cta { display: block; width: 100%; margin: 1.5rem 0 .5rem;
   padding: .9rem 1.1rem; font-size: 1.15rem; font-weight: 600;
