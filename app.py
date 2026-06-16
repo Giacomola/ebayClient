@@ -12,13 +12,14 @@ from price_analysis import analyze_price
 from web_ai import chat
 from derive_instructions import derive_from_example
 from image_host import upload_image
-from ebay_csv import (append_listing, entry_exists, title_for,
+from ebay_csv import (append_listing, entry_exists, remove_listing, title_for,
                       recent_listings, listing_stats, list_archives,
                       archive_as_file, DEFAULT_FILENAME)
 from draft import (load_draft, update_fields, update_images, clear_draft,
                    save_draft, mark_completed, update_price_result, EMPTY)
 from cases import (list_cases, save_case, load_case, delete_case,
-                   find_csv_case_id, case_status, delete_in_csv_cases)
+                   find_csv_case_id, case_status, set_case_status,
+                   delete_in_csv_cases)
 
 # Port, auf dem das Programm läuft (auch in der Handy-Adresse verwendet).
 PORT = 5050
@@ -39,6 +40,33 @@ def _has_content(draft: dict) -> bool:
         return True
     return any(isinstance(v, str) and v.strip()
                for v in draft.get("fields", {}).values())
+
+# Die 10 Anzeige-Felder eines Falls (genau die, die in die CSV einfließen).
+CASE_FIELDS = ("title", "author", "book_title", "language", "publisher",
+               "publication_year", "book_format", "description",
+               "price", "condition_id")
+
+def _data_url_bytes(data_url: str) -> bytes:
+    """Holt die rohen Bilddaten aus einem gespeicherten data:-URL zurück."""
+    komma = data_url.find(",")
+    return base64.standard_b64decode(data_url[komma + 1:])
+
+def _append_from_fields(folder, fields, picture_urls, settings):
+    """Schreibt eine Anzeige aus einem Feld-Wörterbuch in die Sammeldatei
+    (gleiche Logik wie beim normalen Erstellen). Gibt (Pfad, Anzahl) zurück."""
+    aktion = "Add" if settings.get("upload_action") == "add" else "Draft"
+    return append_listing(
+        folder, action=aktion,
+        title=fields.get("title", ""), author=fields.get("author", ""),
+        book_title=fields.get("book_title", ""), language=fields.get("language", ""),
+        description=fields.get("description", ""), price=fields.get("price", ""),
+        condition_id=fields.get("condition_id", ""), picture_urls=picture_urls,
+        publisher=fields.get("publisher", ""),
+        publication_year=fields.get("publication_year", ""),
+        book_format=fields.get("book_format", ""),
+        location=settings["location"], shipping_service=settings["shipping_service"],
+        shipping_cost=settings["shipping_cost"],
+        dispatch_time_max=settings["dispatch_time_max"])
 
 def _handy_qr_svg(url: str) -> str:
     """Erzeugt einen QR-Code als SVG-Text (skaliert sauber, braucht kein Pillow).
@@ -274,9 +302,103 @@ def create_app(config_path: str = "config.json",
             delete_case(case_id, cases_dir)
         return jsonify({"ok": True})
 
+    def _remove_csv_row(case_id):
+        """Entfernt die CSV-Zeile eines „in Sammeldatei"-Falls (falls ein Ordner gesetzt
+        ist). Tut nichts, wenn der Fall nicht in der CSV steht."""
+        target = load_case(case_id, cases_dir) or {}
+        fields = target.get("fields", {})
+        folder = load_settings(config_path).get("save_folder", "")
+        if folder:
+            remove_listing(folder, fields.get("author", ""), fields.get("book_title", ""))
+
     @app.post("/api/cases/<case_id>/delete")
     def remove_case(case_id):
+        # War der Fall in der Sammeldatei, auch dessen CSV-Zeile entfernen.
+        if case_status(case_id, cases_dir) == "in_csv":
+            _remove_csv_row(case_id)
         return jsonify({"ok": delete_case(case_id, cases_dir)})
+
+    @app.post("/api/draft/zurueckhalten")
+    def post_draft_zurueckhalten():
+        """„Zurückhalten": aktuellen Entwurf fertig speichern, aber NICHT freigeben.
+        Er landet als Fall mit Status „zurückgehalten" (nicht in der Upload-CSV)."""
+        d = load_draft(draft_path)
+        if not _has_content(d):
+            return jsonify({"error": "Der Entwurf ist leer – nichts zum Zurückhalten."}), 400
+        save_case(d, cases_dir, status="zurückgehalten")
+        clear_draft(draft_path)
+        return jsonify({"ok": True})
+
+    @app.post("/api/cases/<case_id>/freigeben")
+    def freigeben_case(case_id):
+        """Gibt einen zurückgehaltenen Eintrag frei: Fotos zu imgbb hochladen, Zeile in
+        die Sammeldatei schreiben, Status → in_csv."""
+        if case_status(case_id, cases_dir) != "zurückgehalten":
+            return jsonify({"error": "Nur zurückgehaltene Einträge können "
+                                     "freigegeben werden."}), 400
+        settings = load_settings(config_path)
+        if not settings["imgbb_api_key"]:
+            return jsonify({"error": "Kein imgbb-API-Schlüssel hinterlegt. "
+                                     "Bitte in den Einstellungen eintragen."}), 400
+        folder = settings.get("save_folder", "")
+        if not folder:
+            return jsonify({"error": "Kein Speicherordner gewählt. "
+                                     "Bitte zuerst auf 'Ordner wählen' klicken."}), 400
+        target = load_case(case_id, cases_dir) or {}
+        fields = target.get("fields", {})
+        images = target.get("images", [])
+        if not images:
+            return jsonify({"error": "Im Eintrag sind keine Fotos vorhanden."}), 400
+        try:
+            urls = [upload_image(_data_url_bytes(im["data_url"]),
+                                 settings["imgbb_api_key"]) for im in images]
+        except Exception as e:  # noqa: BLE001
+            return jsonify({"error": f"Foto-Upload fehlgeschlagen: {e}"}), 502
+        try:
+            path, count = _append_from_fields(folder, fields, urls, settings)
+        except Exception as e:  # noqa: BLE001
+            return jsonify({"error": f"Datei konnte nicht gespeichert werden: {e}"}), 500
+        csv_title = title_for(fields.get("title", ""))
+        # Einen anderen „in Sammeldatei"-Fall mit gleichem Titel aufräumen.
+        if csv_title:
+            alt = find_csv_case_id(csv_title, cases_dir)
+            if alt and alt != case_id:
+                delete_case(alt, cases_dir)
+        set_case_status(case_id, "in_csv", cases_dir, csv_title=csv_title)
+        return jsonify({"ok": True, "count": count})
+
+    @app.post("/api/cases/<case_id>/zurueckziehen")
+    def zurueckziehen_case(case_id):
+        """Zieht einen freigegebenen Eintrag aus der Sammeldatei zurück (Status →
+        zurückgehalten); die Fotos/Felder bleiben im Fall erhalten."""
+        if case_status(case_id, cases_dir) != "in_csv":
+            return jsonify({"error": "Nur freigegebene Einträge können "
+                                     "zurückgezogen werden."}), 400
+        _remove_csv_row(case_id)
+        set_case_status(case_id, "zurückgehalten", cases_dir, csv_title="")
+        return jsonify({"ok": True})
+
+    @app.post("/api/cases/<case_id>/archivieren")
+    def archivieren_case(case_id):
+        """Räumt einen Eintrag weg (Status → archiviert). War er freigegeben, wird
+        seine CSV-Zeile entfernt – Archiviertes wird nie hochgeladen."""
+        st = case_status(case_id, cases_dir)
+        if st is None:
+            return jsonify({"error": "Eintrag nicht gefunden."}), 404
+        if st == "in_csv":
+            _remove_csv_row(case_id)
+        set_case_status(case_id, "archiviert", cases_dir, csv_title="")
+        return jsonify({"ok": True})
+
+    @app.post("/api/cases/<case_id>/wiederherstellen")
+    def wiederherstellen_case(case_id):
+        """Holt einen archivierten Eintrag zurück – als „zurückgehalten", also NICHT
+        automatisch wieder in der Upload-CSV."""
+        if case_status(case_id, cases_dir) != "archiviert":
+            return jsonify({"error": "Nur archivierte Einträge können "
+                                     "wiederhergestellt werden."}), 400
+        set_case_status(case_id, "zurückgehalten", cases_dir)
+        return jsonify({"ok": True})
 
     @app.post("/api/shutdown")
     def shutdown():
@@ -348,6 +470,8 @@ def create_app(config_path: str = "config.json",
             r["case_id"] = find_csv_case_id(r.get("title", ""), cases_dir)
         return jsonify({
             "active_cases": list_cases(cases_dir, status="offen"),
+            "held_cases": list_cases(cases_dir, status="zurückgehalten"),
+            "archived_cases": list_cases(cases_dir, status="archiviert"),
             "listings": rows,
             "stats": listing_stats(folder) if folder else {"count": 0, "total": 0.0},
             "archives": list_archives(folder) if folder else [],

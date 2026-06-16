@@ -499,6 +499,107 @@ def test_fall_loeschen(tmp_path):
     assert r.get_json()["ok"] is True
     assert c.get("/api/cases").get_json()["cases"] == []
 
+# --- Eintrags-Verwaltung (zurückhalten / freigeben / archivieren …) ---------
+
+def test_zurueckhalten_speichert_ohne_csv(tmp_path):
+    c = _client(tmp_path)
+    _save_offenen_fall(c, "Faust")
+    r = c.post("/api/draft/zurueckhalten")
+    assert r.status_code == 200
+    # Liegt als zurückgehaltener Fall vor, NICHT in der CSV, draft ist leer.
+    ov = c.get("/api/overview").get_json()
+    assert len(ov["held_cases"]) == 1
+    assert ov["held_cases"][0]["name"] == "Goethe – Faust"
+    assert ov["stats"]["count"] == 0
+    assert c.get("/api/draft").get_json()["fields"] == {}
+
+def test_zurueckhalten_leer_gibt_fehler(tmp_path):
+    c = _client(tmp_path)
+    r = c.post("/api/draft/zurueckhalten")
+    assert r.status_code == 400
+
+def test_freigeben_schreibt_in_csv(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    c.post("/api/settings", json={"imgbb_api_key": "k", "save_folder": str(folder)})
+    _save_offenen_fall(c, "Faust")
+    c.post("/api/draft/zurueckhalten")
+    cid = c.get("/api/overview").get_json()["held_cases"][0]["id"]
+    with patch("app.upload_image", return_value="https://img/1.jpg"):
+        r = c.post(f"/api/cases/{cid}/freigeben")
+    assert r.status_code == 200
+    ov = c.get("/api/overview").get_json()
+    assert ov["held_cases"] == []                  # nicht mehr zurückgehalten
+    assert ov["stats"]["count"] == 1               # jetzt in der CSV
+    assert ov["listings"][0]["case_id"] == cid     # gleicher Fall, jetzt freigegeben
+
+def test_freigeben_ohne_imgbb_schluessel(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    c.post("/api/settings", json={"save_folder": str(folder)})
+    _save_offenen_fall(c, "Faust")
+    c.post("/api/draft/zurueckhalten")
+    cid = c.get("/api/overview").get_json()["held_cases"][0]["id"]
+    r = c.post(f"/api/cases/{cid}/freigeben")
+    assert r.status_code == 400
+    assert "imgbb" in r.get_json()["error"]
+
+def test_zurueckziehen_holt_aus_csv(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    _add_listing(c, folder, title="Mein Buch")
+    cid = c.get("/api/listings").get_json()["listings"][0]["case_id"]
+    r = c.post(f"/api/cases/{cid}/zurueckziehen")
+    assert r.status_code == 200
+    ov = c.get("/api/overview").get_json()
+    assert ov["stats"]["count"] == 0               # CSV-Zeile weg
+    assert len(ov["held_cases"]) == 1              # jetzt zurückgehalten
+    assert ov["held_cases"][0]["id"] == cid
+
+def test_archivieren_entfernt_csv_zeile(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    _add_listing(c, folder, title="Mein Buch")
+    cid = c.get("/api/listings").get_json()["listings"][0]["case_id"]
+    r = c.post(f"/api/cases/{cid}/archivieren")
+    assert r.status_code == 200
+    ov = c.get("/api/overview").get_json()
+    assert ov["stats"]["count"] == 0               # nicht mehr in der CSV
+    assert len(ov["archived_cases"]) == 1          # archiviert
+    assert ov["listings"] == []
+
+def test_wiederherstellen_macht_zurueckgehalten(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    _add_listing(c, folder, title="Mein Buch")
+    cid = c.get("/api/listings").get_json()["listings"][0]["case_id"]
+    c.post(f"/api/cases/{cid}/archivieren")
+    r = c.post(f"/api/cases/{cid}/wiederherstellen")
+    assert r.status_code == 200
+    ov = c.get("/api/overview").get_json()
+    assert ov["archived_cases"] == []
+    assert len(ov["held_cases"]) == 1              # zurück als zurückgehalten
+    assert ov["stats"]["count"] == 0               # NICHT automatisch hochgeladen
+
+def test_loeschen_eines_freigegebenen_entfernt_csv_zeile(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    _add_listing(c, folder, title="Mein Buch")
+    cid = c.get("/api/listings").get_json()["listings"][0]["case_id"]
+    r = c.post(f"/api/cases/{cid}/delete")
+    assert r.get_json()["ok"] is True
+    ov = c.get("/api/overview").get_json()
+    assert ov["stats"]["count"] == 0               # CSV-Zeile mit gelöscht
+    assert ov["listings"] == []
+
+def test_falsche_uebergaenge_werden_abgewiesen(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    _add_listing(c, folder, title="Mein Buch")     # Status in_csv
+    cid = c.get("/api/listings").get_json()["listings"][0]["case_id"]
+    assert c.post(f"/api/cases/{cid}/freigeben").status_code == 400        # nicht zurückgehalten
+    assert c.post(f"/api/cases/{cid}/wiederherstellen").status_code == 400  # nicht archiviert
+
 def test_preis_ergebnis_wird_gespeichert_und_geladen(tmp_path):
     c = _client(tmp_path)
     pr = {"comparables": [{"title": "X", "price": "10"}], "recommended_price": "9.50"}
