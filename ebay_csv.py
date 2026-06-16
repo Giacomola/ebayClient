@@ -94,7 +94,7 @@ def _values(*, title, author, book_title, language, description, price,
     return {
         ACTION: action if action in GUELTIGE_AKTIONEN else "Add",
         "CustomLabel": _clean(custom_label),
-        "*Category": "261186",
+        "*Category": "29223",  # eBay.de „Antiquitäten & Kunst › Antiquarische Bücher"
         "*Title": title_for(title),
         "*ConditionID": _clean(condition_id),
         "*C:Autor": _limit(_clean(author), SPECIFIC_MAX),
@@ -333,21 +333,33 @@ def _mit_preis_punkt(row: str) -> str:
 #
 # eBay nimmt ECHTE Entwürfe nur über eine eigene, begrenzte Vorlage an – NICHT
 # über die volle Kategorie-Vorlage oben. Unterschiede: die Aktionsspalte heißt
-# `Action(...)` OHNE führendes `*`, es gibt nur 11 Spalten, und der Wert ist
-# „Draft". Artikelmerkmale (Autor/Buchtitel/…), Versand, Rücknahme und Standort
-# trägt eBay hier nicht – die ergänzt man später im Entwurf bei eBay. Die volle
-# Beschreibung kommt aber mit.
+# `Action(...)` OHNE führendes `*`, und der Wert ist „Draft". Versand, Rücknahme
+# und Standort trägt eBay im Entwurf NICHT (ergänzt man später bei eBay). Die volle
+# Beschreibung kommt mit – und Artikelmerkmale lassen sich als `C:...`-Spalten OHNE
+# Stern anhängen (von eBay bei Entwürfen unterstützt), darum die C:-Spalten unten.
 #
-# Diese Datei wird aus der vollen Sammeldatei abgeleitet (alle 11 Felder stecken
-# dort schon drin), damit Dubletten-Abgleich/Liste/Statistik unverändert auf der
-# vollen Datei arbeiten können.
+# Diese Datei wird aus der vollen Sammeldatei abgeleitet (alle Werte stecken dort
+# schon drin), damit Dubletten-Abgleich/Liste/Statistik unverändert auf der vollen
+# Datei arbeiten können.
 DRAFT_FILENAME = "ebay-entwuerfe.csv"
 DRAFT_INFO_LINE = "#INFO;Version=0.0.2;Template= eBay-draft-listings-template_DE"
-DRAFT_COLUMNS = [
+# Die Basis-Spalten der Entwurfs-Vorlage …
+DRAFT_BASE_COLUMNS = [
     "Action(SiteID=Germany|Country=DE|Currency=EUR|Version=1193|CC=UTF-8)",
     "Custom label (SKU)", "Category ID", "Title", "UPC", "Price", "Quantity",
     "Item photo URL", "Condition ID", "Description", "Format",
 ]
+# … plus die Artikelmerkmale, die wir tatsächlich füllen. Paar (Entwurf-Spalte ohne
+# Stern → Quellspalte in der vollen Vorlage).
+DRAFT_SPECIFICS = [
+    ("C:Autor", "*C:Autor"),
+    ("C:Buchtitel", "*C:Buchtitel"),
+    ("C:Sprache", "*C:Sprache"),
+    ("C:Verlag", "C:Verlag"),
+    ("C:Erscheinungsjahr", "C:Erscheinungsjahr"),
+    ("C:Format", "C:Format"),
+]
+DRAFT_COLUMNS = DRAFT_BASE_COLUMNS + [ziel for ziel, _ in DRAFT_SPECIFICS]
 DRAFT_HEADER = ";".join(DRAFT_COLUMNS)
 
 def _full_to_draft_row(row: str) -> str:
@@ -372,6 +384,8 @@ def _full_to_draft_row(row: str) -> str:
         hol("*Description"),     # Description
         hol("*Format"),          # Format (FixedPrice)
     ]
+    # Artikelmerkmale (C:...) anhängen – kommen so auch im eBay-Entwurf an.
+    werte += [hol(quelle) for _, quelle in DRAFT_SPECIFICS]
     return ";".join(werte)
 
 def build_draft_file(folder: str, src_filename: str = DEFAULT_FILENAME,

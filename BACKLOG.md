@@ -47,6 +47,8 @@ _Bewusst auf später verschoben — nicht ohne Ansage starten._
 ## ✅ Erledigt
 _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 
+- [x] 2026-06-16 Artikelmerkmale auch im eBay-Entwurf: Die Entwurf-Vorlage übernimmt Autor/Buchtitel/Sprache/Verlag/Erscheinungsjahr/Format jetzt als `C:`-Spalten OHNE Stern (von eBay bei Entwürfen unterstützt). DRAFT_COLUMNS um DRAFT_SPECIFICS erweitert, _full_to_draft_row hängt die Werte an, Test prüft C:Autor/Buchtitel/Sprache (ebay_csv.py, Tests).
+
 - [x] 2026-06-16 Aktualisieren-Knopf live getestet (POST /api/update: 59 Dateien, ok). Dabei zwei Befunde: (1) Selbst-Update verlor das Ausführbar-Bit der .command-Skripte → behoben, apply_update setzt nun +x für .command/.sh (updater.py, Test) `0b0b2f8`; (2) iCloud-Konflikt-Kopien beim Überschreiben vieler Dateien (umgebungsbedingt, kein Code-Fehler; Vater nicht in OneDrive installieren). `main` auf GitHub aktualisiert; Export-ZIP neu gebaut.
 
 - [x] 2026-06-16 „Programm aktualisieren"-Knopf in den Einstellungen (Abschnitt 🔄): ruft das schon vorhandene Backend `/api/update` auf (holt neuesten Stand vom `main`-Branch, sichert vorher, rollt bei Fehlern zurück), fragt vorher per Bestätigung, zeigt Fortschritt/Ergebnis + Neustart-Hinweis (index.html, app.js, chat_wissen.txt) `abe2b02`.

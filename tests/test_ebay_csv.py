@@ -32,7 +32,7 @@ def test_felder_an_richtiger_stelle():
     lines = _parse(data)
     header = lines[1].split(";")
     row = dict(zip(header, lines[2].split(";")))
-    assert row["*Category"] == "261186"
+    assert row["*Category"] == "29223"   # Antiquarische Buecher
     assert row["*ConditionID"] == "4000"
     assert row["*C:Autor"] == "A"
     assert row["*StartPrice"] == "12.50"
@@ -298,18 +298,24 @@ def test_build_draft_file_erzeugt_ebay_entwurf_vorlage(tmp_path):
     assert path.endswith(DRAFT_FILENAME)
     lines = open(path, "r", encoding="utf-8-sig").read().splitlines()
     assert lines[0] == DRAFT_INFO_LINE                 # #INFO-Zeile von eBay
-    assert lines[1] == DRAFT_HEADER                    # Action(...) OHNE *, 11 Spalten
-    assert len(DRAFT_HEADER.split(";")) == 11
+    assert lines[1] == DRAFT_HEADER                    # Action(...) OHNE *
+    header = DRAFT_HEADER.split(";")
     row = lines[2].split(";")
-    assert len(row) == 11
+    assert len(row) == len(header)                     # Zeile und Kopf gleich breit
+    spalte = dict(zip(header, row))
     assert row[0] == "Draft"                           # Aktion = Draft
-    assert row[2] == "261186"                          # Category ID (Bücher)
+    assert row[2] == "29223"                            # Category ID (Antiquarische Buecher)
     assert row[3] == "Der Hobbit"                      # Title
     assert row[5] == "9.99"                            # Price
     assert row[6] == "1"                               # Quantity
     assert row[7] == "https://x/1.jpg|https://x/2.jpg" # Fotos mit | getrennt
     assert row[8] == "5000"                            # Condition ID (Zahl)
     assert row[10] == "FixedPrice"                     # Format
+    # Artikelmerkmale kommen mit (als C:-Spalten OHNE Stern).
+    assert "C:Autor" in header and "*C:Autor" not in header
+    assert spalte["C:Autor"] == "Tolkien"
+    assert spalte["C:Buchtitel"] == "Der Hobbit"
+    assert spalte["C:Sprache"] == "Deutsch"
 
 def test_build_draft_file_ohne_quelle_entfernt_zieldatei(tmp_path):
     from ebay_csv import build_draft_file, DRAFT_FILENAME
