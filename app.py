@@ -14,7 +14,7 @@ from derive_instructions import derive_from_example
 from image_host import upload_image
 from ebay_csv import (append_listing, entry_exists, remove_listing, title_for,
                       recent_listings, listing_stats, list_archives,
-                      archive_as_file, DEFAULT_FILENAME)
+                      archive_as_file, set_action_all, DEFAULT_FILENAME)
 from draft import (load_draft, update_fields, update_images, clear_draft,
                    save_draft, mark_completed, update_price_result, EMPTY)
 from cases import (list_cases, save_case, load_case, delete_case,
@@ -419,7 +419,24 @@ def create_app(config_path: str = "config.json",
         current = load_settings(config_path)
         current.update(request.get_json(force=True))
         save_settings(current, config_path)
+        # Die aktuell eingestellte Upload-Art (Entwurf/sofort) sofort auf die ganze
+        # Sammeldatei anwenden, damit sie für ALLE Einträge gilt – auch ältere.
+        folder = current.get("save_folder", "")
+        if folder:
+            aktion = "Add" if current.get("upload_action") == "add" else "Draft"
+            set_action_all(folder, aktion)
         return jsonify({"ok": True})
+
+    @app.post("/api/apply-upload-action")
+    def apply_upload_action():
+        """Wendet die aktuelle Upload-Art (Entwurf/sofort) auf die ganze Sammeldatei
+        an, sodass sie für ALLE Einträge gilt. Wird beim Öffnen des Upload-Fensters
+        aufgerufen, damit die Datei immer der aktuellen Einstellung entspricht."""
+        settings = load_settings(config_path)
+        folder = settings.get("save_folder", "")
+        aktion = "Add" if settings.get("upload_action") == "add" else "Draft"
+        n = set_action_all(folder, aktion) if folder else 0
+        return jsonify({"ok": True, "action": aktion, "count": n})
 
     @app.post("/api/open-anweisungen")
     def open_anweisungen():

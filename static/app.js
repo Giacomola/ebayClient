@@ -870,6 +870,9 @@ async function renderUpload() {
   upFilter();
 }
 async function openUpload() {
+  // Sicherstellen, dass die aktuelle Upload-Art (Entwurf/sofort) für ALLE Einträge
+  // in der Sammeldatei gilt – auch für ältere Zeilen, bevor man hochlädt.
+  try { await fetch("/api/apply-upload-action", { method: "POST" }); } catch (e) { /* egal */ }
   await renderUpload();
   uploadDlg.showModal();
 }

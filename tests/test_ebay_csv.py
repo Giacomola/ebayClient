@@ -255,3 +255,32 @@ def test_draft_zeilen_werden_mitgezaehlt_und_erkannt(tmp_path):
     assert listing_stats(folder)["count"] == 1
     assert recent_listings(folder)[0]["title"] == "Eins"
     assert entry_exists(folder, "A", "Eins") is True
+
+def _aktionen(folder, filename="ebay-anzeigen.csv"):
+    import os
+    with open(os.path.join(folder, filename), encoding="utf-8-sig") as f:
+        return [ln.split(";")[0] for ln in f.read().splitlines()
+                if ln.startswith(("Add;", "Draft;"))]
+
+def test_append_listing_vereinheitlicht_aktion(tmp_path):
+    folder = str(tmp_path)
+    g = dict(language="Deutsch", description="D", price="1.00", condition_id="5000",
+             picture_urls=["https://x/1.jpg"])
+    append_listing(folder, title="Alt", author="A", book_title="Alt", action="Add", **g)
+    # Neue Zeile als Draft -> die alte Add-Zeile wird ebenfalls auf Draft gesetzt.
+    append_listing(folder, title="Neu", author="B", book_title="Neu", action="Draft", **g)
+    assert set(_aktionen(folder)) == {"Draft"}
+
+def test_set_action_all_setzt_alle_zeilen(tmp_path):
+    from ebay_csv import set_action_all
+    folder = str(tmp_path)
+    g = dict(language="Deutsch", description="D", price="1.00", condition_id="5000",
+             picture_urls=["https://x/1.jpg"], action="Add")
+    append_listing(folder, title="A", author="A", book_title="A", **g)
+    append_listing(folder, title="B", author="B", book_title="B", **g)
+    assert _aktionen(folder) == ["Add", "Add"]
+    assert set_action_all(folder, "Draft") == 2
+    assert set(_aktionen(folder)) == {"Draft"}
+    assert set_action_all(folder, "Quatsch") == 2          # ungültig -> sicher Draft
+    assert set(_aktionen(folder)) == {"Draft"}
+    assert set_action_all(str(tmp_path / "leer"), "Add") == 0   # ohne Datei: 0

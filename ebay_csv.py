@@ -287,9 +287,40 @@ def append_listing(folder: str, filename: str = DEFAULT_FILENAME, **kwargs):
         rows = [r for r in rows if _row_key(r) != new_key]
     rows.append(new_row)
 
+    # Die aktuelle Aktion (Add/Draft der neuen Zeile) gilt für ALLE Zeilen, damit
+    # die ganze Datei immer der aktuellen Einstellung entspricht – auch ältere Zeilen.
+    aktion = new_row.split(";")[0]
+    rows = [_mit_aktion(r, aktion) for r in rows]
+
     # Komplette Datei neu schreiben: BOM + Info + Kopf + alle Datenzeilen.
     with open(path, "w", encoding="utf-8-sig", newline="") as f:
         f.write(INFO_LINE + "\r\n" + HEADER + "\r\n")
         for r in rows:
             f.write(r + "\r\n")
     return path, len(rows)
+
+def _mit_aktion(row: str, action: str) -> str:
+    """Ersetzt die Aktion (erste Spalte) einer Datenzeile durch <action>."""
+    cells = row.split(";")
+    cells[0] = action
+    return ";".join(cells)
+
+def set_action_all(folder: str, action: str, filename: str = DEFAULT_FILENAME) -> int:
+    """Setzt die Aktion (Add/Draft) ALLER Anzeigen in der Sammeldatei auf <action>.
+
+    So gilt die aktuell eingestellte Upload-Art immer für die ganze Datei – auch
+    für Anzeigen, die früher mit einer anderen Einstellung erzeugt wurden. Ein
+    ungültiger Wert wird sicherheitshalber zu "Draft". Gibt die Anzahl der Zeilen
+    zurück (0, wenn es die Datei nicht gibt)."""
+    if action not in GUELTIGE_AKTIONEN:
+        action = "Draft"
+    path = os.path.join(folder, filename)
+    if not os.path.exists(path):
+        return 0
+    with open(path, "r", encoding="utf-8-sig") as f:
+        rows = [line.rstrip("\r\n") for line in f if _ist_angebotszeile(line)]
+    with open(path, "w", encoding="utf-8-sig", newline="") as f:
+        f.write(INFO_LINE + "\r\n" + HEADER + "\r\n")
+        for r in rows:
+            f.write(_mit_aktion(r, action) + "\r\n")
+    return len(rows)

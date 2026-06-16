@@ -278,6 +278,31 @@ def test_archive_entfernt_bearbeitbare_faelle(tmp_path):
     # CSV ist leer und der zugehörige bearbeitbare Fall wurde mit aufgeräumt.
     assert c.get("/api/listings").get_json()["listings"] == []
 
+def test_einstellung_wendet_upload_art_auf_alle_an(tmp_path):
+    from ebay_csv import append_listing
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    append_listing(str(folder), title="X", author="A", book_title="B", language="Deutsch",
+                   description="D", price="9.99", condition_id="5000",
+                   picture_urls=["https://x/1.jpg"], action="Add")   # alte Add-Zeile
+    c.post("/api/settings", json={"save_folder": str(folder), "upload_action": "draft"})
+    zeilen = (folder / "ebay-anzeigen.csv").read_text(encoding="utf-8-sig").splitlines()
+    assert zeilen[2].split(";")[0] == "Draft"          # die alte Zeile ist jetzt Draft
+
+def test_apply_upload_action_endpoint(tmp_path):
+    from ebay_csv import append_listing
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    append_listing(str(folder), title="X", author="A", book_title="B", language="Deutsch",
+                   description="D", price="9.99", condition_id="5000",
+                   picture_urls=["https://x/1.jpg"], action="Add")
+    c.post("/api/settings", json={"save_folder": str(folder)})   # ohne upload_action -> Default draft
+    r = c.post("/api/apply-upload-action")
+    b = r.get_json()
+    assert b["action"] == "Draft" and b["count"] == 1
+    zeilen = (folder / "ebay-anzeigen.csv").read_text(encoding="utf-8-sig").splitlines()
+    assert zeilen[2].split(";")[0] == "Draft"
+
 def test_generate_ohne_schluessel_gibt_fehler(tmp_path):
     c = _client(tmp_path)
     data = {"images": (io.BytesIO(b"\xff\xd8jpeg"), "1.jpg")}
