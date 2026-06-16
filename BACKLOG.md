@@ -84,3 +84,4 @@ _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 - [x] 2026-06-16 Chat als schwebendes Support-Fenster statt modalem Dialog: runder Knopf unten rechts (läuft beim Scrollen mit), Klick klappt das Chat-Fenster auf/zu, die Seite bleibt bedienbar. „Chat" in der Kopfzeile öffnet ebenfalls (index.html, app.js, style.css).
 - [x] 2026-06-16 Das Chat-Modell stellt sich mit seinem Namen vor (Haiku/Sonnet/Opus): Anzeigename wird aus model_chat ermittelt und im System-Prompt gesetzt (app.py CHAT_MODELLNAMEN, web_ai._chat_system/chat, Tests).
 - [x] 2026-06-16 „Chat"-Knopf aus der Kopfzeile entfernt – der runde Knopf unten rechts übernimmt das Öffnen (index.html, app.js).
+- [x] 2026-06-16 Dubletten in der Sammel-CSV über Autor+Buchtitel erkennen (statt über den Anzeigentitel): kleine Titeländerungen erzeugen so keine zweite Zeile mehr. title_exists()→entry_exists(), Abgleich normalisiert (klein, Leerzeichen) (ebay_csv.py, app.py, app.js, Tests) `29f7b06`.
