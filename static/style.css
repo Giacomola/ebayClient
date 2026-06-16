@@ -129,6 +129,11 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
   white-space: pre-wrap; line-height: 1.4; }
 .chat-ich { align-self: flex-end; background: #e7f3ec; }
 .chat-ki  { align-self: flex-start; background: #fff; border: 1px solid #e3e0d8; }
+/* Aktions-Knöpfe unter einer Chat-Antwort (öffnen die jeweilige Funktion). */
+.chat-aktionen { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+.chat-aktion { padding: .3rem .6rem; font-size: .85rem; cursor: pointer;
+  background: #f0ece2; border: 1px solid #d8d4ca; border-radius: 999px; }
+.chat-aktion:hover { background: #e7e1d3; }
 .chat-eingabe { display: flex; gap: .5rem; align-items: flex-end; padding: .6rem;
   border-top: 1px solid #ece9e1; }
 .chat-eingabe textarea { flex: 1; resize: none; font-family: inherit; font-size: 1rem;

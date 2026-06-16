@@ -822,6 +822,50 @@ function chatFormat(text) {
     .replace(/\n/g, "<br>");
 }
 
+// Erlaubte Aktions-Knöpfe: Die KI darf ans Ende ihrer Antwort Marker wie
+// [aktion:einstellungen] setzen; daraus wird hier ein Knopf, der den jeweils
+// VORHANDENEN Knopf auslöst. Feste Liste (Whitelist) – nur diese fünf sind
+// möglich, alles andere wird ignoriert. So kann die KI nichts Beliebiges auslösen.
+const CHAT_AKTIONEN = {
+  einstellungen: { label: "⚙ Einstellungen öffnen",     ziel: "settings-btn" },
+  anweisungen:   { label: "📝 Anweisungen bearbeiten",   ziel: "open-prompt-btn" },
+  uebersicht:    { label: "🗂 Übersicht öffnen",          ziel: "overview-btn" },
+  handy:         { label: "📱 Per Handy hochladen",       ziel: "handy-btn" },
+  upload:        { label: "📤 eBay-Upload-Seite öffnen",  ziel: "ebay-upload-link" },
+};
+
+// Schneidet die [aktion:xxx]-Marker aus dem Antworttext und gibt den sauberen
+// Text plus die Liste erkannter (erlaubter) Aktionen zurück.
+function chatAktionenLesen(text) {
+  const aktionen = [];
+  const sauber = (text || "").replace(/\[aktion:([a-zäöü]+)\]/gi, (_, name) => {
+    const key = name.toLowerCase();
+    if (CHAT_AKTIONEN[key] && !aktionen.includes(key)) aktionen.push(key);
+    return "";   // Marker aus dem sichtbaren Text entfernen
+  }).trim();
+  return { text: sauber, aktionen };
+}
+
+// Hängt unter eine Chat-Antwort die passenden Aktions-Knöpfe.
+function chatAktionenAnzeigen(zeile, aktionen) {
+  if (!aktionen.length) return;
+  const leiste = document.createElement("div");
+  leiste.className = "chat-aktionen";
+  for (const key of aktionen) {
+    const def = CHAT_AKTIONEN[key];
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chat-aktion";
+    b.textContent = def.label;
+    b.addEventListener("click", () => {
+      const ziel = document.getElementById(def.ziel);
+      if (ziel) ziel.click();   // löst den vorhandenen Knopf/Link aus
+    });
+    leiste.appendChild(b);
+  }
+  zeile.appendChild(leiste);
+}
+
 async function chatSenden() {
   const feld = $("chat-text");
   const frage = feld.value.trim();
@@ -838,7 +882,9 @@ async function chatSenden() {
     });
     const d = await r.json();
     if (!r.ok) { platz.textContent = "⚠ " + (d.error || "Es ist ein Fehler aufgetreten."); return; }
-    platz.innerHTML = chatFormat(d.answer || "(keine Antwort)");
+    const { text: antwortText, aktionen } = chatAktionenLesen(d.answer || "(keine Antwort)");
+    platz.innerHTML = chatFormat(antwortText);
+    chatAktionenAnzeigen(platz, aktionen);
     chatVerlauf.push({ role: "assistant", content: d.answer || "" });
   } catch (e) {
     platz.textContent = "⚠ Keine Verbindung – bitte erneut versuchen.";
