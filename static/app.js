@@ -775,7 +775,6 @@ async function chatSenden() {
 
 on("chat-bubble", "click", chatUmschalten);   // runder Knopf unten rechts
 on("chat-close", "click", chatSchliessen);
-on("chat-btn", "click", chatOeffnen);          // „Chat" in der Kopfzeile öffnet ebenfalls
 on("chat-send", "click", chatSenden);
 // Enter sendet, Umschalt+Enter macht einen Zeilenumbruch.
 on("chat-text", "keydown", (e) => {
