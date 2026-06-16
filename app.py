@@ -26,7 +26,7 @@ from cases import (list_cases, save_case, load_case, delete_case,
 PORT = 5050
 
 # Anzeige-Version oben im Kopf (z. B. „v1.0"). Bei einer Veröffentlichung hochzählen.
-APP_VERSION = "1.0"
+APP_VERSION = "1.1"
 
 # Anzeigenamen der Chat-Modelle, damit sich die KI mit ihrem Namen vorstellen kann.
 CHAT_MODELLNAMEN = {
