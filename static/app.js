@@ -890,10 +890,23 @@ async function renderUpload() {
   if (badge) badge.textContent = stats.count ? ` · ${stats.count} bereit` : "";
   upFilter();
 }
+// Name der Datei, die der Nutzer hochladen soll – hängt von der Upload-Art ab
+// (Entwurf-Modus: ebay-entwuerfe.csv, sofort: ebay-anzeigen.csv).
+let uploadFilename = "ebay-anzeigen.csv";
 async function openUpload() {
   // Sicherstellen, dass die aktuelle Upload-Art (Entwurf/sofort) für ALLE Einträge
-  // in der Sammeldatei gilt – auch für ältere Zeilen, bevor man hochlädt.
-  try { await fetch("/api/apply-upload-action", { method: "POST" }); } catch (e) { /* egal */ }
+  // gilt – auch für ältere Zeilen, bevor man hochlädt. Antwort nennt die Datei.
+  try {
+    const r = await fetch("/api/apply-upload-action", { method: "POST" });
+    const d = await r.json().catch(() => ({}));
+    if (d.upload_filename) uploadFilename = d.upload_filename;
+    const fn = $("upload-filename");
+    if (fn) fn.textContent = uploadFilename;
+    const note = $("upload-mode-note");
+    if (note) note.textContent = d.action === "Add"
+      ? "Die Einträge werden damit sofort aktiv bei eBay eingestellt."
+      : "Die Einträge landen damit in deinen eBay-Entwürfen (nicht sofort aktiv).";
+  } catch (e) { /* egal */ }
   await renderUpload();
   uploadDlg.showModal();
 }
@@ -907,7 +920,7 @@ on("ebay-upload-link", "click", async (e) => {
   window.open(url, "ebay-upload", "width=1200,height=850,noopener");
   // Die App kann den Upload auf eBay nicht selbst erkennen – darum einmal nachfragen.
   const ok = confirm(`Die eBay-Upload-Seite wurde geöffnet. Wähle dort deine Datei `
-    + `„ebay-anzeigen.csv“ und lade sie hoch.\n\nSind die freigegebenen Einträge `
+    + `„${uploadFilename}“ und lade sie hoch.\n\nSind die freigegebenen Einträge `
     + `hochgeladen? Dann markiere ich sie als „hochgeladen“ und verschiebe sie in den `
     + `Bereich „Hochgeladen“.\n\n(Bei „Abbrechen“ bleibt alles wie es ist.)`);
   if (!ok) return;

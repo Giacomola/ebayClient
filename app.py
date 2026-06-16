@@ -14,7 +14,8 @@ from derive_instructions import derive_from_example
 from image_host import upload_image
 from ebay_csv import (append_listing, entry_exists, remove_listing, title_for,
                       recent_listings, listing_stats, list_archives,
-                      archive_as_file, set_action_all, DEFAULT_FILENAME)
+                      archive_as_file, set_action_all, build_draft_file,
+                      remove_draft_file, DEFAULT_FILENAME, DRAFT_FILENAME)
 from draft import (load_draft, update_fields, update_images, clear_draft,
                    save_draft, mark_completed, update_price_result, EMPTY)
 from cases import (list_cases, save_case, load_case, delete_case,
@@ -51,11 +52,30 @@ def _data_url_bytes(data_url: str) -> bytes:
     komma = data_url.find(",")
     return base64.standard_b64decode(data_url[komma + 1:])
 
+def _upload_aktion(settings) -> str:
+    """„Add" (sofort einstellen) oder „Draft" (Entwurf) – je nach Einstellung."""
+    return "Add" if settings.get("upload_action") == "add" else "Draft"
+
+def _sync_draft_export(folder, aktion) -> str:
+    """Hält die abgeleitete Entwurf-Datei passend zur Upload-Art aktuell und gibt
+    den Namen der Datei zurück, die der Nutzer hochladen soll.
+
+    Entwurf-Modus: aus der vollen Sammeldatei die Entwurf-Datei neu erzeugen →
+    diese wird hochgeladen. Sofort-Modus: Entwurf-Datei entfernen → es gilt die
+    volle Sammeldatei."""
+    if not folder:
+        return DEFAULT_FILENAME
+    if aktion == "Draft":
+        build_draft_file(folder)
+        return DRAFT_FILENAME
+    remove_draft_file(folder)
+    return DEFAULT_FILENAME
+
 def _append_from_fields(folder, fields, picture_urls, settings):
     """Schreibt eine Anzeige aus einem Feld-Wörterbuch in die Sammeldatei
     (gleiche Logik wie beim normalen Erstellen). Gibt (Pfad, Anzahl) zurück."""
-    aktion = "Add" if settings.get("upload_action") == "add" else "Draft"
-    return append_listing(
+    aktion = _upload_aktion(settings)
+    ergebnis = append_listing(
         folder, action=aktion,
         title=fields.get("title", ""), author=fields.get("author", ""),
         book_title=fields.get("book_title", ""), language=fields.get("language", ""),
@@ -67,6 +87,8 @@ def _append_from_fields(folder, fields, picture_urls, settings):
         location=settings["location"], shipping_service=settings["shipping_service"],
         shipping_cost=settings["shipping_cost"],
         dispatch_time_max=settings["dispatch_time_max"])
+    _sync_draft_export(folder, aktion)  # Entwurf-Datei mitführen
+    return ergebnis
 
 def _handy_qr_svg(url: str) -> str:
     """Erzeugt einen QR-Code als SVG-Text (skaliert sauber, braucht kein Pillow).
@@ -307,9 +329,11 @@ def create_app(config_path: str = "config.json",
         ist). Tut nichts, wenn der Fall nicht in der CSV steht."""
         target = load_case(case_id, cases_dir) or {}
         fields = target.get("fields", {})
-        folder = load_settings(config_path).get("save_folder", "")
+        settings = load_settings(config_path)
+        folder = settings.get("save_folder", "")
         if folder:
             remove_listing(folder, fields.get("author", ""), fields.get("book_title", ""))
+            _sync_draft_export(folder, _upload_aktion(settings))  # Entwurf-Datei mitführen
 
     @app.post("/api/cases/<case_id>/delete")
     def remove_case(case_id):
@@ -426,8 +450,9 @@ def create_app(config_path: str = "config.json",
         # Sammeldatei anwenden, damit sie für ALLE Einträge gilt – auch ältere.
         folder = current.get("save_folder", "")
         if folder:
-            aktion = "Add" if current.get("upload_action") == "add" else "Draft"
+            aktion = _upload_aktion(current)
             set_action_all(folder, aktion)
+            _sync_draft_export(folder, aktion)
         return jsonify({"ok": True})
 
     @app.post("/api/apply-upload-action")
@@ -437,9 +462,11 @@ def create_app(config_path: str = "config.json",
         aufgerufen, damit die Datei immer der aktuellen Einstellung entspricht."""
         settings = load_settings(config_path)
         folder = settings.get("save_folder", "")
-        aktion = "Add" if settings.get("upload_action") == "add" else "Draft"
+        aktion = _upload_aktion(settings)
         n = set_action_all(folder, aktion) if folder else 0
-        return jsonify({"ok": True, "action": aktion, "count": n})
+        upload_datei = _sync_draft_export(folder, aktion)
+        return jsonify({"ok": True, "action": aktion, "count": n,
+                        "upload_filename": upload_datei})
 
     @app.post("/api/open-anweisungen")
     def open_anweisungen():
@@ -512,6 +539,8 @@ def create_app(config_path: str = "config.json",
             if set_case_status(c["id"], "hochgeladen", cases_dir, csv_title=""):
                 n += 1
         moved, archive_name = archive_as_file(folder) if folder else (0, "")
+        if folder:
+            remove_draft_file(folder)  # abgeleitete Entwurf-Datei ist nun veraltet
         return jsonify({"ok": True, "count": n, "moved": moved, "filename": archive_name})
 
     @app.post("/api/archive-file")
@@ -526,6 +555,7 @@ def create_app(config_path: str = "config.json",
         count, archive_name = archive_as_file(folder, name)
         if count == 0:
             return jsonify({"error": "Die Sammeldatei ist leer – nichts zu archivieren."}), 400
+        remove_draft_file(folder)  # abgeleitete Entwurf-Datei ist nun veraltet
         delete_in_csv_cases(cases_dir)  # die zugehörigen bearbeitbaren Fälle sind nun archiviert
         return jsonify({"ok": True, "moved": count, "filename": archive_name})
 
@@ -697,7 +727,7 @@ def create_app(config_path: str = "config.json",
         if not urls:
             return jsonify({"error": "Keine Fotos für die Anzeige vorhanden."}), 400
         # Einstellung: als Entwurf anlegen (Standard) oder sofort einstellen.
-        aktion = "Add" if settings.get("upload_action") == "add" else "Draft"
+        aktion = _upload_aktion(settings)
         try:
             path, count = append_listing(
                 folder, action=aktion,
@@ -715,6 +745,7 @@ def create_app(config_path: str = "config.json",
             )
         except Exception as e:  # noqa: BLE001
             return jsonify({"error": f"Datei konnte nicht gespeichert werden: {e}"}), 500
+        upload_datei = _sync_draft_export(folder, aktion)  # Entwurf-Datei mitführen
         mark_completed(draft_path)  # Fall gilt jetzt als abgeschlossen (wird nicht geparkt)
         # Den Fall als „in Sammeldatei" behalten (mit allen Feldern + Fotos), damit er
         # sich später vollständig bearbeiten lässt. Gleichen Titel vorher ersetzen.
@@ -732,7 +763,7 @@ def create_app(config_path: str = "config.json",
                        "result_visible": True},
                       cases_dir, status="in_csv", csv_title=csv_title)
         return jsonify({"ok": True, "folder": folder,
-                        "filename": DEFAULT_FILENAME, "path": path, "count": count})
+                        "filename": upload_datei, "path": path, "count": count})
 
     return app
 

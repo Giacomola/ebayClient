@@ -305,6 +305,83 @@ def _mit_aktion(row: str, action: str) -> str:
     cells[0] = action
     return ";".join(cells)
 
+# ---------------------------------------------------------------------------
+# eBay-Entwurf-Vorlage (eigene, kleinere Datei)
+#
+# eBay nimmt ECHTE Entwürfe nur über eine eigene, begrenzte Vorlage an – NICHT
+# über die volle Kategorie-Vorlage oben. Unterschiede: die Aktionsspalte heißt
+# `Action(...)` OHNE führendes `*`, es gibt nur 11 Spalten, und der Wert ist
+# „Draft". Artikelmerkmale (Autor/Buchtitel/…), Versand, Rücknahme und Standort
+# trägt eBay hier nicht – die ergänzt man später im Entwurf bei eBay. Die volle
+# Beschreibung kommt aber mit.
+#
+# Diese Datei wird aus der vollen Sammeldatei abgeleitet (alle 11 Felder stecken
+# dort schon drin), damit Dubletten-Abgleich/Liste/Statistik unverändert auf der
+# vollen Datei arbeiten können.
+DRAFT_FILENAME = "ebay-entwuerfe.csv"
+DRAFT_INFO_LINE = "#INFO;Version=0.0.2;Template= eBay-draft-listings-template_DE"
+DRAFT_COLUMNS = [
+    "Action(SiteID=Germany|Country=DE|Currency=EUR|Version=1193|CC=UTF-8)",
+    "Custom label (SKU)", "Category ID", "Title", "UPC", "Price", "Quantity",
+    "Item photo URL", "Condition ID", "Description", "Format",
+]
+DRAFT_HEADER = ";".join(DRAFT_COLUMNS)
+
+def _full_to_draft_row(row: str) -> str:
+    """Wandelt eine volle Datenzeile in eine Entwurf-Zeile (11 Spalten) um.
+
+    Alle benötigten Werte stecken bereits in der vollen Zeile – wir lesen sie
+    über ihre Spaltennamen aus und ordnen sie der Entwurf-Reihenfolge zu."""
+    cells = row.split(";")
+    def hol(col: str) -> str:
+        i = COLUMNS.index(col)
+        return cells[i] if i < len(cells) else ""
+    werte = [
+        "Draft",                 # Action
+        hol("CustomLabel"),      # Custom label (SKU)
+        hol("*Category"),        # Category ID
+        hol("*Title"),           # Title
+        "",                      # UPC (haben wir nicht)
+        hol("*StartPrice"),      # Price
+        hol("*Quantity"),        # Quantity
+        hol("PicURL"),           # Item photo URL (mehrere mit | getrennt)
+        hol("*ConditionID"),     # Condition ID (Zahl, z. B. 5000)
+        hol("*Description"),     # Description
+        hol("*Format"),          # Format (FixedPrice)
+    ]
+    return ";".join(werte)
+
+def build_draft_file(folder: str, src_filename: str = DEFAULT_FILENAME,
+                     dest_filename: str = DRAFT_FILENAME):
+    """Erzeugt aus der vollen Sammeldatei die eBay-Entwurf-Datei (begrenzte Vorlage).
+
+    Gibt (Pfad, Anzahl) zurück. Fehlt die Quelle oder ist sie leer, wird eine evtl.
+    vorhandene Entwurf-Datei entfernt und (None, 0) zurückgegeben."""
+    src = os.path.join(folder, src_filename)
+    dest = os.path.join(folder, dest_filename)
+    rows = []
+    if os.path.exists(src):
+        with open(src, "r", encoding="utf-8-sig") as f:
+            rows = [line.rstrip("\r\n") for line in f if _ist_angebotszeile(line)]
+    if not rows:
+        if os.path.exists(dest):
+            os.remove(dest)
+        return None, 0
+    with open(dest, "w", encoding="utf-8-sig", newline="") as f:
+        f.write(DRAFT_INFO_LINE + "\r\n" + DRAFT_HEADER + "\r\n")
+        for r in rows:
+            f.write(_full_to_draft_row(r) + "\r\n")
+    return dest, len(rows)
+
+def remove_draft_file(folder: str, dest_filename: str = DRAFT_FILENAME) -> bool:
+    """Entfernt die abgeleitete Entwurf-Datei (z. B. beim Wechsel auf „sofort
+    einstellen" oder nach dem Archivieren). True, wenn etwas gelöscht wurde."""
+    dest = os.path.join(folder, dest_filename)
+    if os.path.exists(dest):
+        os.remove(dest)
+        return True
+    return False
+
 def set_action_all(folder: str, action: str, filename: str = DEFAULT_FILENAME) -> int:
     """Setzt die Aktion (Add/Draft) ALLER Anzeigen in der Sammeldatei auf <action>.
 

@@ -284,3 +284,48 @@ def test_set_action_all_setzt_alle_zeilen(tmp_path):
     assert set_action_all(folder, "Quatsch") == 2          # ungültig -> sicher Draft
     assert set(_aktionen(folder)) == {"Draft"}
     assert set_action_all(str(tmp_path / "leer"), "Add") == 0   # ohne Datei: 0
+
+def test_build_draft_file_erzeugt_ebay_entwurf_vorlage(tmp_path):
+    from ebay_csv import (build_draft_file, DRAFT_FILENAME, DRAFT_HEADER,
+                          DRAFT_INFO_LINE)
+    folder = str(tmp_path)
+    append_listing(folder, title="Der Hobbit", author="Tolkien", book_title="Der Hobbit",
+                   language="Deutsch", description="Gut erhalten.", price="9.99",
+                   condition_id="5000", picture_urls=["https://x/1.jpg", "https://x/2.jpg"],
+                   action="Draft")
+    path, count = build_draft_file(folder)
+    assert count == 1
+    assert path.endswith(DRAFT_FILENAME)
+    lines = open(path, "r", encoding="utf-8-sig").read().splitlines()
+    assert lines[0] == DRAFT_INFO_LINE                 # #INFO-Zeile von eBay
+    assert lines[1] == DRAFT_HEADER                    # Action(...) OHNE *, 11 Spalten
+    assert len(DRAFT_HEADER.split(";")) == 11
+    row = lines[2].split(";")
+    assert len(row) == 11
+    assert row[0] == "Draft"                           # Aktion = Draft
+    assert row[2] == "261186"                          # Category ID (Bücher)
+    assert row[3] == "Der Hobbit"                      # Title
+    assert row[5] == "9.99"                            # Price
+    assert row[6] == "1"                               # Quantity
+    assert row[7] == "https://x/1.jpg|https://x/2.jpg" # Fotos mit | getrennt
+    assert row[8] == "5000"                            # Condition ID (Zahl)
+    assert row[10] == "FixedPrice"                     # Format
+
+def test_build_draft_file_ohne_quelle_entfernt_zieldatei(tmp_path):
+    from ebay_csv import build_draft_file, DRAFT_FILENAME
+    folder = str(tmp_path)
+    # Eine veraltete Entwurf-Datei liegt noch da, aber es gibt keine Sammeldatei.
+    ziel = os.path.join(folder, DRAFT_FILENAME)
+    open(ziel, "w").write("alt")
+    path, count = build_draft_file(folder)
+    assert (path, count) == (None, 0)
+    assert not os.path.exists(ziel)                    # veraltete Datei ist weg
+
+def test_remove_draft_file(tmp_path):
+    from ebay_csv import remove_draft_file, DRAFT_FILENAME
+    folder = str(tmp_path)
+    ziel = os.path.join(folder, DRAFT_FILENAME)
+    assert remove_draft_file(folder) is False          # nichts da -> False
+    open(ziel, "w").write("x")
+    assert remove_draft_file(folder) is True
+    assert not os.path.exists(ziel)
