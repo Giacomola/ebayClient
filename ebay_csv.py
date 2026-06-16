@@ -66,6 +66,17 @@ def _limit(text: str, max_len: int) -> str:
         cut = cut[:cut.rfind(" ")].rstrip()
     return cut or text[:max_len]
 
+def _preis_punkt(text: str) -> str:
+    """Macht aus einem Preis mit Dezimal-Komma einen mit Punkt (9999,99 -> 9999.99).
+
+    eBay erwartet den Punkt als Dezimaltrenner. Insbesondere der Entwurf-Prozessor
+    lehnt „9999,99" sonst ab („Could not serialize field [manifest.msrp]").
+    Deutsches Tausender-Format (1.234,56) wird dabei korrekt zu 1234.56."""
+    t = (text or "").strip()
+    if "," in t and "." in t:
+        t = t.replace(".", "")          # Tausenderpunkte entfernen
+    return t.replace(",", ".")          # Dezimalkomma -> Punkt
+
 # eBay-Längengrenzen: Anzeigentitel 80, Artikelmerkmale (C:...) je 65 Zeichen.
 SPECIFIC_MAX = 65
 
@@ -96,7 +107,7 @@ def _values(*, title, author, book_title, language, description, price,
         "*Description": _clean(description),
         "*Format": "FixedPrice",
         "*Duration": "GTC",
-        "*StartPrice": _clean(price),
+        "*StartPrice": _preis_punkt(_clean(price)),
         "*Quantity": "1",
         "*Location": _clean(location),
         "ShippingType": "Flat",
@@ -290,7 +301,7 @@ def append_listing(folder: str, filename: str = DEFAULT_FILENAME, **kwargs):
     # Die aktuelle Aktion (Add/Draft der neuen Zeile) gilt für ALLE Zeilen, damit
     # die ganze Datei immer der aktuellen Einstellung entspricht – auch ältere Zeilen.
     aktion = new_row.split(";")[0]
-    rows = [_mit_aktion(r, aktion) for r in rows]
+    rows = [_mit_aktion(_mit_preis_punkt(r), aktion) for r in rows]
 
     # Komplette Datei neu schreiben: BOM + Info + Kopf + alle Datenzeilen.
     with open(path, "w", encoding="utf-8-sig", newline="") as f:
@@ -303,6 +314,18 @@ def _mit_aktion(row: str, action: str) -> str:
     """Ersetzt die Aktion (erste Spalte) einer Datenzeile durch <action>."""
     cells = row.split(";")
     cells[0] = action
+    return ";".join(cells)
+
+_PREIS_INDEX = COLUMNS.index("*StartPrice")
+
+def _mit_preis_punkt(row: str) -> str:
+    """Normt den Preis (Spalte *StartPrice) einer bestehenden Datenzeile auf Punkt.
+
+    So heilen sich auch ältere Zeilen mit Dezimal-Komma, sobald die Datei neu
+    geschrieben wird – Komma kann dann nirgends mehr überleben."""
+    cells = row.split(";")
+    if _PREIS_INDEX < len(cells):
+        cells[_PREIS_INDEX] = _preis_punkt(cells[_PREIS_INDEX])
     return ";".join(cells)
 
 # ---------------------------------------------------------------------------
@@ -326,17 +349,6 @@ DRAFT_COLUMNS = [
     "Item photo URL", "Condition ID", "Description", "Format",
 ]
 DRAFT_HEADER = ";".join(DRAFT_COLUMNS)
-
-def _preis_punkt(text: str) -> str:
-    """Macht aus einem Preis mit Dezimal-Komma einen mit Punkt (9999,99 -> 9999.99).
-
-    eBays Entwurf-Prozessor kann „9999,99" nicht verarbeiten („Could not serialize
-    field [manifest.msrp]") und braucht den Punkt. Deutsches Tausender-Format
-    (1.234,56) wird dabei korrekt zu 1234.56."""
-    t = (text or "").strip()
-    if "," in t and "." in t:
-        t = t.replace(".", "")          # Tausenderpunkte entfernen
-    return t.replace(",", ".")          # Dezimalkomma -> Punkt
 
 def _full_to_draft_row(row: str) -> str:
     """Wandelt eine volle Datenzeile in eine Entwurf-Zeile (11 Spalten) um.
@@ -410,5 +422,5 @@ def set_action_all(folder: str, action: str, filename: str = DEFAULT_FILENAME) -
     with open(path, "w", encoding="utf-8-sig", newline="") as f:
         f.write(INFO_LINE + "\r\n" + HEADER + "\r\n")
         for r in rows:
-            f.write(_mit_aktion(r, action) + "\r\n")
+            f.write(_mit_aktion(_mit_preis_punkt(r), action) + "\r\n")
     return len(rows)

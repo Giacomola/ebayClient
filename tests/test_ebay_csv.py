@@ -346,3 +346,31 @@ def test_preis_punkt_varianten():
     assert _preis_punkt("9.99") == "9.99"
     assert _preis_punkt("1.234,56") == "1234.56"   # deutsches Tausenderformat
     assert _preis_punkt("  12,50 ") == "12.50"
+
+def test_volle_datei_speichert_preis_mit_punkt(tmp_path):
+    # Preis mit Komma eingegeben -> in der vollen Datei steht er mit Punkt.
+    from ebay_csv import COLUMNS
+    folder = str(tmp_path)
+    append_listing(folder, title="T", author="A", book_title="T", language="Deutsch",
+                   description="D", price="12,50", condition_id="5000",
+                   picture_urls=["https://x/1.jpg"])
+    i = COLUMNS.index("*StartPrice")
+    zeile = [ln for ln in open(folder + "/ebay-anzeigen.csv", encoding="utf-8-sig")
+             .read().splitlines() if ln.startswith(("Add;", "Draft;"))][0]
+    assert zeile.split(";")[i] == "12.50"
+
+def test_set_action_all_heilt_komma_preis(tmp_path):
+    # Eine alte Zeile mit Komma-Preis wird beim Neuschreiben auf Punkt geheilt.
+    from ebay_csv import set_action_all, COLUMNS, INFO_LINE, HEADER, build_row
+    folder = str(tmp_path)
+    row = build_row(title="T", author="A", book_title="T", language="Deutsch",
+                    description="D", price="9.99", condition_id="5000",
+                    picture_urls=["https://x/1.jpg"])
+    i = COLUMNS.index("*StartPrice")
+    cells = row.split(";"); cells[i] = "9999,99"          # künstlich Komma einsetzen
+    with open(folder + "/ebay-anzeigen.csv", "w", encoding="utf-8-sig", newline="") as f:
+        f.write(INFO_LINE + "\r\n" + HEADER + "\r\n" + ";".join(cells) + "\r\n")
+    set_action_all(folder, "Draft")
+    zeile = [ln for ln in open(folder + "/ebay-anzeigen.csv", encoding="utf-8-sig")
+             .read().splitlines() if ln.startswith(("Add;", "Draft;"))][0]
+    assert zeile.split(";")[i] == "9999.99"
