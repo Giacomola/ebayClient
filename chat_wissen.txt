@@ -46,15 +46,22 @@ eBay sie anzeigen kann. Das Programm läuft auf dem eigenen Computer im Browser.
    hochgeladen" gibt es dafür den Knopf „📤 Bei eBay hochladen (Upload-Seite öffnen)",
    der die eBay-Upload-Seite öffnet: https://www.ebay.de/sh/reports/uploads
    (eBay-Seite „Verkäufer-Cockpit Pro → Berichte → Uploads", File-Exchange). Dort die
-   Sammeldatei (CSV) aus dem Speicherordner auswählen und hochladen. Die Datei heißt
-   immer „ebay-anzeigen.csv". Der Knopf „📁 Speicherordner öffnen" (gleich daneben)
-   zeigt im Finder/Explorer, wo diese Datei liegt – praktisch zum Auffinden im
-   eBay-Datei-Dialog. Danach kann man mit „Sammeldatei archivieren & neu beginnen"
-   eine neue, leere Sammeldatei starten.
+   richtige Datei aus dem Speicherordner auswählen und hochladen. WELCHE Datei, hängt
+   von der Einstellung „Beim Hochladen zu eBay" ab:
+     • Als Entwurf (Standard): die Datei „ebay-entwuerfe.csv".
+     • Sofort einstellen: die Datei „ebay-anzeigen.csv".
+   Das Upload-Fenster nennt den passenden Dateinamen automatisch und sagt dazu, ob die
+   Einträge als Entwurf oder sofort aktiv hochgeladen werden. Der Knopf
+   „📁 Speicherordner öffnen" (gleich daneben) zeigt im Finder/Explorer, wo die Dateien
+   liegen – praktisch zum Auffinden im eBay-Datei-Dialog. Danach kann man mit
+   „Sammeldatei archivieren & neu beginnen" eine neue, leere Sammeldatei starten.
    WICHTIG: Standardmäßig werden die Angebote als ENTWURF hochgeladen – sie landen
-   also im eBay-Entwürfe-Ordner und gehen NICHT sofort online. Dort muss man sie
-   noch prüfen und selbst aktivieren/veröffentlichen. Wer lieber direkt einstellen
-   will, stellt das in den Einstellungen um (siehe „Beim Hochladen zu eBay").
+   also im eBay-Entwürfe-Ordner (https://www.ebay.de/sh/lst/drafts) und gehen NICHT
+   sofort online. Dort muss man sie noch prüfen und selbst aktivieren/veröffentlichen.
+   Im Entwurf trägt eBay nur Titel, Kategorie, Preis, Fotos, Zustand, Beschreibung und
+   Format; Artikelmerkmale (Autor/Buchtitel/Sprache …), Versand und Rücknahme ergänzt
+   man im Entwurf bei eBay. Wer lieber direkt einstellen will, stellt das in den
+   Einstellungen um (siehe „Beim Hochladen zu eBay").
 
 == Die Knöpfe oben (Kopfzeile) ==
 - „A−" / „A+": Schrift kleiner / größer.
