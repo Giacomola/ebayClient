@@ -148,12 +148,15 @@
 
   <dialog id="upload-dialog" class="overview-dialog">
     <form method="dialog">
+      <button type="button" class="dialog-close" aria-label="Schließen" title="Schließen">×</button>
       <h2>📤 Zum Upload</h2>
 
-      <h3>Noch nicht hochgeladen <span id="recent-stats" class="sub"></span></h3>
       <input id="up-search" type="search" class="ov-search"
              placeholder="🔍 Suchen (Autor oder Titel) …" autocomplete="off">
+      <h3>✅ Freigegeben – kommen beim Upload mit <span id="recent-stats" class="sub"></span></h3>
       <table class="ov-table"><tbody id="recent-list"></tbody></table>
+      <h3>⏸️ Zurückgehalten – noch nicht freigegeben <span id="up-held-count" class="sub"></span></h3>
+      <table class="ov-table"><tbody id="up-held"></tbody></table>
 
       <h3>Hochladen &amp; Speicherort</h3>
       <a id="ebay-upload-link" class="ebay-upload-btn"
@@ -162,20 +165,17 @@
       <p class="hint">So lädst du hoch: Auf „📤 Bei eBay hochladen" klicken, dort die
         Datei <b>ebay-anzeigen.csv</b> aus deinem Speicherordner auswählen. Mit
         „📁 Speicherordner öffnen" zeigt dir der Computer, wo diese Datei liegt.</p>
-      <button id="archive-file-btn" type="button">Sammeldatei archivieren &amp; neu beginnen</button>
 
-      <h3>Stand nach Status</h3>
-      <p id="up-status-summary" class="up-summary sub"></p>
-      <button id="up-manage-btn" type="button">Einträge verwalten …</button>
-
-      <menu>
-        <button value="cancel">Schließen</button>
-      </menu>
+      <footer class="up-footer">
+        <span id="up-status-summary" class="sub"></span>
+        <button id="up-manage-btn" type="button" class="link-btn">Einträge verwalten →</button>
+      </footer>
     </form>
   </dialog>
 
   <dialog id="overview-dialog" class="overview-dialog">
     <form method="dialog">
+      <button type="button" class="dialog-close" aria-label="Schließen" title="Schließen">×</button>
       <h2>Übersicht &amp; Verwaltung</h2>
       <button id="ov-to-upload-btn" type="button" class="menu-link">📤 → Zum Upload</button>
       <input id="ov-search" type="search" class="ov-search"
@@ -199,14 +199,15 @@
         <p class="sub ov-help">Früher abgeschlossene Sammeldateien (ganze CSV-Dateien).</p>
         <table class="ov-table"><tbody id="ov-archives"></tbody></table>
       </details>
-      <menu>
-        <button value="cancel">Schließen</button>
-      </menu>
+      <p class="ov-tools">
+        <button id="archive-file-btn" type="button" class="link-btn">Sammeldatei archivieren &amp; neu beginnen</button>
+      </p>
     </form>
   </dialog>
 
   <dialog id="settings-dialog">
     <form method="dialog">
+      <button type="button" class="dialog-close" aria-label="Schließen" title="Schließen">×</button>
       <h2>Einstellungen</h2>
 
       <details class="set-section">
@@ -276,13 +277,13 @@
 
       <menu>
         <button id="s-save" value="save">Speichern</button>
-        <button value="cancel">Abbrechen</button>
       </menu>
     </form>
   </dialog>
 
   <dialog id="prompt-dialog">
     <form method="dialog">
+      <button type="button" class="dialog-close" aria-label="Schließen" title="Schließen">×</button>
       <h2>Anweisungen</h2>
       <p class="hint">Hier legst du fest, wie die KI die Anzeige schreiben soll.
         Oben gelten allgemeine Regeln, darunter gibt es für jedes Feld eine eigene Anweisung.</p>
@@ -303,13 +304,13 @@
       <p class="hint" id="p-derive-status"></p>
       <menu>
         <button id="p-save" value="save">Speichern</button>
-        <button value="cancel">Abbrechen</button>
       </menu>
     </form>
   </dialog>
 
   <dialog id="handy-dialog">
     <form method="dialog">
+      <button type="button" class="dialog-close" aria-label="Schließen" title="Schließen">×</button>
       <h2>Per Handy hochladen</h2>
       <p class="hint">PC und Handy müssen im <b>gleichen Netzwerk</b> sein
         (WLAN oder Kabel am selben Router). Scanne den QR-Code mit der Handy-Kamera –
@@ -317,9 +318,6 @@
       <div id="handy-qr" class="handy-qr"></div>
       <p class="handy-url" id="handy-url"></p>
       <p class="hint" id="handy-fehler" hidden></p>
-      <menu>
-        <button value="cancel">Schließen</button>
-      </menu>
     </form>
   </dialog>
 

@@ -89,7 +89,14 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .banner.error   { background: #fbeae6; color: #8a2d12; border-color: #c4421f; }
 .banner.info    { background: #fdf3e7; color: #7a4a14; border-color: #d98b2b; }
 .header-buttons { display: flex; gap: .5rem; }
-dialog { border: none; border-radius: 12px; padding: 1.5rem; min-width: 320px; }
+dialog { border: none; border-radius: 12px; padding: 1.5rem; min-width: 320px;
+  /* manuell in der Größe verstellbar; Inhalt scrollt bei Bedarf. */
+  resize: both; overflow: auto; max-width: 95vw; max-height: 92vh; }
+/* × zum Schließen, oben rechts in jedem Fenster. */
+.dialog-close { position: absolute; top: .4rem; right: .5rem; width: 2rem; height: 2rem;
+  padding: 0; border: none; background: transparent; color: #888; font-size: 1.6rem;
+  line-height: 1; cursor: pointer; border-radius: 6px; }
+.dialog-close:hover { color: #222; background: #eee; }
 dialog label { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .8rem;
   font-size: .9rem; }
 dialog input, dialog select, dialog textarea { font-size: 1rem; padding: .5rem;
@@ -139,7 +146,7 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 .chat-eingabe textarea { flex: 1; resize: none; font-family: inherit; font-size: 1rem;
   padding: .5rem; border: 1px solid #c9c3b5; border-radius: 6px; }
 .chat-eingabe button { white-space: nowrap; }
-.overview-dialog { max-width: 600px; width: 90vw; max-height: 85vh; overflow-y: auto; }
+.overview-dialog { width: min(92vw, 38rem); }
 .overview-dialog h3 { margin: 1rem 0 .3rem; font-size: 1rem; }
 /* Suchfeld oben im Übersicht-Fenster (filtert alle Tabellen). */
 .ov-search { width: 100%; box-sizing: border-box; margin: .2rem 0 1rem;
@@ -150,6 +157,9 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
   border-bottom: 1px solid #eceae4; }
 .ov-table tr:nth-child(even) td { background: #faf9f6; }
 .ovt-name { word-break: break-word; }
+/* Lange Namen auf höchstens 2 Zeilen begrenzen (voller Name als Tooltip). */
+.ovt-name-text { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; }
 .ovt-info { white-space: nowrap; color: #555; }
 .ovt-act { text-align: right; white-space: nowrap; width: 1%; }
 .ovt-act button { padding: .2rem .5rem; font-size: .8rem;
@@ -164,6 +174,16 @@ dialog textarea { overflow: hidden; resize: none; line-height: 1.4; }
 .ov-archived > summary::before { content: "▸ "; color: #8a857a; font-weight: normal; }
 .ov-archived[open] > summary::before { content: "▾ "; }
 .up-summary { font-size: .95rem; color: #444; margin: .2rem 0 .6rem; }
+/* Fußleiste des Upload-Fensters: kleiner Statustext links, „verwalten"-Link rechts. */
+.up-footer { display: flex; align-items: center; justify-content: space-between;
+  gap: .5rem; flex-wrap: wrap; margin-top: 1.2rem; padding-top: .6rem;
+  border-top: 1px solid #e3e0d8; }
+/* Dezenter Link-Knopf (für „verwalten" und „Sammeldatei archivieren"). */
+.link-btn { background: none; border: none; padding: .2rem 0; color: #8a5a3a;
+  text-decoration: underline; font-size: .9rem; cursor: pointer; }
+.link-btn:hover { color: #c4623a; }
+/* Dezente Werkzeug-Zeile unten in der Verwaltung. */
+.ov-tools { margin: 1.2rem 0 .2rem; padding-top: .6rem; border-top: 1px solid #e3e0d8; }
 .hint { font-size: .85rem; color: #6b665c; margin: 0 0 1rem; }
 .menu-link { width: 100%; text-align: left; font-weight: 600; margin-bottom: .2rem; }
 /* Aufklappbare Abschnitte im Einstellungen-Dialog. */

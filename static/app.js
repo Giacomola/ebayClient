@@ -654,7 +654,11 @@ function ovtRow(name, info, knoepfe) {
   tr.dataset.search = `${name} ${info}`.toLowerCase();
   const tdN = document.createElement("td");
   tdN.className = "ovt-name";
-  tdN.textContent = name;
+  const nameEl = document.createElement("span");
+  nameEl.className = "ovt-name-text";
+  nameEl.textContent = name;
+  nameEl.title = name;            // voller Name als Tooltip beim Überfahren
+  tdN.appendChild(nameEl);
   const tdI = document.createElement("td");
   tdI.className = "ovt-info";
   tdI.textContent = info;
@@ -729,9 +733,9 @@ async function caseAction(id, pfad, erfolg, frage) {
   try { d = await r.json(); } catch (e) { /* ohne Body weiter */ }
   if (!r.ok) { banner("error", d.error || "Aktion fehlgeschlagen.", 8000); return; }
   banner("success", erfolg, 4000);
-  await renderOverview();   // Liste im Fenster neu aufbauen
+  if (overviewDlg.open) await renderOverview();   // offenes Fenster neu aufbauen
   loadCases();
-  loadRecent();
+  loadRecent();   // Zähler + (falls offen) das Upload-Fenster aktualisieren
 }
 // Standard-Aktionen, die mehrere Abschnitte teilen.
 function aktArchivieren(id) {
@@ -822,18 +826,51 @@ on("ov-search", "input", ovFilter);
 
 // --- „Zum Upload"-Fenster: alles rund ums Hochladen gebündelt -----------------
 const uploadDlg = $("upload-dialog");
+async function renderUpload() {
+  let d;
+  try { d = await (await fetch("/api/overview")).json(); }
+  catch (e) { banner("error", "Upload-Übersicht konnte nicht geladen werden.", 6000); return; }
+  const stats = d.stats || { count: 0, total: 0 };
+
+  // ✅ Freigegeben – kommen beim Upload mit (Bearbeiten · Zurückziehen)
+  $("recent-stats").textContent = stats.count
+    ? `– ${stats.count} ${stats.count === 1 ? "Anzeige" : "Anzeigen"} · ${euro(stats.total)}`
+    : "– noch nichts";
+  fillTable("recent-list", d.listings || [], (item) => {
+    const info = item.price ? `${item.price} EUR` : "";
+    const name = item.title || "(ohne Titel)";
+    const knoepfe = [];
+    if (item.case_id) {
+      const id = item.case_id;
+      knoepfe.push({ text: "Bearbeiten", onClick: () => openCase(id) });
+      knoepfe.push({ text: "Zurückziehen", onClick: () =>
+        caseAction(id, "zurueckziehen", "Eintrag zurückgezogen – nicht mehr in der Sammeldatei.") });
+    }
+    return ovtRow(name, info, knoepfe);
+  }, "Noch nichts freigegeben.");
+
+  // ⏸️ Zurückgehalten – noch nicht freigegeben (Bearbeiten · Freigeben)
+  const held = d.held_cases || [];
+  $("up-held-count").textContent = ovCount(held.length, "Eintrag", "Einträge");
+  fillTable("up-held", held, (c) =>
+    ovtRow(c.name, `${ovFotos(c)} · ${formatDatum(c.saved_at)}`, [
+      { text: "Bearbeiten", onClick: () => openCase(c.id) },
+      { text: "Freigeben", cls: "case-go", onClick: () =>
+          caseAction(c.id, "freigeben", "Eintrag freigegeben – jetzt in der Sammeldatei.") },
+    ]), "Nichts zurückgehalten.");
+
+  // Fußleiste: kompakter Stand nach Status
+  const a = (d.active_cases || []).length;
+  const ar = (d.archived_cases || []).length;
+  $("up-status-summary").textContent =
+    `🛠️ In Arbeit: ${a} · ⏸️ Zurückgehalten: ${held.length} · ✅ Freigegeben: ${stats.count} · 🗄️ Archiviert: ${ar}`;
+  // Zähler am roten „Zum Upload"-Knopf
+  const badge = $("upload-count");
+  if (badge) badge.textContent = stats.count ? ` · ${stats.count} bereit` : "";
+  upFilter();
+}
 async function openUpload() {
-  await loadRecent();   // „Noch nicht hochgeladen"-Liste + Zähler füllen
-  // Kompakter Stand nach Status (eine Zeile) aus der Übersicht.
-  try {
-    const d = await (await fetch("/api/overview")).json();
-    const a = (d.active_cases || []).length;
-    const h = (d.held_cases || []).length;
-    const f = (d.stats || {}).count || 0;
-    const ar = (d.archived_cases || []).length;
-    $("up-status-summary").textContent =
-      `🛠️ In Arbeit: ${a} · ⏸️ Zurückgehalten: ${h} · ✅ Freigegeben: ${f} · 🗄️ Archiviert: ${ar}`;
-  } catch (e) { $("up-status-summary").textContent = ""; }
+  await renderUpload();
   uploadDlg.showModal();
 }
 on("upload-btn", "click", openUpload);
@@ -848,6 +885,43 @@ on("ebay-upload-link", "click", (e) => {
 // Querverweise zwischen den beiden Fenstern (immer erst schließen, dann öffnen).
 on("up-manage-btn", "click", () => { uploadDlg.close(); openOverview(); });
 on("ov-to-upload-btn", "click", () => { overviewDlg.close(); openUpload(); });
+
+// --- Fenster: per × schließen, größenverstellbar, Größe merken ----------------
+// Jedes Fenster lässt sich über das × oben rechts schließen.
+document.querySelectorAll(".dialog-close").forEach((b) =>
+  b.addEventListener("click", () => b.closest("dialog").close()));
+
+// Fenstergröße merken: in rem speichern, damit sie zur eingestellten Schriftgröße
+// passt. Beim Öffnen wiederherstellen, beim Schließen sichern.
+function dlgSizeKey(dlg) { return "dlgsize:" + dlg.id; }
+function rootPx() {
+  return parseFloat(getComputedStyle(document.documentElement).fontSize) || 18;
+}
+function restoreDialogSize(dlg) {
+  if (!dlg.id) return;
+  let s = null;
+  try { s = JSON.parse(localStorage.getItem(dlgSizeKey(dlg)) || "null"); } catch (e) { /* egal */ }
+  if (s && s.w && s.h) {
+    dlg.style.width = s.w + "rem";
+    dlg.style.height = s.h + "rem";
+  } else {
+    dlg.style.width = ""; dlg.style.height = "";   // natürliche Größe
+  }
+}
+function saveDialogSize(dlg) {
+  if (!dlg.id || !dlg.offsetWidth) return;
+  const px = rootPx();
+  localStorage.setItem(dlgSizeKey(dlg),
+    JSON.stringify({ w: dlg.offsetWidth / px, h: dlg.offsetHeight / px }));
+}
+// showModal so erweitern, dass jede geöffnete Fenstergröße zuerst wiederhergestellt wird.
+const _showModal = HTMLDialogElement.prototype.showModal;
+HTMLDialogElement.prototype.showModal = function () {
+  restoreDialogSize(this);
+  return _showModal.apply(this, arguments);
+};
+document.querySelectorAll("dialog").forEach((dlg) =>
+  dlg.addEventListener("close", () => saveDialogSize(dlg)));
 
 // --- Fragen-Fenster: einfacher Chat mit der KI ------------------------------
 const chatPanel = $("chat-panel");
@@ -974,7 +1048,8 @@ async function deleteCase(id, name) {
   loadCases();
 }
 
-// Zeigt unten die zuletzt gespeicherten Anzeigen aus der Sammeldatei.
+// Aktualisiert nur den Zähler am roten „Zum Upload"-Knopf (leichte Abfrage).
+// Die Tabellen im Upload-Fenster füllt renderUpload() beim Öffnen.
 async function loadRecent() {
   let data;
   try {
@@ -982,32 +1057,10 @@ async function loadRecent() {
   } catch (e) {
     return;  // ohne Liste ist die App weiter benutzbar
   }
-  // „Noch nicht hochgeladen" als Tabelle (Eintrag · Preis · Aktion), durchsuchbar.
-  fillTable("recent-list", data.listings || [], (item) => {
-    const info = item.price ? `${item.price} EUR` : "";
-    const name = item.title || "(ohne Titel)";
-    const knoepfe = item.case_id
-      ? [{ text: "Bearbeiten", onClick: () => openCase(item.case_id) }]
-      : [];
-    return ovtRow(name, info, knoepfe);
-  }, "Noch nichts in der Sammeldatei.");
-  upFilter();   // aktiven Suchtext nach dem Neuaufbau wieder anwenden
-  // Überblick: wie viele Anzeigen liegen bereit und was ist die Preissumme?
-  const stats = data.stats || { count: 0, total: 0 };
-  const statsEl = $("recent-stats");
-  if (statsEl) {
-    if (stats.count > 0) {
-      const summe = stats.total.toLocaleString("de-DE",
-        { style: "currency", currency: "EUR" });
-      const wort = stats.count === 1 ? "Anzeige" : "Anzeigen";
-      statsEl.textContent = `– ${stats.count} ${wort} bereit · Summe Startpreise ${summe}`;
-    } else {
-      statsEl.textContent = "Noch nichts in der Sammeldatei.";
-    }
-  }
-  // Zähler direkt am roten „Zum Upload"-Knopf, damit man bereitliegende Anzeigen sieht.
+  const count = (data.stats || {}).count || 0;
   const badge = $("upload-count");
-  if (badge) badge.textContent = stats.count ? ` · ${stats.count} bereit` : "";
+  if (badge) badge.textContent = count ? ` · ${count} bereit` : "";
+  if (uploadDlg.open) renderUpload();   // ist das Fenster offen, gleich mitziehen
 }
 
 // Speichert die aktuelle Anzeige in die Sammeldatei. overwrite=true erst senden,
@@ -1115,7 +1168,8 @@ on("archive-file-btn", "click", async () => {
     $("show-entry-btn").hidden = true;
     banner("success", `✓ ${d.moved} Eintrag/Einträge archiviert als „${d.filename}". `
            + `Die Sammeldatei beginnt nun neu.`, 8000);
-    loadRecent();  // Liste ist jetzt leer → Bereich blendet sich aus
+    if (overviewDlg.open) renderOverview();   // Verwaltung neu aufbauen
+    loadRecent();  // Zähler + (falls offen) Upload-Fenster aktualisieren
   } catch (e) {
     banner("error", "Konnte nicht archivieren.");
   }
