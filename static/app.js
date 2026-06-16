@@ -695,10 +695,10 @@ function fillTable(id, items, rowFn, leerText) {
   for (const it of items) tb.appendChild(rowFn(it));
   tb.appendChild(items.length ? ovNoResultRow() : ovEmptyRow(leerText));
 }
-// Filtert alle Tabellen im Übersicht-Fenster nach dem Suchtext.
-function ovFilter() {
-  const q = ($("ov-search").value || "").trim().toLowerCase();
-  document.querySelectorAll("#overview-dialog tbody").forEach((tb) => {
+// Filtert alle Status-Tabellen innerhalb eines Fensters nach dem Suchtext.
+function filterTables(scopeSel, rohtext) {
+  const q = (rohtext || "").trim().toLowerCase();
+  document.querySelectorAll(`${scopeSel} tbody`).forEach((tb) => {
     const rows = tb.querySelectorAll("tr[data-search]");
     let sichtbar = 0;
     rows.forEach((tr) => {
@@ -710,6 +710,8 @@ function ovFilter() {
     if (nores) nores.hidden = !(rows.length > 0 && sichtbar === 0);
   });
 }
+function ovFilter() { filterTables("#overview-dialog", $("ov-search").value); }
+function upFilter() { filterTables("#upload-dialog", $("up-search").value); }
 function ovCount(n, ein, mehr) {
   return n ? `– ${n} ${n === 1 ? ein : mehr}` : "– keine";
 }
@@ -835,6 +837,7 @@ async function openUpload() {
   uploadDlg.showModal();
 }
 on("upload-btn", "click", openUpload);
+on("up-search", "input", upFilter);
 // „Bei eBay hochladen": als echtes neues Fenster öffnen (nicht nur als Tab).
 // Fenstergröße angeben -> der Browser öffnet ein eigenständiges Fenster.
 on("ebay-upload-link", "click", (e) => {
@@ -979,28 +982,16 @@ async function loadRecent() {
   } catch (e) {
     return;  // ohne Liste ist die App weiter benutzbar
   }
-  const list = $("recent-list");
-  list.innerHTML = "";
-  for (const item of data.listings || []) {
-    const li = document.createElement("li");
-    li.className = "recent-row";
-    const preis = item.price ? ` – ${item.price} EUR` : "";
-    const info = document.createElement("span");
-    info.className = "recent-info";
-    info.textContent = (item.title || "(ohne Titel)") + preis;
-    li.appendChild(info);
-    // Liegt zu dieser Anzeige ein vollständiger Fall vor? Dann bearbeitbar.
-    if (item.case_id) {
-      const edit = document.createElement("button");
-      edit.type = "button";
-      edit.className = "recent-edit";
-      edit.textContent = "Bearbeiten";
-      edit.title = "Diese Anzeige öffnen und ändern – beim Speichern wird die CSV-Zeile aktualisiert";
-      edit.addEventListener("click", () => openCase(item.case_id));
-      li.appendChild(edit);
-    }
-    list.appendChild(li);
-  }
+  // „Noch nicht hochgeladen" als Tabelle (Eintrag · Preis · Aktion), durchsuchbar.
+  fillTable("recent-list", data.listings || [], (item) => {
+    const info = item.price ? `${item.price} EUR` : "";
+    const name = item.title || "(ohne Titel)";
+    const knoepfe = item.case_id
+      ? [{ text: "Bearbeiten", onClick: () => openCase(item.case_id) }]
+      : [];
+    return ovtRow(name, info, knoepfe);
+  }, "Noch nichts in der Sammeldatei.");
+  upFilter();   // aktiven Suchtext nach dem Neuaufbau wieder anwenden
   // Überblick: wie viele Anzeigen liegen bereit und was ist die Preissumme?
   const stats = data.stats || { count: 0, total: 0 };
   const statsEl = $("recent-stats");
