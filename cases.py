@@ -29,13 +29,22 @@ def _name_from_fields(fields: dict) -> str:
     return " – ".join(teile)
 
 
+# Erlaubte Status eines Falls:
+#   offen          = begonnen, noch nicht abgesendet (zum Wiederaufnehmen)
+#   zurückgehalten = fertig & gespeichert, aber NICHT in der Upload-CSV
+#   in_csv         = freigegeben, steht in der Sammeldatei (wird hochgeladen)
+#   archiviert     = weggeräumt/ausgeblendet, wiederherstellbar
+GUELTIGE_STATUS = ("offen", "zurückgehalten", "in_csv", "archiviert")
+
+
 def save_case(draft: dict, cases_dir: str = "cases", name: str | None = None,
               status: str = "offen", csv_title: str = "") -> str:
     """Speichert den Entwurf als Fall und gibt dessen ID zurück.
 
     status="offen" = begonnen, noch nicht abgesendet (zum Wiederaufnehmen).
     status="in_csv" = bereits in der Sammeldatei; csv_title ist dann der genaue
-    Titel der CSV-Zeile (zum Zuordnen beim Bearbeiten)."""
+    Titel der CSV-Zeile (zum Zuordnen beim Bearbeiten).
+    Weitere Status siehe GUELTIGE_STATUS."""
     os.makedirs(cases_dir, exist_ok=True)
     case_id = "case_%d" % int(time.time() * 1000)
     i = 0
@@ -116,6 +125,28 @@ def case_status(case_id: str, cases_dir: str = "cases") -> str | None:
         return None
     rec = _read_record(cases_dir, case_id + ".json")
     return rec.get("status", "offen") if rec else None
+
+
+def set_case_status(case_id: str, status: str, cases_dir: str = "cases",
+                    csv_title: str | None = None) -> bool:
+    """Ändert den Status eines Falls (z. B. "zurückgehalten"→"in_csv").
+
+    Optional wird csv_title mitgesetzt (None lässt es unverändert). Gibt True
+    zurück, wenn der Fall existierte und der Status gültig war."""
+    if status not in GUELTIGE_STATUS or not _ID_RE.match(case_id or ""):
+        return False
+    rec = _read_record(cases_dir, case_id + ".json")
+    if rec is None:
+        return False
+    rec["status"] = status
+    if csv_title is not None:
+        rec["csv_title"] = csv_title
+    try:
+        with open(_case_path(cases_dir, case_id), "w", encoding="utf-8") as f:
+            json.dump(rec, f, ensure_ascii=False)
+    except OSError:
+        return False
+    return True
 
 
 def delete_in_csv_cases(cases_dir: str = "cases") -> int:

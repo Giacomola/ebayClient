@@ -1,6 +1,6 @@
 import os
 from datetime import date
-from ebay_csv import (build_csv, append_listing, entry_exists,
+from ebay_csv import (build_csv, append_listing, entry_exists, remove_listing,
                       recent_listings, archive_as_file, COLUMNS)
 
 def _parse(data: bytes):
@@ -135,6 +135,28 @@ def test_entry_exists(tmp_path):
     assert entry_exists(folder, "Schiller", "Faust") is False   # anderer Autor
     assert entry_exists(folder, "Goethe", "Werther") is False   # anderer Buchtitel
     assert entry_exists(folder, "Goethe", "") is False          # ohne Buchtitel nie Dublette
+
+def test_remove_listing_entfernt_passende_zeile(tmp_path):
+    folder = str(tmp_path)
+    gemeinsam = dict(author="A", language="Deutsch", description="D", price="1.00",
+                     condition_id="5000", picture_urls=["https://x/1.jpg"])
+    append_listing(folder, title="Eins", book_title="Eins", **gemeinsam)
+    append_listing(folder, title="Zwei", book_title="Zwei", **gemeinsam)
+    # Schlüssel ist Autor+Buchtitel, Groß/Klein + Leerzeichen egal.
+    assert remove_listing(folder, "a", "  eins ") is True
+    titel = {r["title"] for r in recent_listings(folder)}
+    assert titel == {"Zwei"}                              # nur "Eins" ist weg
+    assert remove_listing(folder, "A", "Eins") is False   # schon entfernt -> nichts mehr
+
+def test_remove_listing_ohne_treffer_und_ohne_datei(tmp_path):
+    folder = str(tmp_path)
+    assert remove_listing(folder, "A", "Egal") is False   # Datei existiert nicht
+    append_listing(folder, title="Da", book_title="Da", author="A", language="Deutsch",
+                   description="D", price="1.00", condition_id="5000",
+                   picture_urls=["https://x/1.jpg"])
+    assert remove_listing(folder, "A", "Anderer") is False  # kein passender Eintrag
+    assert remove_listing(folder, "A", "") is False         # ohne Buchtitel kein Treffer
+    assert len(recent_listings(folder)) == 1                # nichts gelöscht
 
 def test_recent_listings_neueste_zuerst(tmp_path):
     folder = str(tmp_path)

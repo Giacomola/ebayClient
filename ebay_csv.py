@@ -240,6 +240,30 @@ def list_archives(folder: str) -> list:
     out.sort(key=lambda a: a["filename"], reverse=True)
     return out
 
+def remove_listing(folder: str, author, book_title,
+                   filename: str = DEFAULT_FILENAME) -> bool:
+    """Entfernt die Anzeige mit gleichem Autor + Buchtitel aus der Sammeldatei.
+
+    Nutzt denselben Schlüssel wie der Dubletten-Abgleich. Schreibt die Datei mit
+    den übrigen Zeilen neu (Info- und Kopfzeile bleiben erhalten, auch wenn keine
+    Anzeige mehr übrig ist). Gibt True zurück, wenn etwas entfernt wurde."""
+    key = (_norm(author), _norm(book_title))
+    if not key[1]:                       # ohne Buchtitel kein verlässlicher Treffer
+        return False
+    path = os.path.join(folder, filename)
+    if not os.path.exists(path):
+        return False
+    with open(path, "r", encoding="utf-8-sig") as f:
+        rows = [line.rstrip("\r\n") for line in f if _ist_angebotszeile(line)]
+    rest = [r for r in rows if _row_key(r) != key]
+    if len(rest) == len(rows):           # nichts gefunden
+        return False
+    with open(path, "w", encoding="utf-8-sig", newline="") as f:
+        f.write(INFO_LINE + "\r\n" + HEADER + "\r\n")
+        for r in rest:
+            f.write(r + "\r\n")
+    return True
+
 def append_listing(folder: str, filename: str = DEFAULT_FILENAME, **kwargs):
     """Fügt eine Anzeige zur gemeinsamen CSV im Ordner hinzu.
 

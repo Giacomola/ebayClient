@@ -1,5 +1,5 @@
 from cases import (save_case, list_cases, load_case, delete_case, _name_from_fields,
-                   find_csv_case_id, case_status, delete_in_csv_cases)
+                   find_csv_case_id, case_status, delete_in_csv_cases, set_case_status)
 
 def _draft(title="Faust", author="Goethe", images=1):
     return {
@@ -90,6 +90,25 @@ def test_load_und_delete_bei_unbekannt(tmp_path):
     assert load_case("case_123", d) is None
     assert delete_case("case_123", d) is False
     assert list_cases(d) == []             # nicht vorhandener Ordner -> leere Liste
+
+def test_set_case_status_aendert_status(tmp_path):
+    d = str(tmp_path / "cases")
+    cid = save_case(_draft(title="Halten"), d, status="zurückgehalten")
+    assert case_status(cid, d) == "zurückgehalten"
+    # Freigeben: zurückgehalten -> in_csv, mit csv_title
+    assert set_case_status(cid, "in_csv", d, csv_title="Mein Titel") is True
+    assert case_status(cid, d) == "in_csv"
+    assert find_csv_case_id("Mein Titel", d) == cid
+    # Felder/Entwurf bleiben erhalten
+    assert load_case(cid, d)["fields"]["book_title"] == "Halten"
+
+def test_set_case_status_weist_unsinn_ab(tmp_path):
+    d = str(tmp_path / "cases")
+    cid = save_case(_draft(), d)
+    assert set_case_status(cid, "quatsch", d) is False      # ungültiger Status
+    assert set_case_status("../config", "in_csv", d) is False  # unsichere ID
+    assert set_case_status("case_999", "in_csv", d) is False    # gibt es nicht
+    assert case_status(cid, d) == "offen"                    # unverändert
 
 def test_save_case_behaelt_price_result(tmp_path):
     d = str(tmp_path / "cases")
