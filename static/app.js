@@ -1474,3 +1474,36 @@ $("s-save").addEventListener("click", async (e) => {
   dlg.close();
   status("Einstellungen gespeichert.");
 });
+
+// „Programm aktualisieren": holt den neuesten Stand von GitHub (Backend /api/update
+// sichert vorher und rollt bei Fehlern automatisch zurück). Danach Neustart nötig.
+on("update-btn", "click", async () => {
+  const ok = confirm(`Das Programm wird auf den neuesten Stand von GitHub gebracht. `
+    + `Deine Daten bleiben erhalten. Danach musst du das Programm einmal neu starten.\n\n`
+    + `Jetzt aktualisieren?`);
+  if (!ok) return;
+  const knopf = $("update-btn");
+  const info = $("update-status");
+  knopf.disabled = true;
+  if (info) info.textContent = "⏳ Wird heruntergeladen und installiert … das kann eine Minute dauern.";
+  let r, d;
+  try {
+    r = await fetch("/api/update", { method: "POST" });
+    d = await r.json().catch(() => ({}));
+  } catch (err) {
+    knopf.disabled = false;
+    if (info) info.textContent = "⚠️ Aktualisierung fehlgeschlagen (keine Verbindung). Es wurde nichts verändert.";
+    return;
+  }
+  if (!r.ok) {
+    knopf.disabled = false;
+    if (info) info.textContent = "⚠️ " + (d.error || "Aktualisierung fehlgeschlagen. Es wurde nichts verändert.");
+    return;
+  }
+  const paket = d.pip_ok === false
+    ? " (Zusatz-Pakete konnten nicht aufgefrischt werden – beim Neustart wird das nachgeholt.)"
+    : "";
+  if (info) info.textContent = `✓ Aktualisierung fertig: ${d.updated} Datei(en) erneuert.${paket} `
+    + `Bitte schließe das Programm jetzt und starte es neu.`;
+  banner("success", "✓ Aktualisiert! Bitte das Programm jetzt neu starten, damit der neue Stand läuft.", 12000);
+});

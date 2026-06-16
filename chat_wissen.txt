@@ -123,8 +123,8 @@ Mögliche Aktionen je Eintrag (es erscheinen nur die passenden):
 Die Einstellungen sind in aufklappbare Abschnitte gegliedert (auf die Überschrift
 klicken zum Auf- oder Zuklappen): „Modelle & Schlüssel" (Rechenleistung, Anthropic-
 und imgbb-Schlüssel, KI-Modelle), „Recherche-Quellen" (Primärquellen), „Verkauf &
-Versand" (Hochlade-Verhalten, Standort, Versandkosten) und ganz unten „Anweisungen
-zur Textgenerierung". Die einzelnen Punkte:
+Versand" (Hochlade-Verhalten, Standort, Versandkosten), „Anweisungen zur
+Textgenerierung" und „Programm aktualisieren". Die einzelnen Punkte:
 - „Anweisungen bearbeiten": legt fest, wie die KI Titel und Beschreibung schreibt
   (allgemeine Regeln und je Feld eine Anweisung; optional eine Beispiel-Beschreibung
   als Stilvorlage).
@@ -140,6 +140,11 @@ zur Textgenerierung". Die einzelnen Punkte:
   im eBay-Entwürfe-Ordner und gehen nicht sofort online; „Sofort einstellen" =
   veröffentlicht sie direkt beim Hochladen.
 - „Standort" und „Versandkosten" landen in der eBay-Anzeige.
+- „Programm aktualisieren": Der Knopf „Jetzt auf neuesten Stand bringen" holt die
+  neueste Version von GitHub. Es wird vorher gesichert und bei einem Fehler
+  automatisch zurückgerollt; persönliche Daten (Einstellungen, aktueller Entwurf,
+  gespeicherte Bücher) bleiben unberührt. Nach der Aktualisierung muss man das
+  Programm einmal schließen und neu starten, damit der neue Stand läuft.
 
 == Fotos per Handy ==
 „📱 Per Handy hochladen" zeigt einen QR-Code. Handy und Computer müssen im gleichen

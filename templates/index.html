@@ -281,6 +281,15 @@
         <p class="hint">Legt fest, wie die KI Titel und Beschreibung schreibt.</p>
       </details>
 
+      <details class="set-section">
+        <summary>🔄 Programm aktualisieren</summary>
+        <p class="hint">Aktuelle Version: <b>v{{ app_version }}</b>. Holt den neuesten
+          Stand von GitHub (mit Sicherung; bei Fehlern wird automatisch zurückgerollt).
+          Deine Daten (Einstellungen, Entwurf, gespeicherte Bücher) bleiben unberührt.</p>
+        <button id="update-btn" type="button">🔄 Jetzt auf neuesten Stand bringen</button>
+        <p class="hint" id="update-status"></p>
+      </details>
+
       <menu>
         <button id="s-save" value="save">Speichern</button>
       </menu>
