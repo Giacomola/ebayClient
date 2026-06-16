@@ -525,6 +525,19 @@ def create_app(config_path: str = "config.json",
             return jsonify({"error": f"Konnte den Ordner nicht öffnen: {e}"}), 500
         return jsonify({"ok": True, "path": folder})
 
+    @app.post("/api/update")
+    def update_app():
+        """Aktualisiert den Helfer auf den neuesten Stand von GitHub (mit Sicherung
+        und automatischem Zurückrollen bei Fehlern). Danach ist ein Neustart nötig."""
+        from updater import run_update
+        projekt = os.path.dirname(os.path.abspath(__file__))
+        try:
+            ergebnis = run_update(projekt)
+        except Exception as e:  # noqa: BLE001 - dem Nutzer verständlich melden
+            return jsonify({"error": "Aktualisierung fehlgeschlagen (es wurde nichts "
+                                     f"verändert): {e}"}), 502
+        return jsonify({"ok": True, **ergebnis})
+
     @app.post("/api/generate")
     def generate():
         settings = load_settings(config_path)

@@ -8,3 +8,4 @@ eBay-Test-*.csv
 .DS_Store
 Buch-Anzeigen-Helfer.app/
 logs/
+.update-backups/
