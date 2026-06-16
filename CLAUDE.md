@@ -24,6 +24,20 @@ Verbindliche Kurzregeln:
 - **Vor dem Editieren häufiger Dateien kurz Git-Stand prüfen** (`git log -5 --oneline -- <datei>`):
   `app.py`, `draft.py`, `ebay_csv.py`, `config.py`, `BACKLOG.md`.
 
+## App-Wissen für den Frage-Chat (`chat_wissen.txt`)
+
+`chat_wissen.txt` (neben `app.py`, in git) ist die **einzige Wissensquelle** des
+eingebauten „Fragen"-Chats: Die Route `/api/chat` liest sie über `_chat_wissen()`
+und ergänzt nur den aktuellen Einträge-Stand. Damit der Chat immer stimmt, gilt:
+
+- **Bei jeder neuen oder geänderten nutzersichtbaren Funktion** (Knöpfe, Felder,
+  Abläufe, Einstellungen) `chat_wissen.txt` im selben Schritt aktualisieren.
+- **Nur beschreiben, was wirklich existiert** — keine erfundenen Knöpfe/Funktionen;
+  die Datei weist den Chat ausdrücklich an, sich strikt an ihren Inhalt zu halten.
+- Die Datei wird teils auch **zwei-Wege im Programm bearbeitet** — vor dem Ändern
+  Git-Stand prüfen; ist sie schon fremd/uncommittet geändert, erst klären/abwarten
+  statt zu überschreiben.
+
 ## Datenschutz (gitignored — nicht committen)
 
 - `config.json` — API-Schlüssel (Anthropic, imgbb)
