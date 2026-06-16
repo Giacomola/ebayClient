@@ -32,8 +32,11 @@ eBay sie anzeigen kann. Das Programm läuft auf dem eigenen Computer im Browser.
    hochgeladen" gibt es dafür den Knopf „📤 Bei eBay hochladen (Upload-Seite öffnen)",
    der die eBay-Upload-Seite öffnet: https://www.ebay.de/sh/reports/uploads
    (eBay-Seite „Verkäufer-Cockpit Pro → Berichte → Uploads", File-Exchange). Dort die
-   Sammeldatei (CSV) aus dem Speicherordner auswählen und hochladen. Danach kann man
-   mit „Sammeldatei archivieren & neu beginnen" eine neue, leere Sammeldatei starten.
+   Sammeldatei (CSV) aus dem Speicherordner auswählen und hochladen. Die Datei heißt
+   immer „ebay-anzeigen.csv". Der Knopf „📁 Speicherordner öffnen" (gleich daneben)
+   zeigt im Finder/Explorer, wo diese Datei liegt – praktisch zum Auffinden im
+   eBay-Datei-Dialog. Danach kann man mit „Sammeldatei archivieren & neu beginnen"
+   eine neue, leere Sammeldatei starten.
    WICHTIG: Standardmäßig werden die Angebote als ENTWURF hochgeladen – sie landen
    also im eBay-Entwürfe-Ordner und gehen NICHT sofort online. Dort muss man sie
    noch prüfen und selbst aktivieren/veröffentlichen. Wer lieber direkt einstellen

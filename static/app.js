@@ -642,24 +642,25 @@ function formatDatum(ts) {
        + d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
 }
 
-// --- Übersicht-Fenster: alles gebündelt (in Arbeit · Sammeldatei · Archiv) ----
+// --- Übersicht & Verwaltung: alle Einträge nach Status, mit Aktionen ----------
 const overviewDlg = $("overview-dialog");
 function euro(n) {
   return (n || 0).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
-// Baut eine Zeile mit Text + optionalem Knopf; leerer Zustand als grauer Hinweis.
-function ovRow(text, knopfText, onClick) {
+// Baut eine Zeile mit Text + beliebig vielen Knöpfen ([{text, onClick, cls}]).
+function ovRow(text, knoepfe) {
   const li = document.createElement("li");
   li.className = "ov-row";
   const info = document.createElement("span");
   info.className = "ov-info";
   info.textContent = text;
   li.appendChild(info);
-  if (knopfText) {
+  for (const k of (knoepfe || [])) {
     const b = document.createElement("button");
     b.type = "button";
-    b.textContent = knopfText;
-    b.addEventListener("click", onClick);
+    b.textContent = k.text;
+    if (k.cls) b.className = k.cls;
+    b.addEventListener("click", k.onClick);
     li.appendChild(b);
   }
   return li;
@@ -670,23 +671,71 @@ function ovHinweis(text) {
   li.textContent = text;
   return li;
 }
-async function openOverview() {
+function ovCount(n, ein, mehr) {
+  return n ? `– ${n} ${n === 1 ? ein : mehr}` : "– keine";
+}
+function ovFotos(c) {
+  return c.photo_count === 1 ? "1 Foto" : `${c.photo_count} Fotos`;
+}
+// Ruft eine Aktions-Route auf und frischt danach Fenster + Seite auf.
+async function caseAction(id, pfad, erfolg, frage) {
+  if (frage && !confirm(frage)) return;
+  banner("info", "Bitte warten …");
+  let r;
+  try { r = await fetch(`/api/cases/${id}/${pfad}`, { method: "POST" }); }
+  catch (e) { banner("error", "Aktion fehlgeschlagen (keine Verbindung).", 6000); return; }
+  let d = {};
+  try { d = await r.json(); } catch (e) { /* ohne Body weiter */ }
+  if (!r.ok) { banner("error", d.error || "Aktion fehlgeschlagen.", 8000); return; }
+  banner("success", erfolg, 4000);
+  await renderOverview();   // Liste im Fenster neu aufbauen
+  loadCases();
+  loadRecent();
+}
+// Standard-Aktionen, die mehrere Abschnitte teilen.
+function aktArchivieren(id) {
+  return { text: "Archivieren", onClick: () =>
+    caseAction(id, "archivieren", "Eintrag archiviert.") };
+}
+function aktLoeschen(id, name, zusatz = "") {
+  return { text: "Löschen", cls: "case-del", onClick: () =>
+    caseAction(id, "delete", "Eintrag gelöscht.",
+      `Eintrag „${name}" wirklich löschen?${zusatz}`) };
+}
+async function renderOverview() {
   let d;
   try { d = await (await fetch("/api/overview")).json(); }
-  catch (e) { status("Übersicht konnte nicht geladen werden."); return; }
+  catch (e) { banner("error", "Übersicht konnte nicht geladen werden.", 6000); return; }
 
-  // In Arbeit (offene Fälle)
+  // 🛠️ In Arbeit (offene Fälle)
   const cases = d.active_cases || [];
-  $("ov-cases-count").textContent =
-    cases.length ? `– ${cases.length} ${cases.length === 1 ? "Fall" : "Fälle"}` : "– keine";
+  $("ov-cases-count").textContent = ovCount(cases.length, "Fall", "Fälle");
   const ulC = $("ov-cases"); ulC.innerHTML = "";
   for (const c of cases) {
-    const fotos = c.photo_count === 1 ? "1 Foto" : `${c.photo_count} Fotos`;
-    ulC.appendChild(ovRow(`${c.name} · ${fotos}`, "Öffnen", () => openCase(c.id)));
+    ulC.appendChild(ovRow(`${c.name} · ${ovFotos(c)}`, [
+      { text: "Bearbeiten", onClick: () => openCase(c.id) },
+      aktArchivieren(c.id),
+      aktLoeschen(c.id, c.name, " Das lässt sich nicht rückgängig machen."),
+    ]));
   }
   if (!cases.length) ulC.appendChild(ovHinweis("Keine begonnenen Fälle."));
 
-  // In der Sammeldatei (fertige Anzeigen)
+  // ⏸️ Zurückgehalten (fertig, aber nicht hochgeladen)
+  const held = d.held_cases || [];
+  $("ov-held-count").textContent = ovCount(held.length, "Eintrag", "Einträge");
+  const ulH = $("ov-held"); ulH.innerHTML = "";
+  for (const c of held) {
+    ulH.appendChild(ovRow(`${c.name} · ${ovFotos(c)}`, [
+      { text: "Bearbeiten", onClick: () => openCase(c.id) },
+      { text: "Freigeben", cls: "case-go", onClick: () =>
+          caseAction(c.id, "freigeben", "Eintrag freigegeben – jetzt in der Sammeldatei.") },
+      aktArchivieren(c.id),
+      aktLoeschen(c.id, c.name),
+    ]));
+  }
+  if (!held.length) ulH.appendChild(ovHinweis("Nichts zurückgehalten."));
+
+  // ✅ Freigegeben (in der Sammeldatei)
   const stats = d.stats || { count: 0, total: 0 };
   $("ov-listings-count").textContent = stats.count
     ? `– ${stats.count} ${stats.count === 1 ? "Anzeige" : "Anzeigen"} · ${euro(stats.total)}`
@@ -695,24 +744,49 @@ async function openOverview() {
   for (const item of d.listings || []) {
     const preis = item.price ? ` – ${item.price} EUR` : "";
     const text = (item.title || "(ohne Titel)") + preis;
-    ulL.appendChild(item.case_id
-      ? ovRow(text, "Bearbeiten", () => openCase(item.case_id))
-      : ovRow(text));
+    if (item.case_id) {
+      const id = item.case_id;
+      ulL.appendChild(ovRow(text, [
+        { text: "Bearbeiten", onClick: () => openCase(id) },
+        { text: "Zurückziehen", onClick: () =>
+            caseAction(id, "zurueckziehen",
+              "Eintrag zurückgezogen – nicht mehr in der Sammeldatei.") },
+        aktArchivieren(id),
+        aktLoeschen(id, item.title || "", " Auch die CSV-Zeile wird entfernt."),
+      ]));
+    } else {
+      ulL.appendChild(ovRow(text));
+    }
   }
   if (!(d.listings || []).length)
     ulL.appendChild(ovHinweis("Noch nichts in der Sammeldatei."));
 
-  // Archiviert (frühere Sammeldateien)
+  // 🗄️ Archivierte Einträge (weggeräumt, wiederherstellbar)
+  const archd = d.archived_cases || [];
+  $("ov-archived-count").textContent = ovCount(archd.length, "Eintrag", "Einträge");
+  const ulAd = $("ov-archived"); ulAd.innerHTML = "";
+  for (const c of archd) {
+    ulAd.appendChild(ovRow(`${c.name} · ${ovFotos(c)}`, [
+      { text: "Wiederherstellen", cls: "case-go", onClick: () =>
+          caseAction(c.id, "wiederherstellen",
+            "Eintrag wiederhergestellt (zurückgehalten).") },
+      aktLoeschen(c.id, c.name, " Endgültig."),
+    ]));
+  }
+  if (!archd.length) ulAd.appendChild(ovHinweis("Keine archivierten Einträge."));
+
+  // 📁 Archivierte Sammeldateien (ganze CSVs, nur zur Info)
   const arch = d.archives || [];
-  $("ov-archives-count").textContent =
-    arch.length ? `– ${arch.length} ${arch.length === 1 ? "Datei" : "Dateien"}` : "– keine";
+  $("ov-archives-count").textContent = ovCount(arch.length, "Datei", "Dateien");
   const ulA = $("ov-archives"); ulA.innerHTML = "";
   for (const a of arch) {
     const anz = a.count === 1 ? "1 Anzeige" : `${a.count} Anzeigen`;
     ulA.appendChild(ovHinweis(`${a.filename} · ${anz} · ${euro(a.total)}`));
   }
   if (!arch.length) ulA.appendChild(ovHinweis("Noch nichts archiviert."));
-
+}
+async function openOverview() {
+  await renderOverview();
   overviewDlg.showModal();
 }
 on("overview-btn", "click", openOverview);
@@ -886,6 +960,22 @@ async function submitListing(overwrite) {
 }
 $("save-csv-btn").addEventListener("click", () => submitListing(false));
 
+// „Zurückhalten": aktuellen Entwurf fertig speichern, aber NICHT freigeben.
+$("hold-btn").addEventListener("click", async () => {
+  await saveFieldsNow();                 // aktuelle Feldwerte sichern
+  banner("info", "Bitte warten …");
+  let r;
+  try { r = await fetch("/api/draft/zurueckhalten", { method: "POST" }); }
+  catch (e) { banner("error", "Zurückhalten fehlgeschlagen (keine Verbindung).", 6000); return; }
+  if (!r.ok) {
+    const d = await r.json().catch(() => ({}));
+    banner("error", d.error || "Zurückhalten fehlgeschlagen.", 6000);
+    return;
+  }
+  banner("success", `Eintrag zurückgehalten – du findest ihn unter „Übersicht".`, 6000);
+  location.reload();
+});
+
 // „Eintrag anzeigen": öffnet die eBay-Sammeldatei im Standardprogramm.
 $("show-entry-btn").addEventListener("click", async () => {
   try {
@@ -896,6 +986,20 @@ $("show-entry-btn").addEventListener("click", async () => {
     }
   } catch (err) {
     alert("Konnte die Sammeldatei nicht öffnen.");
+  }
+});
+
+// „Speicherordner öffnen": zeigt im Finder/Explorer, wo die Datei ebay-anzeigen.csv
+// liegt – damit man sie im eBay-Upload-Dialog leicht findet.
+on("open-folder-btn", "click", async () => {
+  try {
+    const r = await fetch("/api/open-folder", { method: "POST" });
+    if (!r.ok) {
+      const d = await r.json().catch(() => ({}));
+      banner("error", d.error || "Konnte den Speicherordner nicht öffnen.", 6000);
+    }
+  } catch (err) {
+    banner("error", "Konnte den Speicherordner nicht öffnen.", 6000);
   }
 });
 

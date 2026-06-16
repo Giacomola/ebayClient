@@ -508,6 +508,23 @@ def create_app(config_path: str = "config.json",
             return jsonify({"error": f"Konnte die Datei nicht öffnen: {e}"}), 500
         return jsonify({"ok": True, "path": path})
 
+    @app.post("/api/open-folder")
+    def open_folder():
+        """Öffnet den Speicherordner im Datei-Manager (Finder/Explorer), damit man die
+        Sammeldatei für den eBay-Upload leicht findet."""
+        settings = load_settings(config_path)
+        folder = settings.get("save_folder", "")
+        if not folder:
+            return jsonify({"error": "Kein Speicherordner gewählt. "
+                                     "Bitte zuerst auf 'Ordner wählen' klicken."}), 400
+        if not os.path.isdir(folder):
+            return jsonify({"error": "Der Speicherordner existiert nicht mehr."}), 404
+        try:
+            _open_in_os(folder)
+        except Exception as e:  # noqa: BLE001
+            return jsonify({"error": f"Konnte den Ordner nicht öffnen: {e}"}), 500
+        return jsonify({"ok": True, "path": folder})
+
     @app.post("/api/generate")
     def generate():
         settings = load_settings(config_path)

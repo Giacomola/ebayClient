@@ -107,6 +107,22 @@ def test_open_csv_ohne_datei_gibt_404(tmp_path):
     r = c.post("/api/open-csv")
     assert r.status_code == 404
 
+def test_open_folder_oeffnet_ordner(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "ebay"
+    folder.mkdir()
+    c.post("/api/settings", json={"save_folder": str(folder)})
+    with patch("app.subprocess.run") as m:
+        r = c.post("/api/open-folder")
+    assert r.status_code == 200
+    assert m.called
+    assert m.call_args.args[0][-1] == str(folder)   # der Ordner selbst wird geöffnet
+
+def test_open_folder_ohne_ordner_gibt_fehler(tmp_path):
+    c = _client(tmp_path)
+    r = c.post("/api/open-folder")
+    assert r.status_code == 400
+
 def test_listings_liefert_eintraege(tmp_path):
     from ebay_csv import append_listing
     c = _client(tmp_path)
