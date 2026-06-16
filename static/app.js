@@ -744,8 +744,9 @@ function aktArchivieren(id) {
 }
 function aktLoeschen(id, name, zusatz = "") {
   return { text: "Löschen", cls: "case-del", onClick: () =>
-    caseAction(id, "delete", "Eintrag gelöscht.",
-      `Eintrag „${name}" wirklich löschen?${zusatz}`) };
+    caseAction(id, "delete", "Eintrag gelöscht – liegt jetzt bei den archivierten Einträgen.",
+      `Eintrag „${name}" löschen? Er wird zu den archivierten Einträgen verschoben `
+      + `und lässt sich wiederherstellen.${zusatz}`) };
 }
 async function renderOverview() {
   let d;
@@ -759,7 +760,7 @@ async function renderOverview() {
     ovtRow(c.name, `${ovFotos(c)} · ${formatDatum(c.saved_at)}`, [
       { text: "Bearbeiten", onClick: () => openCase(c.id) },
       aktArchivieren(c.id),
-      aktLoeschen(c.id, c.name, " Das lässt sich nicht rückgängig machen."),
+      aktLoeschen(c.id, c.name),
     ]), "Keine begonnenen Fälle.");
 
   // ⏸️ Zurückgehalten (fertig, aber nicht hochgeladen)
@@ -804,19 +805,26 @@ async function renderOverview() {
       { text: "Wiederherstellen", cls: "case-go", onClick: () =>
           caseAction(c.id, "wiederherstellen",
             "Eintrag wiederhergestellt (zurückgehalten).") },
-      aktLoeschen(c.id, c.name, " Endgültig."),
+      aktLoeschen(c.id, c.name),
     ]), "Noch nichts hochgeladen.");
 
-  // 🗄️ Archivierte Einträge (weggeräumt, wiederherstellbar)
-  const archd = d.archived_cases || [];
+  // 🗄️ Archivierte & gelöschte Einträge (weggeräumt bzw. gelöscht, wiederherstellbar).
+  // Gelöschte werden mit 🗑️ markiert und hier einsortiert (neueste zuerst).
+  const archd = (d.archived_cases || []).concat(d.deleted_cases || [])
+    .sort((a, b) => (b.saved_at || 0) - (a.saved_at || 0));
   $("ov-archived-count").textContent = ovCount(archd.length, "Eintrag", "Einträge");
-  fillTable("ov-archived", archd, (c) =>
-    ovtRow(c.name, `${ovFotos(c)} · ${formatDatum(c.saved_at)}`, [
+  fillTable("ov-archived", archd, (c) => {
+    const geloescht = c.status === "gelöscht";
+    const info = geloescht ? `🗑️ gelöscht · ${formatDatum(c.saved_at)}`
+                           : `${ovFotos(c)} · ${formatDatum(c.saved_at)}`;
+    const aktionen = [
       { text: "Wiederherstellen", cls: "case-go", onClick: () =>
           caseAction(c.id, "wiederherstellen",
             "Eintrag wiederhergestellt (zurückgehalten).") },
-      aktLoeschen(c.id, c.name, " Endgültig."),
-    ]), "Keine archivierten Einträge.");
+    ];
+    if (!geloescht) aktionen.push(aktLoeschen(c.id, c.name));   // Gelöschtes nicht nochmal löschen
+    return ovtRow(c.name, info, aktionen);
+  }, "Keine archivierten oder gelöschten Einträge.");
 
   // 📁 Archivierte Sammeldateien (ganze CSVs, nur zur Info)
   const arch = d.archives || [];
@@ -873,7 +881,8 @@ async function renderUpload() {
   // Fußleiste: kompakter Stand nach Status
   const a = (d.active_cases || []).length;
   const up = (d.uploaded_cases || []).length;
-  const ar = (d.archived_cases || []).length;
+  // Archiviert-Zähler schließt gelöschte Einträge mit ein (werden dort angezeigt).
+  const ar = (d.archived_cases || []).length + (d.deleted_cases || []).length;
   $("up-status-summary").textContent =
     `🛠️ ${a} · ⏸️ ${held.length} · ✅ ${stats.count} · 📤 ${up} · 🗄️ ${ar}`;
   // Zähler am roten „Zum Upload"-Knopf
@@ -1075,7 +1084,8 @@ async function openCase(id) {
 }
 
 async function deleteCase(id, name) {
-  if (!confirm(`Fall „${name}" wirklich löschen? Das lässt sich nicht rückgängig machen.`))
+  if (!confirm(`Fall „${name}" löschen? Er wird zu den archivierten Einträgen `
+      + `verschoben und lässt sich wiederherstellen.`))
     return;
   await fetch("/api/cases/" + id + "/delete", { method: "POST" });
   loadCases();

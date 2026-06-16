@@ -531,14 +531,30 @@ def test_fall_oeffnen_unbekannt_404(tmp_path):
     r = c.post("/api/cases/case_999/open")
     assert r.status_code == 404
 
-def test_fall_loeschen(tmp_path):
+def test_fall_loeschen_ist_soft_delete(tmp_path):
     c = _client(tmp_path)
     _save_offenen_fall(c, "Faust")
     c.post("/api/draft/clear")
     cid = c.get("/api/cases").get_json()["cases"][0]["id"]
     r = c.post(f"/api/cases/{cid}/delete")
     assert r.get_json()["ok"] is True
-    assert c.get("/api/cases").get_json()["cases"] == []
+    assert c.get("/api/cases").get_json()["cases"] == []   # nicht mehr „offen"
+    # Bleibt erhalten, markiert als gelöscht (bei den archivierten Einträgen).
+    ov = c.get("/api/overview").get_json()
+    assert len(ov["deleted_cases"]) == 1
+    assert ov["deleted_cases"][0]["id"] == cid
+
+def test_geloeschten_wiederherstellen(tmp_path):
+    c = _client(tmp_path)
+    _save_offenen_fall(c, "Faust")
+    c.post("/api/draft/clear")
+    cid = c.get("/api/cases").get_json()["cases"][0]["id"]
+    c.post(f"/api/cases/{cid}/delete")
+    r = c.post(f"/api/cases/{cid}/wiederherstellen")
+    assert r.status_code == 200
+    ov = c.get("/api/overview").get_json()
+    assert ov["deleted_cases"] == []
+    assert len(ov["held_cases"]) == 1              # zurück als „zurückgehalten"
 
 # --- Eintrags-Verwaltung (zurückhalten / freigeben / archivieren …) ---------
 
@@ -632,6 +648,7 @@ def test_loeschen_eines_freigegebenen_entfernt_csv_zeile(tmp_path):
     ov = c.get("/api/overview").get_json()
     assert ov["stats"]["count"] == 0               # CSV-Zeile mit gelöscht
     assert ov["listings"] == []
+    assert len(ov["deleted_cases"]) == 1           # Eintrag bleibt, als gelöscht markiert
 
 def test_falsche_uebergaenge_werden_abgewiesen(tmp_path):
     c = _client(tmp_path)

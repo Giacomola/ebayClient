@@ -89,8 +89,9 @@ Hier verwaltet man alle Einträge an einem Ort. Sie sind nach Status geordnet:
 - ✅ „Freigegeben": stehen in der Sammeldatei (CSV) und werden bei eBay hochgeladen.
 - 📤 „Hochgeladen": bereits bei eBay hochgeladen und aus der Sammeldatei heraus
   archiviert. Bleiben mit allen Angaben erhalten und sind wiederherstellbar.
-- 🗄️ „Archiviert": weggeräumt und ausgeblendet; bleiben erhalten und sind
-  wiederherstellbar. Werden nicht hochgeladen.
+- 🗄️ „Archiviert & Gelöscht": weggeräumte und gelöschte (🗑️) Einträge stehen
+  zusammen in diesem Bereich; sie bleiben erhalten und sind wiederherstellbar und
+  werden nicht hochgeladen. Gelöschte sind mit 🗑️ markiert.
 Hinweis zum Hochladen: Wenn man auf „📤 Bei eBay hochladen" klickt, öffnet sich die
 eBay-Upload-Seite und das Programm fragt einmal nach. Bestätigt man, werden alle
 freigegebenen Einträge als „hochgeladen" markiert, in den Bereich „Hochgeladen"
@@ -105,10 +106,11 @@ Mögliche Aktionen je Eintrag (es erscheinen nur die passenden):
 - „Zurückziehen": holt einen freigegebenen Eintrag wieder aus der Sammeldatei
   (er wird dann „zurückgehalten").
 - „Archivieren": räumt einen Eintrag weg (aus der CSV entfernt, falls er drin war).
-- „Wiederherstellen": holt einen archivierten Eintrag zurück (als „zurückgehalten",
-  nicht automatisch hochgeladen).
-- „Löschen": entfernt den Eintrag endgültig (mit Sicherheitsabfrage); war er in der
-  CSV, wird auch die CSV-Zeile entfernt.
+- „Wiederherstellen": holt einen archivierten, hochgeladenen ODER gelöschten Eintrag
+  zurück (als „zurückgehalten", nicht automatisch hochgeladen).
+- „Löschen": löscht NICHT endgültig, sondern markiert den Eintrag als gelöscht (🗑️)
+  und legt ihn zu den archivierten Einträgen – er bleibt also erhalten und ist
+  wiederherstellbar. War er in der Sammeldatei, wird die CSV-Zeile entfernt.
 
 == Einstellungen ==
 Die Einstellungen sind in aufklappbare Abschnitte gegliedert (auf die Überschrift

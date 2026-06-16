@@ -35,7 +35,9 @@ def _name_from_fields(fields: dict) -> str:
 #   in_csv         = freigegeben, steht in der Sammeldatei (wird hochgeladen)
 #   hochgeladen    = bei eBay hochgeladen, aus der Sammeldatei heraus archiviert
 #   archiviert     = weggeräumt/ausgeblendet, wiederherstellbar
-GUELTIGE_STATUS = ("offen", "zurückgehalten", "in_csv", "hochgeladen", "archiviert")
+#   gelöscht       = vom Nutzer gelöscht; bleibt erhalten (wiederherstellbar) und
+#                    wird bei den archivierten Einträgen mit angezeigt
+GUELTIGE_STATUS = ("offen", "zurückgehalten", "in_csv", "hochgeladen", "archiviert", "gelöscht")
 
 
 def save_case(draft: dict, cases_dir: str = "cases", name: str | None = None,

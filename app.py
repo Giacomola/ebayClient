@@ -313,10 +313,13 @@ def create_app(config_path: str = "config.json",
 
     @app.post("/api/cases/<case_id>/delete")
     def remove_case(case_id):
-        # War der Fall in der Sammeldatei, auch dessen CSV-Zeile entfernen.
+        # Nicht endgültig entfernen, sondern als „gelöscht" markieren – der Eintrag
+        # bleibt erhalten (wiederherstellbar) und wird bei den archivierten Einträgen
+        # angezeigt. War der Fall in der Sammeldatei, auch dessen CSV-Zeile entfernen
+        # (Gelöschtes wird nie hochgeladen).
         if case_status(case_id, cases_dir) == "in_csv":
             _remove_csv_row(case_id)
-        return jsonify({"ok": delete_case(case_id, cases_dir)})
+        return jsonify({"ok": set_case_status(case_id, "gelöscht", cases_dir, csv_title="")})
 
     @app.post("/api/draft/zurueckhalten")
     def post_draft_zurueckhalten():
@@ -392,11 +395,11 @@ def create_app(config_path: str = "config.json",
 
     @app.post("/api/cases/<case_id>/wiederherstellen")
     def wiederherstellen_case(case_id):
-        """Holt einen archivierten oder hochgeladenen Eintrag zurück – als
+        """Holt einen archivierten, hochgeladenen oder gelöschten Eintrag zurück – als
         „zurückgehalten", also NICHT automatisch wieder in der Upload-CSV."""
-        if case_status(case_id, cases_dir) not in ("archiviert", "hochgeladen"):
-            return jsonify({"error": "Nur archivierte oder hochgeladene Einträge "
-                                     "können wiederhergestellt werden."}), 400
+        if case_status(case_id, cases_dir) not in ("archiviert", "hochgeladen", "gelöscht"):
+            return jsonify({"error": "Nur archivierte, hochgeladene oder gelöschte "
+                                     "Einträge können wiederhergestellt werden."}), 400
         set_case_status(case_id, "zurückgehalten", cases_dir)
         return jsonify({"ok": True})
 
@@ -490,6 +493,7 @@ def create_app(config_path: str = "config.json",
             "held_cases": list_cases(cases_dir, status="zurückgehalten"),
             "uploaded_cases": list_cases(cases_dir, status="hochgeladen"),
             "archived_cases": list_cases(cases_dir, status="archiviert"),
+            "deleted_cases": list_cases(cases_dir, status="gelöscht"),
             "listings": rows,
             "stats": listing_stats(folder) if folder else {"count": 0, "total": 0.0},
             "archives": list_archives(folder) if folder else [],
