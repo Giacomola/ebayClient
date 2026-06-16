@@ -808,6 +808,13 @@ async function openUpload() {
   uploadDlg.showModal();
 }
 on("upload-btn", "click", openUpload);
+// „Bei eBay hochladen": als echtes neues Fenster öffnen (nicht nur als Tab).
+// Fenstergröße angeben -> der Browser öffnet ein eigenständiges Fenster.
+on("ebay-upload-link", "click", (e) => {
+  e.preventDefault();
+  const url = e.currentTarget.getAttribute("href");
+  window.open(url, "ebay-upload", "width=1200,height=850,noopener");
+});
 // Querverweise zwischen den beiden Fenstern (immer erst schließen, dann öffnen).
 on("up-manage-btn", "click", () => { uploadDlg.close(); openOverview(); });
 on("ov-to-upload-btn", "click", () => { overviewDlg.close(); openUpload(); });
