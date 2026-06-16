@@ -126,6 +126,9 @@ DEFAULTS = {
     "model_price": "claude-sonnet-4-6",
     # Modell für das Fragen-/Chat-Fenster (Standard Haiku = am günstigsten).
     "model_chat": "claude-haiku-4-5",
+    # Beim Hochladen zu eBay: "draft" legt die Angebote als Entwurf an (Standard,
+    # nichts geht ungewollt sofort online), "add" stellt sie sofort ein.
+    "upload_action": "draft",
     "location": "Berlin",
     "shipping_service": "DE_DHLPaket",
     "shipping_cost": "5.49",

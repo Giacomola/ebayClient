@@ -505,9 +505,11 @@ def create_app(config_path: str = "config.json",
             return jsonify({"error": f"Foto-Upload fehlgeschlagen: {e}"}), 502
         if not urls:
             return jsonify({"error": "Keine Fotos für die Anzeige vorhanden."}), 400
+        # Einstellung: als Entwurf anlegen (Standard) oder sofort einstellen.
+        aktion = "Add" if settings.get("upload_action") == "add" else "Draft"
         try:
             path, count = append_listing(
-                folder,
+                folder, action=aktion,
                 title=form.get("title", ""), author=form.get("author", ""),
                 book_title=form.get("book_title", ""), language=form.get("language", ""),
                 description=form.get("description", ""), price=form.get("price", ""),

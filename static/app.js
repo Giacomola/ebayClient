@@ -1140,6 +1140,7 @@ $("settings-btn").addEventListener("click", async () => {
   $("s-model-text").value = s.model_text || "claude-opus-4-8";
   $("s-model-price").value = s.model_price || "claude-sonnet-4-6";
   $("s-model-chat").value = s.model_chat || "claude-haiku-4-5";
+  $("s-upload-action").value = s.upload_action || "draft";
   $("s-location").value = s.location;
   $("s-shipping_cost").value = s.shipping_cost;
   renderPrimarySources(s.primary_sources);
@@ -1156,6 +1157,7 @@ $("s-save").addEventListener("click", async (e) => {
       model_text: $("s-model-text").value,
       model_price: $("s-model-price").value,
       model_chat: $("s-model-chat").value,
+      upload_action: $("s-upload-action").value,
       location: $("s-location").value,
       shipping_cost: $("s-shipping_cost").value,
       primary_sources: collectPrimarySources(),

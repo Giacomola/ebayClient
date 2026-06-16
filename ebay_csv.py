@@ -40,6 +40,14 @@ COLUMNS = [
     "Responsible Person 1 ContactURL",
 ]
 
+# Erlaubte Aktionen: "Add" stellt sofort ein, "Draft" legt einen Entwurf an.
+GUELTIGE_AKTIONEN = ("Add", "Draft")
+
+def _ist_angebotszeile(line: str) -> bool:
+    """True, wenn die Zeile eine Anzeige ist – egal ob sofort eingestellt (Add) oder
+    als Entwurf (Draft). So zählen/erkennen alle Funktionen beide Aktionen."""
+    return line.startswith("Add;") or line.startswith("Draft;")
+
 def _clean(value) -> str:
     """Entfernt Trennzeichen/Umbrüche, damit die Spaltenanzahl stabil bleibt."""
     if value is None:
@@ -70,9 +78,10 @@ HEADER = ";".join(COLUMNS)
 def _values(*, title, author, book_title, language, description, price,
             condition_id, picture_urls, publisher="", publication_year="",
             book_format="", location="Berlin", shipping_service="DE_DHLPaket",
-            shipping_cost="5.49", dispatch_time_max="3", custom_label="") -> dict:
+            shipping_cost="5.49", dispatch_time_max="3", custom_label="",
+            action="Add") -> dict:
     return {
-        ACTION: "Add",
+        ACTION: action if action in GUELTIGE_AKTIONEN else "Add",
         "CustomLabel": _clean(custom_label),
         "*Category": "261186",
         "*Title": title_for(title),
@@ -134,7 +143,7 @@ def entry_exists(folder: str, author, book_title, filename: str = DEFAULT_FILENA
     if not os.path.exists(path):
         return False
     with open(path, "r", encoding="utf-8-sig") as f:
-        return any(line.startswith("Add;") and _row_key(line.rstrip("\r\n")) == key
+        return any(_ist_angebotszeile(line) and _row_key(line.rstrip("\r\n")) == key
                    for line in f)
 
 def _safe_name(name: str) -> str:
@@ -158,7 +167,7 @@ def archive_as_file(folder: str, custom_name: str = "",
     if not os.path.exists(path):
         return 0, ""
     with open(path, "r", encoding="utf-8-sig") as f:
-        count = sum(1 for line in f if line.startswith("Add;"))
+        count = sum(1 for line in f if _ist_angebotszeile(line))
     if count == 0:
         return 0, ""
     base = f"eBayClient_{date.today().isoformat()}"
@@ -187,7 +196,7 @@ def recent_listings(folder: str, filename: str = DEFAULT_FILENAME, limit: int = 
     rows = []
     with open(path, "r", encoding="utf-8-sig") as f:
         for line in f:
-            if line.startswith("Add;"):
+            if _ist_angebotszeile(line):
                 cells = line.rstrip("\r\n").split(";")
                 rows.append({"title": cells[idx_title], "author": cells[idx_author],
                              "price": cells[idx_price]})
@@ -206,7 +215,7 @@ def listing_stats(folder: str, filename: str = DEFAULT_FILENAME) -> dict:
     total = 0.0
     with open(path, "r", encoding="utf-8-sig") as f:
         for line in f:
-            if not line.startswith("Add;"):
+            if not _ist_angebotszeile(line):
                 continue
             count += 1
             cells = line.rstrip("\r\n").split(";")
@@ -247,7 +256,7 @@ def append_listing(folder: str, filename: str = DEFAULT_FILENAME, **kwargs):
     rows = []
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8-sig") as f:
-            rows = [line.rstrip("\r\n") for line in f if line.startswith("Add;")]
+            rows = [line.rstrip("\r\n") for line in f if _ist_angebotszeile(line)]
 
     # Bei gleichem Autor + Buchtitel die alte Zeile entfernen (sie wird ersetzt).
     if new_key[1]:   # nur bei vorhandenem Buchtitel

@@ -219,6 +219,23 @@ def test_create_csv_legt_bearbeitbaren_fall_an(tmp_path):
     listings2 = c.get("/api/listings").get_json()["listings"]
     assert listings2[0]["case_id"] == cid        # Fall besteht weiter
 
+def test_create_csv_standard_ist_entwurf(tmp_path):
+    from ebay_csv import DEFAULT_FILENAME
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    _add_listing(c, folder, title="Entwurfsbuch")
+    text = (folder / DEFAULT_FILENAME).read_text(encoding="utf-8-sig")
+    assert text.splitlines()[2].split(";")[0] == "Draft"   # Standard = Entwurf
+
+def test_create_csv_einstellung_add_stellt_sofort_ein(tmp_path):
+    from ebay_csv import DEFAULT_FILENAME
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    c.post("/api/settings", json={"upload_action": "add"})
+    _add_listing(c, folder, title="Sofortbuch")
+    text = (folder / DEFAULT_FILENAME).read_text(encoding="utf-8-sig")
+    assert text.splitlines()[2].split(";")[0] == "Add"
+
 def test_overview_buendelt_alles(tmp_path):
     c = _client(tmp_path)
     folder = tmp_path / "out"; folder.mkdir()

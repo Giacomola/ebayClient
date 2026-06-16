@@ -32,6 +32,10 @@ eBay sie anzeigen kann. Das Programm läuft auf dem eigenen Computer im Browser.
    https://www.ebay.de/sh/reports/uploads (eBay-Seite „Verkäufer-Cockpit Pro →
    Berichte → Uploads", File-Exchange). Danach kann man mit „Sammeldatei
    archivieren & neu beginnen" eine neue, leere Sammeldatei starten.
+   WICHTIG: Standardmäßig werden die Angebote als ENTWURF hochgeladen – sie landen
+   also im eBay-Entwürfe-Ordner und gehen NICHT sofort online. Dort muss man sie
+   noch prüfen und selbst aktivieren/veröffentlichen. Wer lieber direkt einstellen
+   will, stellt das in den Einstellungen um (siehe „Beim Hochladen zu eBay").
 
 == Die Knöpfe oben (Kopfzeile) ==
 - „A−" / „A+": Schrift kleiner / größer.
@@ -71,6 +75,9 @@ eBay sie anzeigen kann. Das Programm läuft auf dem eigenen Computer im Browser.
   Fragen-Fenster (Haiku = günstig, Sonnet = ausgewogen, Opus = beste Qualität).
 - „Primärquellen": bevorzugte Nachschlage-Quellen (z. B. DNB, DDB, ZVAB) mit
   Prioritäten. Zustand und sichtbare Beschreibung kommen aber immer aus den Fotos.
+- „Beim Hochladen zu eBay": „Als Entwurf speichern" (Standard) = die Angebote landen
+  im eBay-Entwürfe-Ordner und gehen nicht sofort online; „Sofort einstellen" =
+  veröffentlicht sie direkt beim Hochladen.
 - „Standort" und „Versandkosten" landen in der eBay-Anzeige.
 
 == Fotos per Handy ==

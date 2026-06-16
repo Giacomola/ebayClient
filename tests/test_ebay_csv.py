@@ -204,3 +204,32 @@ def test_listing_stats_zaehlt_und_summiert(tmp_path):
 
 def test_archive_as_file_leer_macht_nichts(tmp_path):
     assert archive_as_file(str(tmp_path)) == (0, "")      # gar keine Datei
+
+def test_action_draft_steht_in_der_zeile():
+    data = build_csv(
+        title="T", author="A", book_title="B", language="Deutsch", description="D",
+        price="9.99", condition_id="5000", picture_urls=["https://x/1.jpg"],
+        action="Draft",
+    )
+    lines = _parse(data)
+    assert lines[2].split(";")[0] == "Draft"              # Entwurf statt Add
+
+def test_ungueltige_action_faellt_auf_add_zurueck():
+    data = build_csv(
+        title="T", author="A", book_title="B", language="Deutsch", description="D",
+        price="9.99", condition_id="5000", picture_urls=["https://x/1.jpg"],
+        action="Quatsch",
+    )
+    assert _parse(data)[2].split(";")[0] == "Add"
+
+def test_draft_zeilen_werden_mitgezaehlt_und_erkannt(tmp_path):
+    from ebay_csv import listing_stats
+    folder = str(tmp_path)
+    gemeinsam = dict(language="Deutsch", description="D", condition_id="5000",
+                     picture_urls=["https://x/1.jpg"], action="Draft")
+    append_listing(folder, title="Eins", author="A", book_title="Eins",
+                   price="9.99", **gemeinsam)
+    # Draft-Zeilen müssen genauso zählen/erkannt werden wie Add-Zeilen.
+    assert listing_stats(folder)["count"] == 1
+    assert recent_listings(folder)[0]["title"] == "Eins"
+    assert entry_exists(folder, "A", "Eins") is True
