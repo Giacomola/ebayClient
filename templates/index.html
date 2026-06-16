@@ -118,6 +118,7 @@
           <button id="choose-folder-btn" type="button">Ordner wählen</button>
         </div>
         <button id="save-csv-btn" type="button" class="primary">Zur eBay-Sammeldatei hinzufügen</button>
+        <button id="hold-btn" type="button" title="Speichern, aber noch nicht zum Hochladen freigeben">Zurückhalten (nicht hochladen)</button>
         <p id="save-success" class="save-success" hidden></p>
         <button id="show-entry-btn" type="button" hidden>Eintrag anzeigen</button>
       </div>
@@ -155,12 +156,16 @@
 
   <dialog id="overview-dialog" class="overview-dialog">
     <form method="dialog">
-      <h2>Übersicht</h2>
-      <h3>In Arbeit <span id="ov-cases-count" class="sub"></span></h3>
+      <h2>Übersicht &amp; Verwaltung</h2>
+      <h3>🛠️ In Arbeit <span id="ov-cases-count" class="sub"></span></h3>
       <ul id="ov-cases" class="ov-list"></ul>
-      <h3>In der Sammeldatei <span id="ov-listings-count" class="sub"></span></h3>
+      <h3>⏸️ Zurückgehalten <span id="ov-held-count" class="sub"></span></h3>
+      <ul id="ov-held" class="ov-list"></ul>
+      <h3>✅ Freigegeben (in der Sammeldatei) <span id="ov-listings-count" class="sub"></span></h3>
       <ul id="ov-listings" class="ov-list"></ul>
-      <h3>Archiviert <span id="ov-archives-count" class="sub"></span></h3>
+      <h3>🗄️ Archivierte Einträge <span id="ov-archived-count" class="sub"></span></h3>
+      <ul id="ov-archived" class="ov-list"></ul>
+      <h3>📁 Archivierte Sammeldateien <span id="ov-archives-count" class="sub"></span></h3>
       <ul id="ov-archives" class="ov-list"></ul>
       <menu>
         <button value="cancel">Schließen</button>

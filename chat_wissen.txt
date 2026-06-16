@@ -28,10 +28,12 @@ eBay sie anzeigen kann. Das Programm läuft auf dem eigenen Computer im Browser.
 7. Unter „Speicherordner" mit „Ordner wählen" festlegen, wo die Sammeldatei liegt.
 8. „Zur eBay-Sammeldatei hinzufügen" – die Anzeige wird in die gemeinsame CSV
    geschrieben. Mehrere Bücher sammeln sich so in einer Datei.
-9. Wenn alle Bücher fertig sind: Die CSV bei eBay hochladen. Die Upload-Seite ist:
-   https://www.ebay.de/sh/reports/uploads (eBay-Seite „Verkäufer-Cockpit Pro →
-   Berichte → Uploads", File-Exchange). Danach kann man mit „Sammeldatei
-   archivieren & neu beginnen" eine neue, leere Sammeldatei starten.
+9. Wenn alle Bücher fertig sind: Die CSV bei eBay hochladen. Im Abschnitt „Noch nicht
+   hochgeladen" gibt es dafür den Knopf „📤 Bei eBay hochladen (Upload-Seite öffnen)",
+   der die eBay-Upload-Seite öffnet: https://www.ebay.de/sh/reports/uploads
+   (eBay-Seite „Verkäufer-Cockpit Pro → Berichte → Uploads", File-Exchange). Dort die
+   Sammeldatei (CSV) aus dem Speicherordner auswählen und hochladen. Danach kann man
+   mit „Sammeldatei archivieren & neu beginnen" eine neue, leere Sammeldatei starten.
    WICHTIG: Standardmäßig werden die Angebote als ENTWURF hochgeladen – sie landen
    also im eBay-Entwürfe-Ordner und gehen NICHT sofort online. Dort muss man sie
    noch prüfen und selbst aktivieren/veröffentlichen. Wer lieber direkt einstellen
@@ -40,9 +42,8 @@ eBay sie anzeigen kann. Das Programm läuft auf dem eigenen Computer im Browser.
 == Die Knöpfe oben (Kopfzeile) ==
 - „A−" / „A+": Schrift kleiner / größer.
 - „↔−" / „↔+": angezeigten Inhalt schmaler / breiter.
-- „Übersicht": zeigt alles gebündelt – Fälle „In Arbeit", Anzeigen „In der
-  Sammeldatei" (Anzahl und Summe der Preise) und „Archiviert" (frühere Sammeldateien).
-  Bei Anzeigen in der Sammeldatei kann man „Bearbeiten" wählen.
+- „Übersicht": öffnet die Eintrags-Verwaltung. Dort sind alle Einträge in vier
+  Abschnitten geordnet (siehe „Eintrags-Verwaltung" weiter unten).
 - „Fragen": öffnet dieses Fenster (den Chat mit der KI).
 - „Einstellungen": Schlüssel, KI-Modelle, Quellen, Standort, Versandkosten.
 
@@ -62,6 +63,28 @@ eBay sie anzeigen kann. Das Programm läuft auf dem eigenen Computer im Browser.
 - Begonnene, noch nicht in die Sammeldatei übernommene Bücher erscheinen oben unter
   „Fall wiederaufnehmen". Ein Klick öffnet den Fall erneut.
 - „Neuen Fall starten" leert die Eingabe für ein neues Buch (mit Sicherheitsabfrage).
+
+== Eintrags-Verwaltung (Knopf „Übersicht") ==
+Hier verwaltet man alle Einträge an einem Ort. Sie sind nach Status geordnet:
+- 🛠️ „In Arbeit": begonnen, noch nicht fertig.
+- ⏸️ „Zurückgehalten": fertig und gespeichert, aber bewusst NICHT zum Hochladen
+  freigegeben. Diese Einträge stehen nicht in der Upload-Datei.
+- ✅ „Freigegeben": stehen in der Sammeldatei (CSV) und werden bei eBay hochgeladen.
+- 🗄️ „Archiviert": weggeräumt und ausgeblendet; bleiben erhalten und sind
+  wiederherstellbar. Werden nicht hochgeladen.
+Wichtig: Nur „Freigegebene" Einträge landen in der CSV. „Zurückgehalten" und
+„Archiviert" werden nie hochgeladen.
+Mögliche Aktionen je Eintrag (es erscheinen nur die passenden):
+- „Bearbeiten": öffnet den Eintrag wieder im Anzeige-Bereich.
+- „Zurückhalten": speichert den aktuellen Entwurf, ohne ihn freizugeben.
+- „Freigeben": schiebt einen zurückgehaltenen Eintrag in die Sammeldatei.
+- „Zurückziehen": holt einen freigegebenen Eintrag wieder aus der Sammeldatei
+  (er wird dann „zurückgehalten").
+- „Archivieren": räumt einen Eintrag weg (aus der CSV entfernt, falls er drin war).
+- „Wiederherstellen": holt einen archivierten Eintrag zurück (als „zurückgehalten",
+  nicht automatisch hochgeladen).
+- „Löschen": entfernt den Eintrag endgültig (mit Sicherheitsabfrage); war er in der
+  CSV, wird auch die CSV-Zeile entfernt.
 
 == Einstellungen ==
 - „Anweisungen bearbeiten": legt fest, wie die KI Titel und Beschreibung schreibt
