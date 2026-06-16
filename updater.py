@@ -74,6 +74,11 @@ def apply_update(project_dir: str, source_root: str) -> int:
                     aktionen.append(("delete", rel))
                 os.makedirs(os.path.dirname(ziel) or ".", exist_ok=True)
                 shutil.copy2(quelle, ziel)
+                # Launcher-Skripte ausführbar halten: Pythons zipfile stellt das
+                # Unix-Ausführbar-Bit nicht wieder her, sonst lassen sich .command
+                # (Mac) nach einem Update nicht mehr per Doppelklick starten.
+                if fn.endswith((".command", ".sh")):
+                    os.chmod(ziel, os.stat(ziel).st_mode | 0o111)
                 count += 1
         return count
     except Exception:

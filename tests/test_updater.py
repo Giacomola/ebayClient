@@ -75,3 +75,18 @@ def test_apply_update_rollback_bei_fehler(tmp_path, monkeypatch):
     # Nach dem Rollback ist der alte Stand wieder da und nichts Neues übrig.
     assert _lies(str(projekt / "app.py")) == "ALT"
     assert not os.path.exists(str(projekt / "static" / "app.js"))
+
+def test_apply_update_macht_command_skripte_ausfuehrbar(tmp_path):
+    # Im „Paket" liegt ein .command-Skript ohne Ausführbar-Bit (so kommt es aus
+    # dem entpackten ZIP). Nach dem Update muss es ausführbar sein.
+    projekt = tmp_path / "projekt"
+    quelle = tmp_path / "neu"
+    _schreib(str(quelle / "Start.command"), "#!/bin/bash\necho hi\n")
+    os.chmod(str(quelle / "Start.command"), 0o644)        # nicht ausführbar
+    _schreib(str(quelle / "app.py"), "NEU")               # normale Datei bleibt wie sie ist
+    os.chmod(str(quelle / "app.py"), 0o644)
+
+    apply_update(str(projekt), str(quelle))
+
+    assert os.access(str(projekt / "Start.command"), os.X_OK)      # jetzt ausführbar
+    assert not os.access(str(projekt / "app.py"), os.X_OK)         # .py unverändert
