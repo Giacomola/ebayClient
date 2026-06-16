@@ -47,6 +47,9 @@ _Bewusst auf später verschoben — nicht ohne Ansage starten._
 ## ✅ Erledigt
 _Abgehakt, mit Datum + Commit. Verlauf, wird nicht gelöscht._
 
+- [x] 2026-06-16 „Programm aktualisieren"-Knopf in den Einstellungen (Abschnitt 🔄): ruft das schon vorhandene Backend `/api/update` auf (holt neuesten Stand vom `main`-Branch, sichert vorher, rollt bei Fehlern zurück), fragt vorher per Bestätigung, zeigt Fortschritt/Ergebnis + Neustart-Hinweis (index.html, app.js, chat_wissen.txt) `abe2b02`.
+- [x] 2026-06-16 Entwurf-Preis-Fix vertieft: Preis schon beim Schreiben der vollen Datei auf Punkt normiert, bestehende Zeilen heilen sich beim Neuschreiben (ebay_csv.py, Tests) `81a7c91`; Entwurf-Export normiert zusätzlich (`58947ff`). Behebt eBay-Entwurf-Fehler „Could not serialize field [manifest.msrp]". Live bestätigt: Entwürfe gehen durch.
+
 - [x] 2026-06-16 Echte eBay-Entwürfe: eigene, begrenzte Entwurf-Vorlage (Action ohne *, 11 Spalten, #INFO-Zeilen) als abgeleitete Datei `ebay-entwuerfe.csv`. Behebt BAF.Error.5 beim Entwurf-Upload (die volle Vorlage kennt kein „Draft"). Im Entwurf-Modus wird die Datei aus der vollen Sammeldatei erzeugt und hochgeladen, im Sofort-Modus entfernt; Dubletten/Liste/Statistik bleiben auf der vollen Datei. Upload-Hinweis nennt den Dateinamen je nach Einstellung (ebay_csv.py, app.py, index.html, app.js, Tests) `84c9f20`.
 
 - [x] 2026-06-15 Rechenleistung-Schalter robust: Listener über on()-Helfer angehängt, ein fehlendes Element friert die Seite nicht mehr ein (app.js) `b54ebc5`.
