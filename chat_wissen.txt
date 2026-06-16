@@ -87,8 +87,15 @@ Hier verwaltet man alle Einträge an einem Ort. Sie sind nach Status geordnet:
 - ⏸️ „Zurückgehalten": fertig und gespeichert, aber bewusst NICHT zum Hochladen
   freigegeben. Diese Einträge stehen nicht in der Upload-Datei.
 - ✅ „Freigegeben": stehen in der Sammeldatei (CSV) und werden bei eBay hochgeladen.
+- 📤 „Hochgeladen": bereits bei eBay hochgeladen und aus der Sammeldatei heraus
+  archiviert. Bleiben mit allen Angaben erhalten und sind wiederherstellbar.
 - 🗄️ „Archiviert": weggeräumt und ausgeblendet; bleiben erhalten und sind
   wiederherstellbar. Werden nicht hochgeladen.
+Hinweis zum Hochladen: Wenn man auf „📤 Bei eBay hochladen" klickt, öffnet sich die
+eBay-Upload-Seite und das Programm fragt einmal nach. Bestätigt man, werden alle
+freigegebenen Einträge als „hochgeladen" markiert, in den Bereich „Hochgeladen"
+verschoben und die Sammeldatei beginnt leer neu. (Das Programm kann den Upload auf
+eBay nicht selbst erkennen – darum die Nachfrage.)
 Wichtig: Nur „Freigegebene" Einträge landen in der CSV. „Zurückgehalten" und
 „Archiviert" werden nie hochgeladen.
 Mögliche Aktionen je Eintrag (es erscheinen nur die passenden):

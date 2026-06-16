@@ -796,6 +796,17 @@ async function renderOverview() {
     return ovtRow(name, info, []);
   }, "Noch nichts in der Sammeldatei.");
 
+  // 📤 Hochgeladen (bei eBay hochgeladen, aus der Sammeldatei archiviert)
+  const uploaded = d.uploaded_cases || [];
+  $("ov-uploaded-count").textContent = ovCount(uploaded.length, "Eintrag", "Einträge");
+  fillTable("ov-uploaded", uploaded, (c) =>
+    ovtRow(c.name, `${ovFotos(c)} · ${formatDatum(c.saved_at)}`, [
+      { text: "Wiederherstellen", cls: "case-go", onClick: () =>
+          caseAction(c.id, "wiederherstellen",
+            "Eintrag wiederhergestellt (zurückgehalten).") },
+      aktLoeschen(c.id, c.name, " Endgültig."),
+    ]), "Noch nichts hochgeladen.");
+
   // 🗄️ Archivierte Einträge (weggeräumt, wiederherstellbar)
   const archd = d.archived_cases || [];
   $("ov-archived-count").textContent = ovCount(archd.length, "Eintrag", "Einträge");
@@ -861,9 +872,10 @@ async function renderUpload() {
 
   // Fußleiste: kompakter Stand nach Status
   const a = (d.active_cases || []).length;
+  const up = (d.uploaded_cases || []).length;
   const ar = (d.archived_cases || []).length;
   $("up-status-summary").textContent =
-    `🛠️ In Arbeit: ${a} · ⏸️ Zurückgehalten: ${held.length} · ✅ Freigegeben: ${stats.count} · 🗄️ Archiviert: ${ar}`;
+    `🛠️ ${a} · ⏸️ ${held.length} · ✅ ${stats.count} · 📤 ${up} · 🗄️ ${ar}`;
   // Zähler am roten „Zum Upload"-Knopf
   const badge = $("upload-count");
   if (badge) badge.textContent = stats.count ? ` · ${stats.count} bereit` : "";
@@ -880,10 +892,28 @@ on("upload-btn", "click", openUpload);
 on("up-search", "input", upFilter);
 // „Bei eBay hochladen": als echtes neues Fenster öffnen (nicht nur als Tab).
 // Fenstergröße angeben -> der Browser öffnet ein eigenständiges Fenster.
-on("ebay-upload-link", "click", (e) => {
+on("ebay-upload-link", "click", async (e) => {
   e.preventDefault();
   const url = e.currentTarget.getAttribute("href");
   window.open(url, "ebay-upload", "width=1200,height=850,noopener");
+  // Die App kann den Upload auf eBay nicht selbst erkennen – darum einmal nachfragen.
+  const ok = confirm(`Die eBay-Upload-Seite wurde geöffnet. Wähle dort deine Datei `
+    + `„ebay-anzeigen.csv“ und lade sie hoch.\n\nSind die freigegebenen Einträge `
+    + `hochgeladen? Dann markiere ich sie als „hochgeladen“ und verschiebe sie in den `
+    + `Bereich „Hochgeladen“.\n\n(Bei „Abbrechen“ bleibt alles wie es ist.)`);
+  if (!ok) return;
+  banner("info", "Bitte warten …");
+  let r;
+  try { r = await fetch("/api/mark-uploaded", { method: "POST" }); }
+  catch (err) { banner("error", "Markieren fehlgeschlagen (keine Verbindung).", 6000); return; }
+  const dd = await r.json().catch(() => ({}));
+  if (!r.ok) { banner("error", dd.error || "Markieren fehlgeschlagen.", 6000); return; }
+  banner("success", `✓ ${dd.count} Eintrag/Einträge als hochgeladen markiert und archiviert.`, 7000);
+  $("save-success").hidden = true;
+  $("show-entry-btn").hidden = true;
+  if (uploadDlg.open) renderUpload();
+  if (overviewDlg.open) renderOverview();
+  loadRecent();
 });
 // Querverweise zwischen den beiden Fenstern (immer erst schließen, dann öffnen).
 on("up-manage-btn", "click", () => { uploadDlg.close(); openOverview(); });

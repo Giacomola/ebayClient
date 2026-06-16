@@ -33,8 +33,9 @@ def _name_from_fields(fields: dict) -> str:
 #   offen          = begonnen, noch nicht abgesendet (zum Wiederaufnehmen)
 #   zurückgehalten = fertig & gespeichert, aber NICHT in der Upload-CSV
 #   in_csv         = freigegeben, steht in der Sammeldatei (wird hochgeladen)
+#   hochgeladen    = bei eBay hochgeladen, aus der Sammeldatei heraus archiviert
 #   archiviert     = weggeräumt/ausgeblendet, wiederherstellbar
-GUELTIGE_STATUS = ("offen", "zurückgehalten", "in_csv", "archiviert")
+GUELTIGE_STATUS = ("offen", "zurückgehalten", "in_csv", "hochgeladen", "archiviert")
 
 
 def save_case(draft: dict, cases_dir: str = "cases", name: str | None = None,

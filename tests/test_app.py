@@ -641,6 +641,24 @@ def test_falsche_uebergaenge_werden_abgewiesen(tmp_path):
     assert c.post(f"/api/cases/{cid}/freigeben").status_code == 400        # nicht zurückgehalten
     assert c.post(f"/api/cases/{cid}/wiederherstellen").status_code == 400  # nicht archiviert
 
+def test_mark_uploaded_markiert_und_archiviert(tmp_path):
+    c = _client(tmp_path)
+    folder = tmp_path / "out"; folder.mkdir()
+    _add_listing(c, folder, title="Mein Buch")            # in_csv-Fall + CSV-Zeile
+    cid = c.get("/api/listings").get_json()["listings"][0]["case_id"]
+    r = c.post("/api/mark-uploaded")
+    assert r.status_code == 200 and r.get_json()["count"] == 1
+    ov = c.get("/api/overview").get_json()
+    assert ov["stats"]["count"] == 0                      # Sammeldatei leer
+    assert ov["listings"] == []
+    assert len(ov["uploaded_cases"]) == 1                 # jetzt „hochgeladen"
+    assert ov["uploaded_cases"][0]["id"] == cid
+    assert len(ov["archives"]) == 1                       # CSV als Datei gesichert
+    # Wiederherstellen aus „hochgeladen" -> „zurückgehalten"
+    assert c.post(f"/api/cases/{cid}/wiederherstellen").status_code == 200
+    ov2 = c.get("/api/overview").get_json()
+    assert ov2["uploaded_cases"] == [] and len(ov2["held_cases"]) == 1
+
 def test_preis_ergebnis_wird_gespeichert_und_geladen(tmp_path):
     c = _client(tmp_path)
     pr = {"comparables": [{"title": "X", "price": "10"}], "recommended_price": "9.50"}

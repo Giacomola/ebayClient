@@ -392,11 +392,11 @@ def create_app(config_path: str = "config.json",
 
     @app.post("/api/cases/<case_id>/wiederherstellen")
     def wiederherstellen_case(case_id):
-        """Holt einen archivierten Eintrag zurück – als „zurückgehalten", also NICHT
-        automatisch wieder in der Upload-CSV."""
-        if case_status(case_id, cases_dir) != "archiviert":
-            return jsonify({"error": "Nur archivierte Einträge können "
-                                     "wiederhergestellt werden."}), 400
+        """Holt einen archivierten oder hochgeladenen Eintrag zurück – als
+        „zurückgehalten", also NICHT automatisch wieder in der Upload-CSV."""
+        if case_status(case_id, cases_dir) not in ("archiviert", "hochgeladen"):
+            return jsonify({"error": "Nur archivierte oder hochgeladene Einträge "
+                                     "können wiederhergestellt werden."}), 400
         set_case_status(case_id, "zurückgehalten", cases_dir)
         return jsonify({"ok": True})
 
@@ -488,11 +488,27 @@ def create_app(config_path: str = "config.json",
         return jsonify({
             "active_cases": list_cases(cases_dir, status="offen"),
             "held_cases": list_cases(cases_dir, status="zurückgehalten"),
+            "uploaded_cases": list_cases(cases_dir, status="hochgeladen"),
             "archived_cases": list_cases(cases_dir, status="archiviert"),
             "listings": rows,
             "stats": listing_stats(folder) if folder else {"count": 0, "total": 0.0},
             "archives": list_archives(folder) if folder else [],
         })
+
+    @app.post("/api/mark-uploaded")
+    def mark_uploaded():
+        """Markiert alle freigegebenen Einträge als „hochgeladen" und räumt die
+        Sammeldatei. Wird nach dem eBay-Upload aufgerufen. Die Fälle bleiben mit
+        Feldern + Fotos erhalten (Status „hochgeladen") und die Sammeldatei wird
+        unter eBayClient_<Datum>.csv gesichert und beginnt leer neu."""
+        settings = load_settings(config_path)
+        folder = settings.get("save_folder", "")
+        n = 0
+        for c in list_cases(cases_dir, status="in_csv"):
+            if set_case_status(c["id"], "hochgeladen", cases_dir, csv_title=""):
+                n += 1
+        moved, archive_name = archive_as_file(folder) if folder else (0, "")
+        return jsonify({"ok": True, "count": n, "moved": moved, "filename": archive_name})
 
     @app.post("/api/archive-file")
     def archive_file():
