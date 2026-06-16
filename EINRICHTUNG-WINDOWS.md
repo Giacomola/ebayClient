@@ -20,6 +20,13 @@ Zielsystem: **Windows 10/11 (64-Bit)**, KI-Weg: **Claude-Abo** (kein API-Schlüs
       kopieren, dabei den Unterordner **`.venv` löschen** (groß und Mac-spezifisch,
       wird auf Windows neu gebaut) und **`config.json` weglassen**. Den Rest als ZIP
       packen → per Fernwartung-Dateiübertragung oder Cloud rüberschieben und auspacken.
+- [ ] **Wichtig – wohin auspacken:** in einen **einfachen lokalen Ordner**, z. B.
+      `C:\Buch-Anzeigen-Helfer`. **Nicht** in einen **OneDrive**-synchronisierten Ordner
+      (oft „Desktop" oder „Dokumente"!). Sonst kann beim Aktualisieren – wenn viele
+      Dateien gleichzeitig ersetzt werden – OneDrive **Konflikt-Kopien** („… 2.py")
+      anlegen, die stören. Tipp: Im Explorer oben in die Adresszeile `C:\` eintippen und
+      dort den Ordner anlegen; liegt der Pfad unter `C:\Users\…\OneDrive\…`, ist es der
+      falsche Ort.
 - [ ] *(Nur falls du später `Update.bat` nutzen willst:)* das GitHub-Repo
       `Giacomola/ebayClient` auf **public** stellen. Unbedenklich, weil `config.json`
       und `draft.json` per `.gitignore` **nicht** im Repo liegen.
